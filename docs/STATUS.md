@@ -229,3 +229,9 @@ in BENCHMARKS.md. Single local run, no general performance or user-study claim.
 Before final light-palette correction: full suite 107 passed, 4 documented skips,
 84% coverage. Corrected light contrast and refresh; focused UX tests 12 passed.
 Next: final full regression/build/clean-install and verified GitHub push/CI.
+
+Final interaction correction: keyboard input in search does not dispatch actions;
+modal recovery blocks background recovery shortcuts, preserving one reviewed intent.
+Display limits apply after control escaping. TUI pilots: 9 passed; Ruff/mypy clean.
+Light palette has separate high-contrast semantic colors and re-renders previews.
+Next: full final gate, package TUI smoke and remote CI.

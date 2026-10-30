@@ -184,6 +184,23 @@ class TimeMachineApp(App[None]):
         self.theme = "timemachine"
         self.animation_level = "none"
 
+    def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
+        if isinstance(self.screen, ModalScreen) and action in {
+            "undo",
+            "redo",
+            "restore",
+            "refresh",
+            "theme",
+            "anchor",
+            "diff",
+            "toggle_file",
+            "search",
+            "history",
+            "help",
+        }:
+            return False
+        return True
+
     def compose(self) -> ComposeResult:
         with Horizontal(id="brandbar"):
             yield Static(Text("TIME / MACHINE", style="bold"), id="brand")
@@ -514,8 +531,9 @@ class TimeMachineApp(App[None]):
         if path not in self.file_items or self.file_items[path] is not change:
             return
         lines = text.splitlines()
-        clipped = len(lines) > 2000 or any(len(line) > 500 for line in lines[:2000])
-        self.preview_text = "\n".join(safe(line[:500]) for line in lines[:2000])
+        display_lines = [safe(line) for line in lines[:2000]]
+        clipped = len(lines) > 2000 or any(len(line) > 500 for line in display_lines)
+        self.preview_text = "\n".join(line[:500] for line in display_lines)
         if clipped:
             self.preview_text += (
                 "\n[Truncated: 2,000 lines / 500 chars per line. Saved bytes intact.]"

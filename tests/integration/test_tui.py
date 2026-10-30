@@ -114,7 +114,7 @@ def test_narrow_empty_help_theme_and_keyboard(project):
             assert isinstance(app.screen, HelpScreen)
             await pilot.press("escape")
             await pilot.press("t")
-            assert app.theme == "textual-light"
+            assert app.theme == "timemachine-light"
             await pilot.press("slash")
             assert app.focused is app.query_one("#filter", Input)
             assert app.query_one("#overview", Static).region.width <= 60
@@ -227,5 +227,34 @@ def test_binary_long_file_and_no_follow_preview(project):
             app.query_one("#find", Input).value = "not found"
             await pilot.pause()
             assert app.match_index == -1
+
+    asyncio.run(exercise())
+
+
+def test_typing_does_not_trigger_actions_and_modal_is_exclusive(project):
+    from textual.widgets import Input
+
+    (project.root / "x").write_text("before")
+    with project.lock():
+        checkpoint(project)
+    (project.root / "x").write_text("after")
+
+    async def exercise():
+        app = TimeMachineApp(project)
+        async with app.run_test(size=(120, 36)) as pilot:
+            await pilot.pause()
+            await pilot.press("slash", "r", "u", "q", "t")
+            assert app.query_one("#filter", Input).value == "ruqt"
+            assert app.theme == "timemachine"
+            app.query_one("#filter", Input).value = ""
+            await pilot.press("escape", "r")
+            await pilot.pause()
+            assert isinstance(app.screen, ConfirmRestore)
+            screens = len(app.screen_stack)
+            await pilot.press("u", "r")
+            assert len(app.screen_stack) == screens
+            await pilot.press("escape")
+            await pilot.pause()
+            assert (project.root / "x").read_text() == "after"
 
     asyncio.run(exercise())
