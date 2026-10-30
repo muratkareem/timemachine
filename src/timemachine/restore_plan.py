@@ -43,6 +43,13 @@ def make_plan(
     current = scan(project)
     selected_paths = paths if paths is not None else changed(expected, target)
     for path in selected_paths:
+        target_entry = target.get(path)
+        if (
+            target_entry
+            and target_entry.kind == "symlink"
+            and project.config.get("symlink_policy", "record") == "reject"
+        ):
+            raise ConflictError(f"Symlink target refused by current policy: {path!r}")
         if excluded(project, path):
             raise ConflictError(f"Path is excluded by current policy: {path!r}")
     return from_scan(current, expected, target, paths, warnings)

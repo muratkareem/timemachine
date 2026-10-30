@@ -63,6 +63,8 @@ def scan(project: Project, *, capture: bool = False) -> Scan:
                 finally:
                     os.close(fd)
             elif stat.S_ISLNK(before.st_mode):
+                if project.config.get("symlink_policy", "record") == "reject":
+                    raise IntegrityError(f"Symlink refused by policy: {path!r}")
                 target = os.readlink(name, dir_fd=directory_fd)
                 entries[path] = Entry("symlink", 0o777, target=target)
             elif stat.S_ISREG(before.st_mode):

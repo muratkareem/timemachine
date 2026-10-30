@@ -24,3 +24,11 @@ The JSON marker configures `exclude` glob patterns, `max_file_bytes` (256 MiB) a
 `quota_bytes` (10 GiB). Edit deliberately; inspect status before checkpointing.
 Git ignore rules do not exclude files. `.git` and `.timemachine.json` are mandatory
 exclusions at any depth. Optional default directory names match at any depth.
+
+`symlink_policy` is `record` (opaque link targets, default) or `reject` (fail any
+checkpoint encountering a symlink). It never follows link targets. Older markers
+without this optional key use `record`. `quota_bytes` limits object bytes; metadata,
+WAL files and temporary/recovery staging need additional free disk space. It is
+not an operating-system hard quota. Status/doctor expose actual included paths,
+Git tracked/untracked/ignored categories and exclusions; directory/nested entries
+that Git does not classify are labelled explicitly.

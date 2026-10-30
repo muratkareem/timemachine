@@ -5,7 +5,9 @@ from dataclasses import asdict
 from typing import Any
 
 from .checkpoint import get_checkpoint, verify
-from .git_context import git_context
+from .errors import TimeMachineError
+from .git_context import git_context, path_categories
+from .journal import read_plan, read_progress
 from .metadata import connect
 from .project import Project
 from .scanner import scan
@@ -62,6 +64,15 @@ def history(project: Project, limit: int = 20) -> dict[str, Any]:
             run["change_count"] = compare(project, run["pre"], run["post"], include_text=False)[
                 "change_count"
             ]
+    for run in runs:
+        if run["post"]:
+            entries = get_checkpoint(project, run["post"])["entries"]
+            run["size"] = sum(e.size for e in entries.values())
+            run["integrity"] = "manifests verified; use verify for objects"
+    for transaction in transactions:
+        transaction["plan"] = read_plan(transaction["plan"])
+        transaction["progress"] = read_progress(transaction["progress"])
+        transaction["change_count"] = transaction["plan"]["change_count"]
     return {"checkpoints": checkpoints(project, limit), "runs": runs, "restores": transactions}
 
 
@@ -71,6 +82,7 @@ def status(project: Project) -> dict[str, Any]:
         "project": project.config,
         "git": git_context(project.root),
         "included": sorted(result.entries),
+        "categories": path_categories(project.root, set(result.entries)),
         "excluded": result.excluded,
         "protected_bytes": sum(e.size for e in result.entries.values()),
         "limitations": "Bytes/modes/links/directories only; see docs/SAFETY.md",
@@ -94,7 +106,12 @@ def doctor(project: Project) -> dict[str, Any]:
         ]
         integrity = db.execute("PRAGMA integrity_check").fetchone()[0]
     verification = verify(project)
+    try:
+        scope = status(project)
+    except (OSError, TimeMachineError) as exc:
+        scope = {"error": str(exc), "policy": project.config}
     return {
+        "scope": scope,
         "database": integrity,
         "verification": verification,
         "unfinished_runs": stale,

@@ -90,3 +90,21 @@ subprocess.run(['git','-c','user.name=Test','-c','user.email=test@example.invali
         undo(project, acknowledge_git=True)
     assert (root / "x").read_text() == "before"
     assert git_context(root) == after
+
+
+def test_status_distinguishes_git_categories_and_preserves_index(project):
+    from timemachine.history import status
+
+    root = project.root
+    git(root, "init", "-b", "main")
+    (root / ".gitignore").write_text("ignored\n")
+    (root / "tracked").write_bytes(b"staged")
+    git(root, "add", ".gitignore", "tracked")
+    (root / "ignored").write_text("valuable")
+    (root / "untracked").write_text("untracked")
+    before = git_context(root)
+    result = status(project)
+    assert "tracked" in result["categories"]["tracked"]
+    assert "ignored" in result["categories"]["ignored"]
+    assert "untracked" in result["categories"]["untracked"]
+    assert git_context(root) == before

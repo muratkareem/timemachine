@@ -63,6 +63,7 @@ class Project:
             "exclude": DEFAULT_EXCLUDES.copy(),
             "max_file_bytes": 256 * 1024**2,
             "quota_bytes": 10 * 1024**3,
+            "symlink_policy": "record",
         }
         initialize(store)
         atomic_write(
@@ -91,10 +92,12 @@ class Project:
                 raise TimeMachineError("Project marker must be a regular file")
             try:
                 config = json.loads(marker.read_bytes())
+                config.setdefault("symlink_policy", "record")
                 if (
                     type(config["version"]) is not int
                     or config["version"] != 1
                     or not isinstance(config["id"], str)
+                    or config["symlink_policy"] not in ("record", "reject")
                     or not isinstance(config["exclude"], list)
                     or not all(isinstance(p, str) for p in config["exclude"])
                     or type(config["max_file_bytes"]) is not int

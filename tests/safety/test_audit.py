@@ -207,3 +207,36 @@ def test_generated_bytes_modes_roundtrip(values):
             assert p.read_bytes() == data
             assert p.stat().st_mode & 0o777 == mode
         assert not (root / "new").exists()
+
+
+def test_configurable_symlink_rejection(project):
+    (project.root / "link").symlink_to("/outside")
+    project.config["symlink_policy"] = "reject"
+    with project.lock(), pytest.raises(IntegrityError, match="policy"):
+        checkpoint(project)
+
+
+def test_doctor_reports_unsupported_scope_without_hiding_diagnostics(project):
+    from timemachine.history import doctor
+
+    (project.root / "a").write_text("data")
+    import os
+
+    os.link(project.root / "a", project.root / "b")
+    result = doctor(project)
+    assert result["database"] == "ok"
+    assert "Hardlinked" in result["scope"]["error"]
+
+
+def test_reject_policy_refuses_symlink_restore_before_mutation(project):
+    from timemachine.errors import ConflictError
+
+    path = project.root / "link"
+    path.symlink_to("/outside")
+    with project.lock():
+        identifier = checkpoint(project)
+        path.unlink()
+        project.config["symlink_policy"] = "reject"
+        with pytest.raises(ConflictError, match="policy"):
+            restore(project, identifier)
+    assert not path.is_symlink()

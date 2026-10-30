@@ -130,3 +130,14 @@ Remote CI has not yet run; configuration alone is not a pass claim.
 Push user authorization is explicit; first verified push ended at 363c16f.
 Next: push final verified code, inspect all six remote jobs, fix any failures,
 record final coverage/install/remote outcomes and deliver clean main.
+
+M12 scope-policy closeout: status/doctor label tracked/untracked/ignored and
+unclassified directories; doctor preserves diagnostics on unsupported scope;
+configurable opaque-record/reject symlink policy refuses targets before mutation.
+History exposes run sizes/integrity and parsed verified journals. Object quotas
+are explicitly documented separately from metadata/staging disk space.
+Validation: final broad audit before last policy guard was 90 passed, 4 skipped,
+83% coverage (1599 statements/277 missed); focused final scope/E2E checks pass.
+Ruff/format/mypy clean; rebuilt wheel and reinstalled demo pass. CI run
+41102164521 remains queued with zero assigned runners, no remote success claim.
+Next: record updated final full results, push scope closeout and delivery report.

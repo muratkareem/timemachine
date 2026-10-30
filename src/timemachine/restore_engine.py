@@ -68,6 +68,11 @@ def execute(
             change.expected.validate()
         if change.target:
             change.target.validate()
+            if (
+                change.target.kind == "symlink"
+                and project.config.get("symlink_policy", "record") == "reject"
+            ):
+                raise ConflictError("Symlink target refused by current policy")
     objects = ObjectStore(project.store, project.config["quota_bytes"])
     for change in plan.changes:
         if change.target and change.target.digest:
@@ -194,6 +199,8 @@ def execute(
                                     view = memoryview(data)
                                     while view:
                                         written = os.write(stage, view)
+                                        if written <= 0:
+                                            raise OSError("No progress writing staged file")
                                         view = view[written:]
                             finally:
                                 os.close(source)
