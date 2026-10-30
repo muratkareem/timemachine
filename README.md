@@ -44,3 +44,15 @@ Python 3.12+, POSIX macOS/Linux target. See [safety](docs/SAFETY.md),
 [recovery](docs/RECOVERY.md), [integrations](docs/INTEGRATIONS.md) and
 [execution status](docs/STATUS.md). This is source software; no published package
 or remote CI success is implied.
+
+Beyond the MVP: `redo`, full/selective `restore`, `recover`, `tag`, `pin`, `delete`,
+`storage`, `verify`, `gc`, `prune`, `rebind`, `finish-run` and `agents`. Install
+`pip install -e '.[tui]'` for `timemachine tui`.
+
+![Real Textual browser in a disposable project](docs/assets/tui.svg)
+
+This screenshot comes from `python examples/tui_preview.py` after a real wrapped
+synthetic Python command. Run `python examples/demo.py` for an isolated CLI demo
+with byte assertions. See [measured benchmark](docs/BENCHMARKS.md) and
+[edge-case behavior](docs/EDGE_CASES.md). Optional watch/export/import/compression
+are deferred; no placeholder features are presented as complete.

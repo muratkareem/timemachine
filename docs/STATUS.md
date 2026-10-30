@@ -121,3 +121,12 @@ Runner rejects non-main-thread use before creating metadata (signals need main).
 Validation included in 87-pass full suite; headless TUI: 3 passed. Prior commit:
 see journal-integrity commit. No destructive operation is enabled after stale
 confirmation. Next: final packaging and remote CI.
+
+M12 packaging/CI configured: macOS/Linux x Python 3.12/3.13/3.14, Ruff/format,
+mypy, pytest+coverage, build, real demo and isolated wheel CLI install. Security,
+contributing, changelog and explicit edge-case matrix added. MIT preserved.
+Build backend added to dev dependencies for reproducible no-isolation checks.
+Remote CI has not yet run; configuration alone is not a pass claim.
+Push user authorization is explicit; first verified push ended at 363c16f.
+Next: push final verified code, inspect all six remote jobs, fix any failures,
+record final coverage/install/remote outcomes and deliver clean main.
