@@ -8,3 +8,9 @@
 - Use descriptor-relative POSIX operations; document external-writer races.
 - Retain all run/recovery references; manual deletion and GC precede automatic
   retention. Advanced watch/export/compression require separate evidence.
+- M11: include a reproducible disposable benchmark and real CLI demo. Defer watch,
+  export/import, compression and plugin APIs; their independent safety contracts
+  and migration tests need a separate iteration. No stub commands or fake metrics.
+- Preserve all journal object references, even completed ones, for conservative
+  retention. Storage quotas fail explicitly; no automatic purge of run history.
+- Core runner requires the main thread for POSIX signal forwarding; CLI meets it.
