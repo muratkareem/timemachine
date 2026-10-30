@@ -37,6 +37,19 @@ Next: M6 generic subprocess wrapper, then M7 end-to-end Git/non-Git gate.
 M6 complete: real argv subprocess without shell; inherited cwd/env/stdin/out/err
 and TTY; durable PRE/POST on nonzero/launch-failure/signals; signal forwarding;
 redacted metadata; late POST command for crashes, no automatic rollback.
-Validation: `pytest tests/integration/test_runner.py -q`: 6 passed, including PTY
-and SIGTERM subprocess checks. Ruff clean; mypy success (17 files).
+Initial M6 validation: 5 passed, 1 failed (missing os import in PTY test);
+Ruff caught the same missing import. The premature completion entry was
+corrected at M7; runner behavior itself was not the failing path.
+Mypy success (17 files).
 Last prior commit: 2d868eb. Push pending M7. Next: complete MVP acceptance gate.
+
+M7 MVP gate PASS: corrected PTY test import and drained PTY before closing its
+last slave (macOS discards pending data on last-slave close). Full `pytest -q`:
+42 passed, 1 filesystem setuid skip. Ruff clean; mypy success (17 source files).
+Synthetic agent creates/edits/deletes/renames files and changes modes; undo
+preserves unrelated edits in Git and non-Git projects. Dirty/staged/untracked/
+ignored bytes and executable modes restored; HEAD/branch/refs/index unchanged.
+Agent-created Git commit test emits mismatch and leaves Git metadata untouched.
+README, install/CLI/recovery docs describe actual MVP behavior and limitations.
+Last prior commit: 9969904. Push pending remote/auth check. Next: M5 redo and
+selective restore, then storage/TUI/integrations/final audit.

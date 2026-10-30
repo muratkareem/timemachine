@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import sys
 
@@ -84,6 +85,7 @@ def test_pipe_stdin_stdout(project):
 
 def test_inherited_tty(project):
     import pty
+    import select
 
     master, slave = pty.openpty()
     command = [
@@ -99,10 +101,8 @@ def test_inherited_tty(project):
     try:
         child = subprocess.Popen(command, cwd=project.root, stdin=slave, stdout=slave, stderr=slave)
         child.wait(timeout=10)
-        os.close(slave)
-        slave = -1
         data = b""
-        while True:
+        while select.select([master], [], [], 0.2)[0]:
             try:
                 chunk = os.read(master, 8192)
                 if not chunk:
