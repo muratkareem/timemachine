@@ -14,3 +14,7 @@
 - Preserve all journal object references, even completed ones, for conservative
   retention. Storage quotas fail explicitly; no automatic purge of run history.
 - Core runner requires the main thread for POSIX signal forwarding; CLI meets it.
+- UX overhaul: human views on TTY; redirected JSON and explicit --json remain
+  compatible. Plain/no-color views are supported without relying on color.
+- UI uses metadata pagination and lazy cached immutable manifests, never source
+  scanning on navigation. "Undo available" requires an actual backend preview.

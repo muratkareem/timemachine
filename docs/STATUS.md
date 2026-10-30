@@ -186,3 +186,9 @@ M12 remote gate complete: workflow 41103386128 success at 639548a. Six jobs
 individually confirmed success, 94 passed/4 skipped each, 83% coverage. Final
 record commit changes docs only. All feasible core milestones delivered; optional
 M11 advanced features remain explicitly deferred. No unresolved execution blocker.
+
+UX overhaul started from clean 6d28695. Audit/design contract: UX_OVERHAUL.md.
+Shared safe Unicode/units/palette and metadata-paged UI read model implemented.
+Navigation uses lazy immutable manifest cache, no source scanning. Unique ID
+prefix resolution is explicit and rejects ambiguity. Focused tests: 2 passed;
+Ruff/mypy clean. Next: responsive workspace and guided backend recovery dialogs.
