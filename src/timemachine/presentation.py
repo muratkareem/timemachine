@@ -128,6 +128,58 @@ def human(value: Any) -> Any:
             title="TimeMachine is ready",
             border_style=COLORS["primary"],
         )
+    if "workflow" in value:
+        return Panel(
+            Text(
+                "1  Open your project and run timemachine init\n"
+                "2  Protect a session: timemachine run -- COMMAND\n"
+                "3  Inspect: timemachine diff or timemachine tui\n"
+                "4  Review: timemachine undo --preview\n"
+                "5  Undo: timemachine undo (confirmation required)\n\n"
+                "No automatic watching. Each session must be wrapped.\n"
+                "Git history/index and excluded files are outside recovery scope."
+            ),
+            title="Your first minute with TimeMachine",
+            border_style=COLORS["primary"],
+        )
+    if "entries" in value:
+        return table(
+            "Checkpoint " + short(value["id"]),
+            ("Path", "Type", "Mode", "Size"),
+            [[p, e["kind"], oct(e["mode"]), size(e["size"])] for p, e in value["entries"].items()],
+        )
+    if "integrity" in value and "objects_verified" in value:
+        return Panel(
+            Text(
+                f"Integrity: {value['integrity']}\n"
+                f"{value['complete_checkpoints']} complete checkpoints · "
+                f"{value['objects_verified']} objects · "
+                f"{value.get('journals_verified', 0)} journals\n"
+                f"{value['incomplete_checkpoints']} incomplete (not restore targets)"
+            ),
+            title="Verification complete",
+            border_style=COLORS["success"],
+        )
+    if "run" in value and "exit_code" in value:
+        return Panel(
+            Text(
+                f"{value['status']} · exit {value['exit_code']}\n"
+                f"PRE {short(value['pre'])} → POST {short(value['post'])}\n"
+                "Next: timemachine diff · timemachine undo --preview\n"
+                "Detached processes may continue after POST."
+            ),
+            title="Session recorded",
+            border_style=COLORS["success"] if value["exit_code"] == 0 else COLORS["warning"],
+        )
+    if value.get("status") == "COMPLETE" and "id" in value:
+        return Panel(
+            Text(
+                "Checkpoint " + value["id"] + " saved.\n"
+                "Inspect with timemachine show " + short(value["id"])
+            ),
+            title="Checkpoint complete",
+            border_style=COLORS["protected"],
+        )
     if "changes" in value:
         rows = []
         for change in value["changes"]:
@@ -227,6 +279,18 @@ def human(value: Any) -> Any:
                     "No automatic rollback was performed."
                 ),
                 title="Doctor",
+            ),
+            table(
+                "Needs attention",
+                ("Operation", "Next step"),
+                [
+                    [r["id"], "Stop writers; timemachine finish-run " + r["id"] + " --yes"]
+                    for r in value["unfinished_runs"]
+                ]
+                + [
+                    [r["id"], "timemachine recover " + r["id"] + " --preview"]
+                    for r in value["unfinished_restores"]
+                ],
             ),
             human(value["scope"]),
             Text(safe(value["guidance"])),

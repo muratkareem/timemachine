@@ -1,29 +1,84 @@
 """Terminal adapter. Core services have no dependency on this module."""
 
 import json
+import os
+import sys
+from collections.abc import Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
 from pathlib import Path
 from typing import Annotated, Any
 
 import typer
 
 from .errors import TimeMachineError
+from .presentation import console, guidance, human
 from .project import Project
+from .ui_data import resolve_checkpoint
 
-app = typer.Typer(no_args_is_help=True, help="Local checkpoints and safe undo for coding agents.")
+app = typer.Typer(
+    no_args_is_help=True,
+    help="Ctrl+Z for coding agents. Local snapshots, safe recovery.",
+    epilog="Start: timemachine quickstart. Automate: add --json. Nothing runs in the background.",
+)
+
+
+_human: ContextVar[bool] = ContextVar("human_output", default=False)
+_plain: ContextVar[bool] = ContextVar("plain_output", default=False)
+
+
+@app.callback()
+def options(
+    human_output: bool = typer.Option(
+        False, "--human", help="Readable output, including in pipes."
+    ),
+    plain: bool = typer.Option(False, "--plain", help="Readable output without color/animation."),
+) -> None:
+    """Checkpoint → run your agent → inspect → preview undo. Use --json for automation."""
+    _human.set(human_output or plain or sys.stdout.isatty())
+    _plain.set(plain)
 
 
 def output(value: Any, json_mode: bool = False) -> None:
-    # JSON escaping also protects terminal control sequences in all text output.
-    typer.echo(json.dumps(value, ensure_ascii=True, indent=2 if not json_mode else None))
+    if json_mode or not _human.get():
+        typer.echo(json.dumps(value, ensure_ascii=True, indent=None if json_mode else 2))
+    else:
+        console(plain=_plain.get()).print(human(value))
+
+
+@contextmanager
+def working(label: str) -> Iterator[None]:
+    if _human.get() and sys.stderr.isatty() and not _plain.get() and "NO_COLOR" not in os.environ:
+        with console(stderr=True).status(label, spinner="dots"):
+            yield
+    else:
+        yield
 
 
 @app.command()
 def init(
     storage: Path | None = typer.Option(None, help="Empty external snapshot directory"),
+    json_mode: bool = typer.Option(False, "--json"),
 ) -> None:
     """Initialize this directory without changing Git state."""
     project = Project.init(Path.cwd(), storage)
-    output({"root": str(project.root), "storage": str(project.store), "initialized": True})
+    result: dict[str, Any] = {
+        "root": str(project.root),
+        "storage": str(project.store),
+        "initialized": True,
+    }
+    if _human.get() and not json_mode:
+        from .scanner import scan
+
+        try:
+            scope = scan(project)
+            result["scope"] = f"{len(scope.entries)} entries ready to capture (no backup yet)"
+            result["exclusions"] = ", ".join(scope.excluded) or "policy defaults; see status"
+        except (TimeMachineError, OSError) as exc:
+            result["scope"] = f"Needs attention before checkpoint: {exc}"
+        output(result)
+    else:
+        output(result, json_mode)
 
 
 @app.command()
@@ -39,11 +94,21 @@ def main() -> None:
     try:
         app()
     except (TimeMachineError, OSError) as exc:
-        typer.echo(json.dumps({"error": str(exc)}, ensure_ascii=True), err=True)
+        if _human.get() and "--json" not in sys.argv:
+            from rich.panel import Panel
+            from rich.text import Text
+
+            from .presentation import safe
+
+            console(plain=_plain.get(), stderr=True).print(
+                Panel(Text(safe(exc) + "\n\n" + guidance(str(exc))), title="Cannot proceed")
+            )
+        else:
+            typer.echo(json.dumps({"error": str(exc)}, ensure_ascii=True), err=True)
         raise SystemExit(1) from exc
 
 
-@app.command("checkpoint")
+@app.command("checkpoint", rich_help_panel="Everyday")
 def checkpoint_command(
     message: str = typer.Option("", "-m", "--message"),
     json_mode: bool = typer.Option(False, "--json"),
@@ -52,12 +117,12 @@ def checkpoint_command(
     from .checkpoint import checkpoint
 
     project = Project.discover()
-    with project.lock():
+    with project.lock(), working("Saving a verified checkpoint…"):
         identifier = checkpoint(project, message)
     output({"id": identifier, "status": "COMPLETE"}, json_mode)
 
 
-@app.command("list")
+@app.command("list", rich_help_panel="Everyday")
 def list_command(
     limit: int = typer.Option(20, min=0), json_mode: bool = typer.Option(False, "--json")
 ) -> None:
@@ -67,26 +132,36 @@ def list_command(
     output(checkpoints(Project.discover(), limit), json_mode)
 
 
-@app.command("show")
-@app.command("inspect")
+@app.command("show", rich_help_panel="Everyday")
+@app.command("inspect", rich_help_panel="Everyday")
 def show_command(checkpoint_id: str, json_mode: bool = typer.Option(False, "--json")) -> None:
     """Inspect a checkpoint manifest and Git context."""
     from .history import show
 
-    output(show(Project.discover(), checkpoint_id), json_mode)
+    project = Project.discover()
+    output(show(project, resolve_checkpoint(project, checkpoint_id)), json_mode)
 
 
-@app.command("history")
+@app.command("history", rich_help_panel="Everyday")
 def history_command(
-    limit: int = typer.Option(20, min=0), json_mode: bool = typer.Option(False, "--json")
+    limit: int = typer.Option(20, min=0),
+    json_mode: bool = typer.Option(False, "--json"),
+    search: str | None = typer.Option(None, help="Filter this page by ID, agent or description"),
 ) -> None:
     """Show checkpoints, agent runs and restores with their relationships."""
     from .history import history
 
-    output(history(Project.discover(), limit), json_mode)
+    result = history(Project.discover(), limit)
+    if search:
+        query = search.casefold()
+        result = {
+            key: [item for item in values if query in str(item).casefold()]
+            for key, values in result.items()
+        }
+    output(result, json_mode)
 
 
-@app.command("diff")
+@app.command("diff", rich_help_panel="Everyday")
 def diff_command(
     checkpoint_a: Annotated[str | None, typer.Argument()] = None,
     checkpoint_b: Annotated[str | None, typer.Argument()] = None,
@@ -98,31 +173,36 @@ def diff_command(
     """Compare checkpoints; no IDs selects the latest completed run."""
     from .diff import compare
 
+    project = Project.discover()
     result = compare(
-        Project.discover(), checkpoint_a, checkpoint_b, path, include_text=not (stat or name_only)
+        project,
+        resolve_checkpoint(project, checkpoint_a) if checkpoint_a else None,
+        resolve_checkpoint(project, checkpoint_b) if checkpoint_b else None,
+        path,
+        include_text=not (stat or name_only),
     )
     if name_only:
         result = {"paths": [c["path"] for c in result["changes"]]}
     output(result, json_mode)
 
 
-@app.command("doctor")
+@app.command("doctor", rich_help_panel="Storage & diagnostics")
 def doctor_command(json_mode: bool = typer.Option(False, "--json")) -> None:
     """Verify integrity and report unfinished work without automatic rollback."""
     from .history import doctor
 
     project = Project.discover()
-    with project.lock(allow_pending=True):
+    with project.lock(allow_pending=True), working("Checking integrity and recovery state…"):
         output(doctor(project), json_mode)
 
 
-@app.command("verify")
+@app.command("verify", rich_help_panel="Storage & diagnostics")
 def verify_command(json_mode: bool = typer.Option(False, "--json")) -> None:
     """Validate all retained complete manifests and referenced objects."""
     from .checkpoint import verify
 
     project = Project.discover()
-    with project.lock(allow_pending=True):
+    with project.lock(allow_pending=True), working("Verifying saved data…"):
         output(verify(project), json_mode)
 
 
@@ -130,7 +210,7 @@ def confirm(preview: bool, yes: bool, json_mode: bool, plan: dict[str, Any]) -> 
     if preview:
         output(plan, json_mode)
         return False
-    if plan.get("warnings") and not json_mode:
+    if plan.get("warnings") and not json_mode and yes:
         output({"warnings": plan["warnings"]}, json_mode)
     if not yes:
         if json_mode:
@@ -141,7 +221,7 @@ def confirm(preview: bool, yes: bool, json_mode: bool, plan: dict[str, Any]) -> 
     return True
 
 
-@app.command("undo")
+@app.command("undo", rich_help_panel="Recovery")
 def undo_command(
     preview: bool = False, yes: bool = False, json_mode: bool = typer.Option(False, "--json")
 ) -> None:
@@ -155,7 +235,7 @@ def undo_command(
             output(undo(project, acknowledge_git=True), json_mode)
 
 
-@app.command("recover")
+@app.command("recover", rich_help_panel="Recovery")
 def recover_command(
     transaction_id: str,
     preview: bool = False,
@@ -172,7 +252,11 @@ def recover_command(
             output(recover(project, transaction_id), json_mode)
 
 
-@app.command("run", context_settings={"allow_extra_args": True, "ignore_unknown_options": True})
+@app.command(
+    "run",
+    rich_help_panel="Everyday",
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+)
 def run_command(ctx: typer.Context) -> None:
     """Checkpoint and execute: run -- COMMAND [ARGS...]; inherit terminal and env."""
     from .runner import run
@@ -183,11 +267,14 @@ def run_command(ctx: typer.Context) -> None:
         args = args[1:]
     with project.lock():
         result = run(project, args)
-    typer.echo(json.dumps(result, ensure_ascii=True), err=True)
+    if _human.get():
+        console(plain=_plain.get(), stderr=True).print(human(result))
+    else:
+        typer.echo(json.dumps(result, ensure_ascii=True), err=True)
     raise typer.Exit(result["exit_code"])
 
 
-@app.command("finish-run")
+@app.command("finish-run", rich_help_panel="Recovery")
 def finish_run_command(run_id: str, yes: bool = False) -> None:
     """Record a late POST for a crashed run after stopping all external writers."""
     from .runner import finish_run
@@ -198,7 +285,7 @@ def finish_run_command(run_id: str, yes: bool = False) -> None:
             output(finish_run(project, run_id))
 
 
-@app.command("redo")
+@app.command("redo", rich_help_panel="Recovery")
 def redo_command(
     preview: bool = False, yes: bool = False, json_mode: bool = typer.Option(False, "--json")
 ) -> None:
@@ -212,7 +299,7 @@ def redo_command(
             output(redo(project, acknowledge_git=True), json_mode)
 
 
-@app.command("restore")
+@app.command("restore", rich_help_panel="Recovery")
 def restore_command(
     checkpoint_id: str,
     path: str | None = None,
@@ -225,12 +312,13 @@ def restore_command(
 
     project = Project.discover()
     with project.lock():
+        checkpoint_id = resolve_checkpoint(project, checkpoint_id)
         plan = restore_plan(project, checkpoint_id, path)
         if confirm(preview, yes, json_mode, plan.data()):
             output(restore(project, checkpoint_id, path, plan=plan), json_mode)
 
 
-@app.command("rebind")
+@app.command("rebind", rich_help_panel="Recovery")
 def rebind_command(yes: bool = False) -> None:
     """Explicitly bind a moved project identity to its current canonical root."""
     from .security import atomic_write, encode
@@ -247,7 +335,7 @@ def rebind_command(yes: bool = False) -> None:
             output({"rebound": str(project.root), "id": config["id"]})
 
 
-@app.command("storage")
+@app.command("storage", rich_help_panel="Storage & diagnostics")
 def storage_command(json_mode: bool = typer.Option(False, "--json")) -> None:
     """Report deduplicated bytes, quota, live references and reclaimable objects."""
     from .retention import storage
@@ -257,41 +345,44 @@ def storage_command(json_mode: bool = typer.Option(False, "--json")) -> None:
         output(storage(project), json_mode)
 
 
-@app.command("tag")
+@app.command("tag", rich_help_panel="Storage & diagnostics")
 def tag_command(checkpoint_id: str, label: str) -> None:
     """Attach a retention-protecting label to a complete checkpoint."""
     from .retention import tag
 
     project = Project.discover()
     with project.lock():
+        checkpoint_id = resolve_checkpoint(project, checkpoint_id)
         tag(project, checkpoint_id, label)
     output({"tagged": checkpoint_id, "label": label})
 
 
-@app.command("pin")
+@app.command("pin", rich_help_panel="Storage & diagnostics")
 def pin_command(checkpoint_id: str) -> None:
     """Retain a complete checkpoint against deletion/pruning."""
     from .retention import pin
 
     project = Project.discover()
     with project.lock():
+        checkpoint_id = resolve_checkpoint(project, checkpoint_id)
         pin(project, checkpoint_id)
     output({"pinned": checkpoint_id})
 
 
-@app.command("delete")
+@app.command("delete", rich_help_panel="Storage & diagnostics")
 def delete_command(checkpoint_id: str, preview: bool = False, yes: bool = False) -> None:
     """Delete an unreferenced, unpinned, untagged checkpoint; gc is separate."""
     from .retention import delete, deletion_plan
 
     project = Project.discover()
     with project.lock():
+        checkpoint_id = resolve_checkpoint(project, checkpoint_id)
         plan = deletion_plan(project, checkpoint_id)
         if confirm(preview, yes, False, plan):
             output(delete(project, checkpoint_id))
 
 
-@app.command("gc")
+@app.command("gc", rich_help_panel="Storage & diagnostics")
 def gc_command(dry_run: bool = False, yes: bool = False) -> None:
     """Collect only unreferenced objects after integrity verification."""
     from .retention import gc
@@ -303,7 +394,7 @@ def gc_command(dry_run: bool = False, yes: bool = False) -> None:
             output(gc(project, dry_run=False))
 
 
-@app.command("prune")
+@app.command("prune", rich_help_panel="Storage & diagnostics")
 def prune_command(
     keep: int = typer.Option(20, min=0), preview: bool = False, yes: bool = False
 ) -> None:
@@ -317,7 +408,7 @@ def prune_command(
             output(prune(project, keep, preview=False))
 
 
-@app.command("tui")
+@app.command("tui", rich_help_panel="Everyday")
 def tui_command() -> None:
     """Browse real checkpoints, file previews and confirmed restores interactively."""
     try:
@@ -329,12 +420,29 @@ def tui_command() -> None:
     TimeMachineApp(Project.discover()).run()
 
 
-@app.command("agents")
+@app.command("agents", rich_help_panel="Everyday")
 def agents_command(json_mode: bool = typer.Option(False, "--json")) -> None:
     """Discover agent executables without launching them or requiring accounts."""
     from .integrations import capabilities
 
     output(capabilities(), json_mode)
+
+
+@app.command("quickstart", rich_help_panel="Everyday")
+def quickstart_command() -> None:
+    """Learn the workflow and discover agents. Does not initialize or launch anything."""
+    from .integrations import capabilities
+
+    output(
+        {
+            "workflow": "1. cd your/project  2. timemachine init  3. timemachine run -- COMMAND",
+            "inspect": "timemachine diff · timemachine history · timemachine tui",
+            "recover": "timemachine undo --preview, then timemachine undo",
+            "scope": "Selected local files; exclusions and Git history are not restored",
+            "automatic_protection": "None: wrap each session or create a checkpoint explicitly",
+        }
+    )
+    output(capabilities())
 
 
 if __name__ == "__main__":

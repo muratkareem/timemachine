@@ -200,3 +200,10 @@ use real backend data and frozen plans/run IDs. Corrupt selections disable resto
 Tests: `pytest tests/integration/test_tui.py -q`: 6 passed, including narrow/empty,
 Unicode/search, changed files/history during confirmation and corrupt manifests.
 Ruff and mypy pass. Next: CLI onboarding/presentation, visual inspection and QA.
+
+CLI/onboarding gate: interactive readable views, explicit --human/--plain,
+NO_COLOR support, grouped help, useful init scope/next steps, non-launching
+quickstart, agent discovery, history filtering and unique checkpoint prefixes.
+Redirected and explicit JSON structures remain unchanged. Focused CLI/read-model
+checks: 10 passed; Ruff/mypy clean. Timeline now fetches headers in bounded batches,
+not manifest BLOBs or one query per row. Next: visual QA/docs and edge-case tests.

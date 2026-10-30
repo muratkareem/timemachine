@@ -57,20 +57,27 @@ class Workspace:
             """,
                 (limit, offset),
             ).fetchall()
-            result = []
-            for item in rows:
-                category = item["category"]
-                table = {"checkpoint": "checkpoints", "run": "runs", "restore": "transactions"}[
-                    category
-                ]
-                row = dict(
-                    db.execute(f"SELECT * FROM {table} WHERE id=?", (item["id"],)).fetchone()
-                )
-                row.pop("manifest", None)
-                row["category"] = category
-                if category == "checkpoint":
-                    row["tags"] = json.loads(row["tags"])
-                result.append(row)
+            details: dict[str, dict[str, Any]] = {}
+            columns = {
+                "checkpoint": ("checkpoints", "id,created,message,kind,status,pinned,tags"),
+                "run": ("runs", "*"),
+                "restore": ("transactions", "id,created,kind,status,recovery,run_id,error"),
+            }
+            for category, (table, fields) in columns.items():
+                ids = [r["id"] for r in rows if r["category"] == category]
+                if not ids:
+                    continue
+                placeholders = ",".join("?" for _ in ids)
+                records = db.execute(
+                    f"SELECT {fields} FROM {table} WHERE id IN ({placeholders})", ids
+                ).fetchall()
+                for record in records:
+                    item = dict(record)
+                    item["category"] = category
+                    if category == "checkpoint":
+                        item["tags"] = json.loads(item["tags"])
+                    details[category + ":" + item["id"]] = item
+            result = [details[r["category"] + ":" + r["id"]] for r in rows]
         return result
 
     def selection(self, event: dict[str, Any], anchor: str | None = None) -> dict[str, Any]:

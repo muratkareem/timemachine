@@ -31,3 +31,16 @@ def test_lazy_navigation_no_source_scan(project, monkeypatch):
     assert resolve_checkpoint(project, a[:8]) == a
     with pytest.raises(TimeMachineError):
         resolve_checkpoint(project, "%")
+
+
+def test_timeline_headers_do_not_read_manifest_payload(project):
+    from timemachine.metadata import connect
+
+    with project.lock():
+        identifier = checkpoint(project)
+    with connect(project.store) as db:
+        db.execute("UPDATE checkpoints SET manifest=? WHERE id=?", (b"invalid payload", identifier))
+    assert Workspace(project).timeline()[0]["id"] == identifier
+    # Selecting still validates it. Metadata browsing never certifies corrupt data.
+    with pytest.raises(TimeMachineError):
+        Workspace(project).selection(Workspace(project).timeline()[0])
