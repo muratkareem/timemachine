@@ -443,20 +443,22 @@ def agents_command(json_mode: bool = typer.Option(False, "--json")) -> None:
 
 
 @app.command("quickstart", rich_help_panel="Everyday")
-def quickstart_command() -> None:
+def quickstart_command(json_mode: bool = typer.Option(False, "--json")) -> None:
     """Learn the workflow and discover agents. Does not initialize or launch anything."""
     from .integrations import capabilities
 
-    output(
-        {
-            "workflow": "1. cd your/project  2. timemachine init  3. timemachine run -- COMMAND",
-            "inspect": "timemachine diff · timemachine history · timemachine tui",
-            "recover": "timemachine undo --preview, then timemachine undo",
-            "scope": "Selected local files; exclusions and Git history are not restored",
-            "automatic_protection": "None: wrap each session or create a checkpoint explicitly",
-        }
-    )
-    output(capabilities())
+    guide = {
+        "workflow": "1. cd your/project  2. timemachine init  3. timemachine run -- COMMAND",
+        "inspect": "timemachine diff · timemachine history · timemachine tui",
+        "recover": "timemachine undo --preview, then timemachine undo",
+        "scope": "Selected local files; exclusions and Git history are not restored",
+        "automatic_protection": "None: wrap each session or create a checkpoint explicitly",
+    }
+    if json_mode or not _human.get():
+        output({**guide, "agents": capabilities()}, json_mode)
+    else:
+        output(guide)
+        output(capabilities())
 
 
 if __name__ == "__main__":

@@ -25,5 +25,11 @@ jobs:
       - run: python -m build --no-isolation
       - run: python examples/demo.py
       - run: python -m venv /tmp/timemachine-wheel-check
-      - run: /tmp/timemachine-wheel-check/bin/pip install dist/*.whl
+      - name: Install the packaged TUI in isolation
+        run: |
+          for wheel_path in dist/*.whl; do
+            /tmp/timemachine-wheel-check/bin/pip install "${wheel_path}[tui]"
+          done
       - run: cd /tmp && /tmp/timemachine-wheel-check/bin/timemachine --help
+      - run: /tmp/timemachine-wheel-check/bin/python examples/demo.py
+      - run: /tmp/timemachine-wheel-check/bin/python examples/tui_preview.py --output /tmp/timemachine-wheel-preview.svg

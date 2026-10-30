@@ -235,3 +235,9 @@ modal recovery blocks background recovery shortcuts, preserving one reviewed int
 Display limits apply after control escaping. TUI pilots: 9 passed; Ruff/mypy clean.
 Light palette has separate high-contrast semantic colors and re-renders previews.
 Next: full final gate, package TUI smoke and remote CI.
+
+Packaging/automation gate: clean installed wheel includes the TUI stylesheet and
+runs the real CLI demo plus headless workspace. CI now exercises that isolated
+wheel/TUI workflow on every platform. Quickstart --json emits one document and
+never initializes or executes an agent. Focused CLI tests: 5 passed. Full prior
+final gate: 108 passed/4 skips, 84% coverage, Ruff/format/mypy/build/demo clean.

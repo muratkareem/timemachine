@@ -55,3 +55,12 @@ def test_human_error_has_actionable_guidance_and_no_controls(tmp_path):
     assert "timemachine init" in result.stderr
     assert "Traceback" not in result.stderr
     assert "\x1b" not in result.stderr
+
+
+def test_quickstart_json_is_one_document_without_mutation(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    result = CliRunner().invoke(app, ["--human", "quickstart", "--json"])
+    assert result.exit_code == 0
+    data = json.loads(result.stdout)
+    assert "agents" in data and "workflow" in data
+    assert not list(tmp_path.iterdir())
