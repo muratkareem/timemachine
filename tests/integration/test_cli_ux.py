@@ -17,6 +17,7 @@ def test_onboarding_is_clear_and_json_init_compatible(tmp_path, monkeypatch):
     assert "Initialization does not" in result.stdout
     assert "timemachine run -- codex" in result.stdout
     assert "Snapshots:" in result.stdout
+    assert "node_modules" in result.stdout
     assert "\x1b" not in result.stdout
 
 

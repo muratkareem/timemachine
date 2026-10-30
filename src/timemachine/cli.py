@@ -79,7 +79,9 @@ def init(
         try:
             scope = scan(project)
             result["scope"] = f"{len(scope.entries)} entries ready to capture (no backup yet)"
-            result["exclusions"] = ", ".join(scope.excluded) or "policy defaults; see status"
+            result["exclusions"] = ", ".join(
+                [".git", ".timemachine.json", *project.config["exclude"]]
+            )
         except (TimeMachineError, OSError) as exc:
             result["scope"] = f"Needs attention before checkpoint: {exc}"
         output(result)

@@ -48,7 +48,7 @@ success appears only after the backend verifies the selected result.
 
 These are real screenshots from a disposable project and a wrapped synthetic
 Python command. Reproduce them with `python examples/tui_preview.py`. No billed
-agent or fake product data is used. [Narrow view](docs/assets/narrow.svg) ·
+agent or fake product data is used. [Narrow view](docs/assets/narrow.svg) · [Light theme](docs/assets/light.svg) ·
 [Before the redesign](docs/assets/tui-before.svg) · [UX decisions](docs/UX_OVERHAUL.md).
 
 ## A small before / after

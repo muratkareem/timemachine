@@ -1,3 +1,20 @@
+# UX/UI overhaul — current status
+
+All eight implementation phases delivered locally. Full gate: 109 passed,
+4 documented skips, 84% coverage; Ruff/format/mypy/build and installed-wheel
+CLI/TUI checks pass. Core recovery/storage/Git engine unchanged from 6d28695.
+Nine TUI pilots cover narrow/empty/search/conflicts/frozen modal/corruption states.
+Design, compatibility, screenshots, workload metrics, limits and installation:
+UX_OVERHAUL.md and UX_DELIVERY.md.
+
+Last prior code commit: 7ece889; final empty-selection/onboarding-copy polish and
+this evidence are committed at the local QA boundary. Next: push verified work
+without force using existing explicit origin/main authorization, inspect all six
+CI matrix results, fix real failures, then record final SHA/result. No new
+permission request is needed. No publication/tag is authorized or attempted.
+
+---
+
 # Current delivery status
 
 Runtime implementation complete at **91a6caf**; final staging fault tests at
@@ -241,3 +258,10 @@ runs the real CLI demo plus headless workspace. CI now exercises that isolated
 wheel/TUI workflow on every platform. Quickstart --json emits one document and
 never initializes or executes an agent. Focused CLI tests: 5 passed. Full prior
 final gate: 108 passed/4 skips, 84% coverage, Ruff/format/mypy/build/demo clean.
+
+UX final local gate: 109 passed, 4 skips, 84% statement coverage (2090 statements,
+331 missed), 17.88 s. Ruff/format clean (44 files), mypy clean (24 files), wheel+
+sdist builds and real CLI demo pass. Isolated wheel includes CSS, runs CLI demo
+and headless TUI. All recovery/storage/Git engine files match 6d28695 exactly.
+Final onboarding explicitly shows exclusion policy, including absent dependency
+folders (not only exclusions currently found). Focused CLI regression: 5 passed.

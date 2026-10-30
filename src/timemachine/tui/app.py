@@ -270,6 +270,7 @@ class TimeMachineApp(App[None]):
         widget.update(Text(safe(message)))
 
     def show_result(self, value: Any) -> None:
+        self.preview_text = ""
         log = self.query_one("#preview", RichLog)
         log.clear()
         log.write(human(value))
@@ -431,7 +432,10 @@ class TimeMachineApp(App[None]):
         else:
             self.selected_id = None
             self.selected_event = None
+            self.file_items.clear()
+            self.selection = None
             self.query_one("#files", DataTable).clear()
+            self.query_one("#preview-title", Static).update("No matching selection")
             self.show_result("No matching history. Clear the filter or load older entries.")
 
     async def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
@@ -444,6 +448,7 @@ class TimeMachineApp(App[None]):
                 self.selection = None
                 self.file_items.clear()
                 self.query_one("#files", DataTable).clear()
+                self.query_one("#preview-title", Static).update("Reading saved selection…")
                 selected = await self.service(lambda: self.workspace.selection(item, self.anchor))
                 if self.selected_event is not item:
                     return
@@ -484,6 +489,7 @@ class TimeMachineApp(App[None]):
                         key=path,
                     )
                 if not self.file_items:
+                    self.query_one("#preview-title", Static).update("No filesystem differences")
                     self.show_result("No filesystem differences in this selection.")
             elif event.data_table.id == "files" and key in self.file_items:
                 await self.preview_file(key)

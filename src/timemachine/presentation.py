@@ -137,7 +137,7 @@ def human(value: Any) -> Any:
                 "Protects selected file bytes, modes, directories and link targets.\n"
                 f"Snapshots: {safe(value['storage'])}\n"
                 f"Scope: {value.get('scope', 'use timemachine status')}\n"
-                f"Exclusions: {safe(value.get('exclusions', 'see timemachine status'))}\n\n"
+                f"Exclusions (not recovered): {safe(value.get('exclusions', 'see status'))}\n\n"
                 "Next: timemachine run -- codex\n"
                 "Then: timemachine diff · timemachine undo --preview"
             ),
