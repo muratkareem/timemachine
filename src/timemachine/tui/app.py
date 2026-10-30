@@ -104,9 +104,7 @@ class ConfirmRestore(ModalScreen[bool]):
         if not self.plan.changes and self.operation in ("undo", "redo"):
             apply.label = "Confirm history step"
             self.query_one("#plan", RichLog).write(
-                Text(
-                    "No file changes. Confirmation advances only this session's history state."
-                )
+                Text("No file changes. Confirmation advances only this session's history state.")
             )
         else:
             apply.disabled = not self.plan.changes

@@ -1,3 +1,20 @@
+# UX/UI overhaul — final local gate
+
+All eight phases implemented. Current full suite: **110 passed, 4 skipped**,
+114 collected, **84% coverage** (2094 statements/330 missed), 18.59 s. Ten TUI
+pilots pass. Ruff/format clean (44 files), mypy clean (24 files), wheel/sdist
+build, clean-wheel CLI demo and real packaged TUI smoke pass. Existing safety
+suite: 37 passed. Core recovery/storage/Git engine matches baseline 6d28695.
+
+Overhaul pushed through ece12c5. The final dialog copy required one formatter
+wrap correction; corrected in the next verified commit. Earlier overhaul run
+41125302957 completed successfully for e3b46b5. Final correction matrix pending;
+do not infer its success from the earlier result. Next: push final formatting/
+evidence update and verify all six jobs. No outstanding human approval request.
+Details/screenshots/installation/limits: UX_DELIVERY.md.
+
+---
+
 # UX/UI overhaul — current status
 
 All eight implementation phases delivered locally. Full gate: 109 passed,

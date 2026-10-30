@@ -45,9 +45,9 @@ background agent, package publication, release or tag was introduced.
 .venv/bin/python examples/ux_benchmark.py
 ```
 
-Local Python 3.12.14 / macOS arm64: **109 passed, 4 skipped**, 113 collected;
+Local Python 3.12.14 / macOS arm64: **110 passed, 4 skipped**, 114 collected;
 **84%** statement coverage. Ruff/format clean (44 files); strict mypy clean
-(24 source files). Existing safety tests: **37 passed**. TUI pilots: **9 passed**.
+(24 source files). Existing safety tests: **37 passed**. TUI pilots: **10 passed**.
 Skips: three unavailable optional agents and sandbox-stripped setuid; the direct
 mode validator passes. CLI subprocess execution is tested but not included in
 the pytest-process coverage figure. Final exclusion-copy adjustment: 5 CLI tests pass.
@@ -139,3 +139,10 @@ ledger and are available in git log. No artificial or empty commits were used.
 
 Verified local work is being pushed to authorized origin/main after an ancestry
 check. The remote six-job result will be recorded here when actually observed.
+
+
+Final interaction audit: no-change sessions can explicitly advance undo/redo
+history through the backend, without file writes or fabricated transactions.
+The new pilot verifies this. Full local suite: 110 passed/4 skipped, 84% coverage
+(2094 statements, 330 missed), 18.59 s. Final formatter wrap correction applied;
+Ruff/format/mypy/build/installed-wheel demo and TUI smoke all pass.
