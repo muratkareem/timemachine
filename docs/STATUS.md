@@ -114,3 +114,10 @@ mypy success (22 files); wheel/sdist build and content/license inspection pass;
 real CLI demo passes. Current source still awaiting final CI commit/push.
 Last prior commit: aefd165; last pushed: 363c16f. Next: CI matrix and clean-wheel
 workflow, then remote verification and final delivery audit.
+
+M9/M6 final audit follow-up: shorter readable UTC timeline cells, frozen modal
+expectations and selected run identity tested across external edits/new runs.
+Runner rejects non-main-thread use before creating metadata (signals need main).
+Validation included in 87-pass full suite; headless TUI: 3 passed. Prior commit:
+see journal-integrity commit. No destructive operation is enabled after stale
+confirmation. Next: final packaging and remote CI.

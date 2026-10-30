@@ -120,9 +120,9 @@ class TimeMachineApp(App[None]):
             table.clear()
             for item in data["checkpoints"]:
                 table.add_row(
-                    item["id"][:12],
-                    item["created"],
-                    f"{item['kind']}/{item['status']}",
+                    item["id"][:8],
+                    item["created"][:16].replace("T", " "),
+                    f"{item['kind']}/{'ok' if item['status'] == 'COMPLETE' else 'incomplete'}",
                     Text(json.dumps(item["message"])),
                     str(item.get("size", "?")),
                     key=item["id"],

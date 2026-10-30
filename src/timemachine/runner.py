@@ -3,6 +3,7 @@
 import os
 import signal
 import subprocess
+import threading
 import uuid
 from pathlib import Path
 from types import FrameType
@@ -31,6 +32,8 @@ def finalize(project: Project, identifier: str, exit_code: int | None, status: s
 
 def run(project: Project, argv: list[str], cwd: Path | None = None) -> dict[str, Any]:
     """Caller holds lock across the entire session. Never persist raw argv/env."""
+    if threading.current_thread() is not threading.main_thread():
+        raise TimeMachineError("Runner must execute on the main thread for signal handling")
     if not argv:
         raise TimeMachineError("Missing command: use run -- COMMAND [ARGS...]")
     identifier = uuid.uuid4().hex
