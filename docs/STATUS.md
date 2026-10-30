@@ -11,3 +11,11 @@ strict configuration/discovery, moved-root detection, SQLite v1 and flock.
 Validation: editable install succeeded; `pytest tests/unit/test_project.py -q`:
 11 passed. Last commit before M1: 19b11d3. Push pending snapshot gate.
 Next: M2 scanner/store/checkpoint acceptance. No destructive operations yet.
+
+M2 complete: no-follow scanner; SHA-256 deduplicated durable objects; stable double
+scan; v1 hash-validated manifests; INCOMPLETE-before-scan lifecycle; Git context;
+quota/size failures; integrity verification. Last prior commit: 11c457b.
+Validation: `pytest tests/unit/test_snapshots.py -q`: 10 passed, 1 skipped (the
+sandbox filesystem strips setuid; direct special-mode validator test passes).
+`mypy`: success, 11 source files. Ruff clean. Push not yet attempted.
+Next: M3 history/diff, then M4 restore safety gate.
