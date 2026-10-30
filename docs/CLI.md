@@ -1,9 +1,17 @@
 # CLI
 
-All commands support `--help`. Read-only JSON is available through `--json` on
-status, doctor, checkpoint, list, history, show/inspect, diff, verify, undo and
-recover. Text output is indented JSON with escaped terminal controls. No markup
-interpretation of project filenames or contents. IDs are full UUID hex strings.
+All commands support `--help`, grouped into everyday, recovery and diagnostics.
+Interactive terminals get human-readable views. Redirected output keeps its
+previous JSON structures; `--json` always explicitly selects the stable JSON
+contract. `--human` forces readable views in pipes; `--plain` also disables color
+and animation. NO_COLOR is respected. Untrusted markup/controls are never executed.
+
+Checkpoint commands accept a full UUID hex ID or an unambiguous prefix of at least
+four digits. JSON always returns full IDs. Run and transaction IDs remain full IDs.
+`history --search TEXT` filters the returned page (increase --limit for older rows).
+`quickstart` teaches the workflow and lists executable availability, without
+initializing or launching an agent. Init's optional --json keeps the same result
+fields as earlier redirected init output. Initialization is never called a backup.
 
 - `init [--storage PATH]`: initialize current directory, external empty store.
 - `status [--json]`: actual included/excluded paths, bytes, policy and Git context.
@@ -45,8 +53,17 @@ failure; 2 usage error (confirmation cancellation returns 1); wrapped command st
   Run/recovery/journal history is retained indefinitely; quota exhaustion requires
   deliberate storage management. Compression and automatic schedules are absent.
 
-- `tui`: optional Textual browser (`pip install -e '.[tui]'`). Arrows/Tab navigate
-  real history/files; b selects comparison origin, d shows diff; r restores chosen
-  snapshot with a full preview modal; u undo; Ctrl+R redo; F5 refresh; q quit.
-  Escape/cancel leaves files unchanged. Progress appears while core services run.
-  Confirmation uses the original expected states; intervening edits refuse safely.
+- `tui`: optional Textual workspace (`pip install -e '.[tui]'` in the checkout).
+  Dashboard shows saved-state availability, latest session, selected file counts,
+  snapshot bytes and relevant Git/recovery warnings. Navigation never scans live
+  project files. Undo preview performs the real current-state conflict check.
+  Arrows/j/k navigate; Enter/d opens details; Esc returns to history on narrow
+  terminals; / filters loaded history; Load older fetches another 50 events.
+  Find searches the selected preview; Enter/n finds the next match; v toggles
+  saved file/unified diff; b sets comparison origin. u/r/Ctrl+R preview undo/full
+  checkpoint restore/redo; ? opens help; t switches dark/light; F5 refreshes.
+  Review defaults to Cancel; empty plans cannot be applied. Frozen plans and run
+  IDs are revalidated through the existing backend after confirmation.
+  Suggested minimum: 60 columns x 24 rows. CLI remains the accessible alternative.
+  File text is limited to 1 MiB before preview; displayed text is bounded to 2000
+  lines and 500 characters per line, with explicit truncation. Stored data is intact.

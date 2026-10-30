@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased — product UX overhaul
+
+- Responsive dark/light Textual workspace, project dashboard, session relationships,
+  filters, paged timeline, bounded searchable diff/file preview and keyboard help.
+- Guided recovery reviews and actionable conflicts using the unchanged safety engine.
+- Human terminal output, short useful onboarding, grouped help, quickstart, searchable
+  history and unique checkpoint prefixes. Redirected/explicit JSON stays compatible.
+- Original SVG identity, real screenshots and a practical README.
+- Lazy metadata/read cache with measured navigation results and usability regressions.
+
 ## 0.1.0 — source implementation, not published
 
 - Private external project storage and strict versioned SQLite/manifest metadata.

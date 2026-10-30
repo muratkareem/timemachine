@@ -22,6 +22,19 @@ COLORS = {
 }
 
 
+LIGHT_COLORS = {
+    "primary": "#166B58",
+    "protected": "#6944A0",
+    "success": "#22663E",
+    "warning": "#825A00",
+    "error": "#AD2942",
+    "added": "#22663E",
+    "modified": "#825A00",
+    "deleted": "#AD2942",
+    "conflict": "#AD2942",
+}
+
+
 def safe(value: Any, *, multiline: bool = False) -> str:
     """Keep readable Unicode; escape controls, surrogates and direction overrides."""
     result = []

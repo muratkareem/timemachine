@@ -429,7 +429,7 @@ def tui_command() -> None:
         from .tui.app import TimeMachineApp
     except ImportError as exc:
         raise TimeMachineError(
-            "Install the optional TUI: pip install 'timemachine-cli[tui]'"
+            "TUI extra missing. From the TimeMachine checkout: pip install -e '.[tui]'"
         ) from exc
     TimeMachineApp(Project.discover()).run()
 

@@ -29,3 +29,33 @@ M11: benchmarking is implemented and measured. Watch mode, portable export/impor
 compression and extension/plugin APIs are explicitly deferred. They would add
 concurrency, extraction and format-compatibility risk without being required for
 the verified snapshot/run/undo/redo/restore workflow. No placeholder commands ship.
+
+
+# UX navigation measurement · 2026-10-31
+
+Executed `python examples/ux_benchmark.py` against 120 real saved checkpoints
+with one small file in an isolated temporary project. Measured the previous human
+history service and the new UI metadata page, plus repeated cached selection.
+
+```json
+{
+  "platform": "macOS-26.7.1-arm64-arm-64bit",
+  "python": "3.12.14",
+  "saved_checkpoints": 120,
+  "page_size": 50,
+  "previous_history_seconds": 0.017909875023178756,
+  "previous_manifest_loads": 50,
+  "new_header_seconds": 0.0005606660270132124,
+  "new_header_manifest_loads": 0,
+  "twenty_selections_seconds": 0.007293082948308438,
+  "selection_manifest_loads": 2,
+  "cache_limit": 8,
+  "note": "Single small local run; not a large-project performance guarantee"
+}
+```
+
+The result demonstrates bounded header work and cache reuse for this fixture.
+It is not a UI startup, large-repository or general speed guarantee. Navigation
+performs no project scan; regression tests prohibit scanner access. Snapshot
+integrity and restore validation remain on the existing backend. This is not a
+user study and no measured one-minute comprehension claim is made.

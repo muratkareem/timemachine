@@ -20,7 +20,7 @@ from ..git_context import git_context
 from ..metadata import connect
 from ..objects import ObjectStore
 from ..operations import redo, redo_plan, restore, restore_plan, undo, undo_plan
-from ..presentation import COLORS, guidance, human, safe, short, size
+from ..presentation import COLORS, LIGHT_COLORS, guidance, human, safe, short, size
 from ..project import Project
 from ..restore_plan import Plan
 from ..ui_data import Workspace
@@ -165,6 +165,22 @@ class TimeMachineApp(App[None]):
                 dark=True,
             )
         )
+        self.register_theme(
+            Theme(
+                name="timemachine-light",
+                primary="#166B58",
+                secondary="#6944A0",
+                background="#F4F6F9",
+                surface="#FFFFFF",
+                panel="#DAE1EB",
+                foreground="#162535",
+                success="#22663E",
+                warning="#825A00",
+                error="#AD2942",
+                accent="#6944A0",
+                dark=False,
+            )
+        )
         self.theme = "timemachine"
         self.animation_level = "none"
 
@@ -300,7 +316,7 @@ class TimeMachineApp(App[None]):
             self.query_one("#card-protection", Static).update(
                 Text(
                     "PROTECTION\n" + state + "\nCurrent files not scanned",
-                    style=COLORS["protected"],
+                    style=self.palette["protected"],
                 )
             )
             session = (
@@ -446,7 +462,9 @@ class TimeMachineApp(App[None]):
                 for path, change in self.file_items.items():
                     label = change["change"]
                     files.add_row(
-                        Text(label.upper(), style=COLORS.get(label, "")), Text(safe(path)), key=path
+                        Text(label.upper(), style=self.palette.get(label, "")),
+                        Text(safe(path)),
+                        key=path,
                     )
                 if not self.file_items:
                     self.show_result("No filesystem differences in this selection.")
@@ -534,8 +552,8 @@ class TimeMachineApp(App[None]):
                 lexer,
                 line_numbers=True,
                 word_wrap=False,
-                background_color="#F5F5F5" if self.theme == "textual-light" else "#151C27",
-                theme="friendly" if self.theme == "textual-light" else "monokai",
+                background_color="#F5F5F5" if self.theme == "timemachine-light" else "#151C27",
+                theme="friendly" if self.theme == "timemachine-light" else "monokai",
             )
         )
         log.scroll_home(animate=False)
@@ -612,8 +630,13 @@ class TimeMachineApp(App[None]):
     def action_help(self) -> None:
         self.push_screen(HelpScreen())
 
-    def action_theme(self) -> None:
-        self.theme = "textual-light" if self.theme == "timemachine" else "timemachine"
+    @property
+    def palette(self) -> dict[str, str]:
+        return LIGHT_COLORS if self.theme == "timemachine-light" else COLORS
+
+    async def action_theme(self) -> None:
+        self.theme = "timemachine-light" if self.theme == "timemachine" else "timemachine"
+        await self.action_refresh()
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "undo-button":

@@ -63,7 +63,7 @@ Path('tests/test_names.py').write_text(
         async with app.run_test(size=(width, height)) as pilot:
             await pilot.pause()
             if light:
-                app.action_theme()
+                await app.action_theme()
             if view == "diff":
                 await pilot.press("enter")
             elif view == "restore":

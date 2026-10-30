@@ -220,3 +220,12 @@ previews are bounded and no-follow, ambiguous prefixes refuse, metadata paginati
 works and immutable cache access is synchronized. Latest incomplete checkpoints
 and interrupted sessions are visibly distinguished. Focused tests: 12 passed;
 Ruff/mypy clean. Optional TUI minimum pinned to the verified Textual 6.12 API.
+
+Brand/docs gate: original SVG wordmark, concise practical README, real dark/narrow/
+review screenshots, CLI compatibility/help/keys and troubleshooting documented.
+Measured 120-checkpoint fixture: header page loads 0 manifests versus previous
+history's 50; 20 selections load 2 cached manifests total. Exact timings/workload
+in BENCHMARKS.md. Single local run, no general performance or user-study claim.
+Before final light-palette correction: full suite 107 passed, 4 documented skips,
+84% coverage. Corrected light contrast and refresh; focused UX tests 12 passed.
+Next: final full regression/build/clean-install and verified GitHub push/CI.
