@@ -30,7 +30,10 @@ def safe(value: Any, *, multiline: bool = False) -> str:
             result.append(char)
         elif multiline and char == "\t":
             result.append("    ")
-        elif unicodedata.category(char).startswith("C"):
+        elif unicodedata.category(char).startswith("C") or unicodedata.category(char) in (
+            "Zl",
+            "Zp",
+        ):
             result.append(f"\\u{ord(char):04x}")
         else:
             result.append(char)

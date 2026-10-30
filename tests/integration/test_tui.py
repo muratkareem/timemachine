@@ -171,3 +171,61 @@ def test_corrupt_manifest_refuses_selected_restore(project):
             assert (project.root / "x").read_text() == "data"
 
     asyncio.run(exercise())
+
+
+def test_conflicting_undo_explains_safe_next_step(project):
+    import sys
+
+    from textual.widgets import Static
+
+    from timemachine.runner import run
+
+    (project.root / "x").write_text("before")
+    with project.lock():
+        run(
+            project,
+            [sys.executable, "-c", "from pathlib import Path; Path('x').write_text('after')"],
+            project.root,
+        )
+    (project.root / "x").write_text("my newer work")
+
+    async def exercise():
+        app = TimeMachineApp(project)
+        async with app.run_test(size=(120, 36)) as pilot:
+            await pilot.pause()
+            await pilot.press("u")
+            await pilot.pause()
+            assert not isinstance(app.screen, ConfirmRestore)
+            message = str(app.query_one("#notice", Static).render())
+            assert "conflict" in message.lower() and "newer edits" in message
+            assert (project.root / "x").read_text() == "my newer work"
+
+    asyncio.run(exercise())
+
+
+def test_binary_long_file_and_no_follow_preview(project):
+    from textual.widgets import Input
+
+    name = "очень-длинное-имя-" + "x" * 120
+    (project.root / name).write_bytes(b"\0\xff")
+    (project.root / "large-lines.py").write_text("x" * 600 + "\n" + "line\n" * 2100)
+    (project.root / "link").symlink_to("/never/read/this")
+    with project.lock():
+        checkpoint(project)
+
+    async def exercise():
+        app = TimeMachineApp(project)
+        async with app.run_test(size=(100, 32)) as pilot:
+            await pilot.pause()
+            await app.preview_file(name)
+            assert "Binary" in app.preview_text
+            await app.preview_file("large-lines.py")
+            assert "Truncated" in app.preview_text
+            assert len(app.preview_text.splitlines()) <= 2001
+            await app.preview_file("link")
+            assert "/never/read/this" in app.preview_text
+            app.query_one("#find", Input).value = "not found"
+            await pilot.pause()
+            assert app.match_index == -1
+
+    asyncio.run(exercise())

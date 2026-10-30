@@ -44,3 +44,18 @@ def test_timeline_headers_do_not_read_manifest_payload(project):
     # Selecting still validates it. Metadata browsing never certifies corrupt data.
     with pytest.raises(TimeMachineError):
         Workspace(project).selection(Workspace(project).timeline()[0])
+
+
+def test_ambiguous_prefix_and_paged_timeline(project):
+    from timemachine.metadata import connect
+
+    with project.lock():
+        first = checkpoint(project, "one")
+        second = checkpoint(project, "two")
+    with connect(project.store) as db:
+        db.execute("UPDATE checkpoints SET id=? WHERE id=?", ("abcd" + "0" * 28, first))
+        db.execute("UPDATE checkpoints SET id=? WHERE id=?", ("abcd" + "1" * 28, second))
+    with pytest.raises(TimeMachineError, match="Ambiguous"):
+        resolve_checkpoint(project, "abcd")
+    assert len(Workspace(project).timeline(1, 1)) == 1
+    assert Workspace(project).timeline(1, 2) == []

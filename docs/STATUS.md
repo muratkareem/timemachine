@@ -214,3 +214,9 @@ mode/byte metadata and filename-based syntax highlighting. Snapshot fixture uses
 a real wrapped Python command and explicitly selects a color-capable demo terminal;
 the application still respects NO_COLOR. Focused UX tests: 10 passed. Next: branding,
 README, wider usability/safety regression and measured navigation benchmark.
+
+UX edge gate: conflict guidance preserves newer edits, binary/long/Unicode/link
+previews are bounded and no-follow, ambiguous prefixes refuse, metadata pagination
+works and immutable cache access is synchronized. Latest incomplete checkpoints
+and interrupted sessions are visibly distinguished. Focused tests: 12 passed;
+Ruff/mypy clean. Optional TUI minimum pinned to the verified Textual 6.12 API.

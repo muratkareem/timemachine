@@ -275,19 +275,24 @@ class TimeMachineApp(App[None]):
 
     async def action_refresh(self) -> None:
         try:
-            self.workspace.cache.clear()
+            self.workspace.reset()
             self.events = await self.service(lambda: self.workspace.timeline(self.page_size))
             self.render_timeline()
             data = await self.service(self.dashboard)
             cp, run = data["checkpoint"], data["run"]
-            state = (
-                "Recovery needs attention"
-                if data["pending"]
-                else (
-                    "Checkpoint available"
-                    if cp and cp["status"] == "COMPLETE"
-                    else "Ready to checkpoint"
-                )
+            needs_attention = data["pending"] or (
+                run and run["status"] in ("RUNNING", "FINALIZING")
+            )
+            if needs_attention:
+                state = "Recovery needs attention"
+            elif cp and cp["status"] != "COMPLETE":
+                state = "Latest checkpoint incomplete"
+            elif cp:
+                state = "Checkpoint available"
+            else:
+                state = "Ready to checkpoint"
+            self.notify_state(
+                "Saved snapshots are not a live backup. Preview undo checks conflicts."
             )
             self.query_one("#brand", Static).update(
                 Text("TIME / MACHINE  /  " + safe(self.project.root.name))
@@ -330,9 +335,9 @@ class TimeMachineApp(App[None]):
                         "Git metadata differs. File recovery never reverses commits or the index.",
                         "error",
                     )
-            if data["pending"]:
+            if needs_attention:
                 self.notify_state(
-                    "Recovery unfinished. Run timemachine doctor, then explicit recover.",
+                    "Session/recovery unfinished. Run timemachine doctor for next steps.",
                     "error",
                 )
             if not self.events:

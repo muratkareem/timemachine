@@ -2,6 +2,7 @@
 
 import json
 import re
+import threading
 from collections import OrderedDict
 from typing import Any
 
@@ -35,14 +36,20 @@ class Workspace:
     def __init__(self, project: Project):
         self.project = project
         self.cache: OrderedDict[str, dict[str, Any]] = OrderedDict()
+        self._lock = threading.RLock()
 
     def checkpoint(self, identifier: str) -> dict[str, Any]:
-        if identifier not in self.cache:
-            self.cache[identifier] = get_checkpoint(self.project, identifier)
-            if len(self.cache) > 8:
-                self.cache.popitem(last=False)
-        self.cache.move_to_end(identifier)
-        return self.cache[identifier]
+        with self._lock:
+            if identifier not in self.cache:
+                self.cache[identifier] = get_checkpoint(self.project, identifier)
+                if len(self.cache) > 8:
+                    self.cache.popitem(last=False)
+            self.cache.move_to_end(identifier)
+            return self.cache[identifier]
+
+    def reset(self) -> None:
+        with self._lock:
+            self.cache.clear()
 
     def timeline(self, limit: int = 50, offset: int = 0) -> list[dict[str, Any]]:
         with connect(self.project.store) as db:
