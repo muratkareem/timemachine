@@ -126,5 +126,50 @@ def verify_command(json_mode: bool = typer.Option(False, "--json")) -> None:
         output(verify(project), json_mode)
 
 
+def confirm(preview: bool, yes: bool, json_mode: bool, plan: dict[str, Any]) -> bool:
+    if preview:
+        output(plan, json_mode)
+        return False
+    if plan.get("warnings"):
+        output({"warnings": plan["warnings"]}, json_mode)
+    if not yes:
+        if json_mode:
+            raise TimeMachineError("Noninteractive mutation requires --yes or --preview")
+        if not typer.confirm("Apply this filesystem operation (recovery checkpoint retained)?"):
+            raise typer.Abort()
+    return True
+
+
+@app.command("undo")
+def undo_command(
+    preview: bool = False, yes: bool = False, json_mode: bool = typer.Option(False, "--json")
+) -> None:
+    """Undo the latest applied run, refusing newer conflicting edits."""
+    from .operations import undo, undo_plan
+
+    project = Project.discover()
+    with project.lock():
+        _, plan = undo_plan(project)
+        if confirm(preview, yes, json_mode, plan.data()):
+            output(undo(project, acknowledge_git=True), json_mode)
+
+
+@app.command("recover")
+def recover_command(
+    transaction_id: str,
+    preview: bool = False,
+    yes: bool = False,
+    json_mode: bool = typer.Option(False, "--json"),
+) -> None:
+    """Recover a partial restore explicitly; refuse subsequent conflicting edits."""
+    from .operations import recover
+
+    project = Project.discover()
+    with project.lock(allow_pending=True):
+        plan = recover(project, transaction_id, preview=True)
+        if confirm(preview, yes, json_mode, plan):
+            output(recover(project, transaction_id), json_mode)
+
+
 if __name__ == "__main__":
     main()

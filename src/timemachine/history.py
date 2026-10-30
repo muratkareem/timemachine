@@ -87,7 +87,8 @@ def doctor(project: Project) -> dict[str, Any]:
         transactions = [
             dict(r)
             for r in db.execute(
-                "SELECT id,status,recovery,error FROM transactions WHERE status != 'COMPLETE'"
+                "SELECT id,status,recovery,error FROM transactions "
+                "WHERE status NOT IN ('COMPLETE','RECOVERED')"
             )
         ]
         integrity = db.execute("PRAGMA integrity_check").fetchone()[0]

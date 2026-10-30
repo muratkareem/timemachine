@@ -25,3 +25,11 @@ binary/encoding/size summaries, list/show/inspect/history/status/doctor/verify C
 Validation: `pytest tests/unit -q`: 23 passed, 1 filesystem setuid skip;
 Ruff clean; mypy success (13 files). Last prior commit: 6e5a8fb. Push pending MVP.
 Next: M4 immutable plans, recovery snapshots, journals and conflict-safe undo.
+
+M4 complete: immutable conflict plans, scoped undo service, no-follow staging and
+atomic per-file replace, before/after step journal, recovery checkpoint, exact
+post-verification, explicit interrupted recovery and later-edit refusal.
+Validation: `pytest tests/safety tests/unit -q`: 33 passed, 1 filesystem skip;
+mypy success (16 files). Last prior commit: 7947bb0. Push pending M7 gate.
+Safety: multi-file restore is not atomic; external races remain documented.
+Next: M6 generic subprocess wrapper, then M7 end-to-end Git/non-Git gate.

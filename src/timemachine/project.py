@@ -128,7 +128,8 @@ class Project:
             if not allow_pending:
                 with connect(self.store) as db:
                     pending = db.execute(
-                        "SELECT id FROM transactions WHERE status != 'COMPLETE' LIMIT 1"
+                        "SELECT id FROM transactions "
+                        "WHERE status NOT IN ('COMPLETE','RECOVERED') LIMIT 1"
                     ).fetchone()
                 if pending:
                     raise TimeMachineError(f"Unfinished restore {pending[0]}; run doctor/recover")
