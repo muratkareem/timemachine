@@ -1,6 +1,7 @@
 """Versioned transactional metadata; blobs are external immutable files."""
 
 import sqlite3
+import stat
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -30,7 +31,13 @@ CREATE TABLE IF NOT EXISTS transactions (
 
 @contextmanager
 def connect(store: Path) -> Iterator[sqlite3.Connection]:
-    db = sqlite3.connect(store / "metadata.sqlite3", timeout=0)
+    path = store / "metadata.sqlite3"
+    try:
+        if not stat.S_ISREG(path.lstat().st_mode):
+            raise IntegrityError("Metadata database must be a regular file")
+    except FileNotFoundError as exc:
+        raise IntegrityError("Metadata database missing; restore a whole-store backup") from exc
+    db = sqlite3.connect(path, timeout=0)
     db.row_factory = sqlite3.Row
     try:
         db.execute("PRAGMA foreign_keys=ON")
@@ -40,6 +47,8 @@ def connect(store: Path) -> Iterator[sqlite3.Connection]:
             raise IntegrityError(f"Unsupported database schema: {version}")
         with db:
             yield db
+    except sqlite3.Error as exc:
+        raise IntegrityError(f"Metadata database failure: {exc}") from exc
     finally:
         db.close()
 

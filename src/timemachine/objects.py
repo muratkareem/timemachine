@@ -48,6 +48,7 @@ class ObjectStore:
                     raise TimeMachineError("Storage quota exceeded; checkpoint incomplete")
                 os.replace(name, target)
                 sync_dir(self.directory)
+                self.verify(digest, size)
             return digest, size
         finally:
             if os.path.lexists(name):

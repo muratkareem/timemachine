@@ -20,7 +20,9 @@ def safe_path(path: str) -> str:
         not path
         or path.startswith("/")
         or "\x00" in path
-        or any(p in ("", ".", "..", ".git", ".timemachine.json") for p in path.split("/"))
+        or any(
+            p.casefold() in ("", ".", "..", ".git", ".timemachine.json") for p in path.split("/")
+        )
     ):
         raise TimeMachineError(f"Unsafe relative path: {path!r}")
     return path

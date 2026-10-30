@@ -36,6 +36,7 @@ def checkpoints(project: Project, limit: int = 20) -> list[dict[str, Any]]:
 def show(project: Project, identifier: str) -> dict[str, Any]:
     result = get_checkpoint(project, identifier)
     del result["manifest"]
+    result["tags"] = json.loads(result["tags"])
     result["entries"] = {p: asdict(e) for p, e in result["entries"].items()}
     return result
 

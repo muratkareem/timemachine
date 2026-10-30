@@ -26,7 +26,7 @@ interpretation of project filenames or contents. IDs are full UUID hex strings.
 
 Mutations prompt unless `--yes`; machine-readable mutations require `--yes` or
 `--preview`. Preview is read-only. Exit 0 success; 1 actionable I/O/integrity/safety
-failure; 2 usage/confirmation cancellation; wrapped command status is propagated
+failure; 2 usage error (confirmation cancellation returns 1); wrapped command status is propagated
 (128+signal for signal termination; 127 launch failure). No force-conflict flag.
 
 - `redo [--preview] [--yes] [--json]`: linear replay after undo. New successful

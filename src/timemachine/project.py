@@ -73,7 +73,11 @@ class Project:
 
     @staticmethod
     def validate_store(root: Path, store: Path) -> None:
-        if store.is_relative_to(root) or root.is_relative_to(store) or ".git" in store.parts:
+        if (
+            store.is_relative_to(root)
+            or root.is_relative_to(store)
+            or any(p.casefold() == ".git" for p in store.parts)
+        ):
             raise TimeMachineError("Storage must be outside project and Git metadata")
 
     @classmethod
@@ -88,7 +92,8 @@ class Project:
             try:
                 config = json.loads(marker.read_bytes())
                 if (
-                    config["version"] != 1
+                    type(config["version"]) is not int
+                    or config["version"] != 1
                     or not isinstance(config["id"], str)
                     or not isinstance(config["exclude"], list)
                     or not all(isinstance(p, str) for p in config["exclude"])
@@ -116,7 +121,9 @@ class Project:
         raise TimeMachineError("No initialized project found; run timemachine init")
 
     @contextmanager
-    def lock(self, *, allow_pending: bool = False) -> Iterator[None]:
+    def lock(
+        self, *, allow_pending: bool = False, allow_unfinished: bool = False
+    ) -> Iterator[None]:
         fd = os.open(self.store / "lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
         try:
             try:
@@ -133,6 +140,15 @@ class Project:
                     ).fetchone()
                 if pending:
                     raise TimeMachineError(f"Unfinished restore {pending[0]}; run doctor/recover")
+            if not allow_pending and not allow_unfinished:
+                with connect(self.store) as db:
+                    unfinished = db.execute(
+                        "SELECT id FROM runs WHERE status IN ('RUNNING','FINALIZING') LIMIT 1"
+                    ).fetchone()
+                if unfinished:
+                    raise TimeMachineError(
+                        f"Unfinished run {unfinished[0]}; stop children and use doctor/finish-run"
+                    )
             yield
         finally:
             os.close(fd)

@@ -3,6 +3,8 @@ import os
 import subprocess
 import sys
 
+import pytest
+
 from timemachine.history import history
 from timemachine.metadata import connect
 from timemachine.runner import run
@@ -50,7 +52,8 @@ def test_no_shell_injection(project):
     assert not (project.root / "PWNED").exists()
 
 
-def test_signal_forwarding_finalizes_post(project):
+@pytest.mark.parametrize("signal_name,expected", [("SIGTERM", 143), ("SIGINT", 130)])
+def test_signal_forwarding_finalizes_post(project, signal_name, expected):
     command = [
         sys.executable,
         "-m",
@@ -59,10 +62,10 @@ def test_signal_forwarding_finalizes_post(project):
         "--",
         sys.executable,
         "-c",
-        "import os,signal,time; os.kill(os.getppid(),signal.SIGTERM); time.sleep(10)",
+        f"import os,signal,time; os.kill(os.getppid(),signal.{signal_name}); time.sleep(10)",
     ]
     child = subprocess.run(command, cwd=project.root, capture_output=True, timeout=15)
-    assert child.returncode == 143
+    assert child.returncode == expected
     with connect(project.store) as db:
         row = db.execute("SELECT * FROM runs").fetchone()
         assert row["status"] == "INTERRUPTED" and row["post"]
@@ -116,3 +119,49 @@ def test_inherited_tty(project):
         os.close(master)
         if slave != -1:
             os.close(slave)
+
+
+def test_detached_child_late_write_is_a_conflict(project):
+    import time
+
+    from timemachine.errors import ConflictError
+    from timemachine.operations import undo
+
+    (project.root / "x").write_text("before")
+    child_script = "import time,pathlib; time.sleep(0.6); pathlib.Path('x').write_text('late')"
+    agent = (
+        "import subprocess,sys,pathlib; pathlib.Path('x').write_text('post'); "
+        f"subprocess.Popen([sys.executable,'-c',{child_script!r}],"
+        "stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,"
+        "start_new_session=True)"
+    )
+    with project.lock():
+        run(project, [sys.executable, "-c", agent], project.root)
+    deadline = time.monotonic() + 5
+    while (project.root / "x").read_text() != "late" and time.monotonic() < deadline:
+        time.sleep(0.02)
+    assert (project.root / "x").read_text() == "late"
+    with project.lock(), pytest.raises(ConflictError):
+        undo(project)
+
+
+def test_sigkill_retains_pre_without_false_post(project):
+    from timemachine.errors import TimeMachineError
+
+    command = [
+        sys.executable,
+        "-m",
+        "timemachine.cli",
+        "run",
+        "--",
+        sys.executable,
+        "-c",
+        "import os,signal; os.kill(os.getppid(),signal.SIGKILL)",
+    ]
+    child = subprocess.run(command, cwd=project.root, capture_output=True, timeout=10)
+    assert child.returncode == -9
+    with connect(project.store) as db:
+        row = db.execute("SELECT * FROM runs").fetchone()
+        assert row["pre"] and row["post"] is None and row["status"] == "RUNNING"
+    with pytest.raises(TimeMachineError, match="Unfinished run"), project.lock():
+        pass

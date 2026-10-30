@@ -23,7 +23,7 @@ The scanner opens directory/file descriptors with O_NOFOLLOW, checks stat before
 and after reads, and compares two full scans. This detects observed instability;
 it is not a global point-in-time filesystem snapshot. A project flock serializes
 cooperating writers (including an entire wrapped run); kernel release handles
-stale lock ownership. Lock owner metadata is diagnostic only.
+stale lock ownership automatically; persisted run PIDs are diagnostic only.
 
 Runs persist PRE, POST, status, executable basename, exit code and Git context.
 Raw command arguments and environment are never persisted. A linear operation

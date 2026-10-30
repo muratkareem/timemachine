@@ -23,7 +23,7 @@ class Scan:
 
 def excluded(project: Project, path: str) -> bool:
     parts = path.split("/")
-    if ".git" in parts or MARKER in parts:
+    if any(p.casefold() in (".git", MARKER) for p in parts):
         return True
     return any(
         fnmatch.fnmatchcase(path, p) or any(fnmatch.fnmatchcase(c, p) for c in parts)

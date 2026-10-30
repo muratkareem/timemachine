@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 import typer
 
@@ -88,8 +88,8 @@ def history_command(
 
 @app.command("diff")
 def diff_command(
-    checkpoint_a: str | None = None,
-    checkpoint_b: str | None = None,
+    checkpoint_a: Annotated[str | None, typer.Argument()] = None,
+    checkpoint_b: Annotated[str | None, typer.Argument()] = None,
     stat: bool = False,
     name_only: bool = False,
     path: str | None = None,
@@ -130,11 +130,12 @@ def confirm(preview: bool, yes: bool, json_mode: bool, plan: dict[str, Any]) -> 
     if preview:
         output(plan, json_mode)
         return False
-    if plan.get("warnings"):
+    if plan.get("warnings") and not json_mode:
         output({"warnings": plan["warnings"]}, json_mode)
     if not yes:
         if json_mode:
             raise TimeMachineError("Noninteractive mutation requires --yes or --preview")
+        output(plan)
         if not typer.confirm("Apply this filesystem operation (recovery checkpoint retained)?"):
             raise typer.Abort()
     return True
@@ -192,7 +193,7 @@ def finish_run_command(run_id: str, yes: bool = False) -> None:
     from .runner import finish_run
 
     project = Project.discover()
-    with project.lock():
+    with project.lock(allow_unfinished=True):
         if confirm(False, yes, False, {}):
             output(finish_run(project, run_id))
 

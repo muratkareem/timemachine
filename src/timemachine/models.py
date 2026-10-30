@@ -4,6 +4,7 @@ import hashlib
 import json
 import re
 import stat
+import unicodedata
 from dataclasses import asdict, dataclass
 from typing import Any
 
@@ -52,6 +53,14 @@ class Entry:
     @classmethod
     def from_dict(cls, value: Any) -> "Entry":
         try:
+            if not isinstance(value, dict) or set(value) != {
+                "kind",
+                "mode",
+                "size",
+                "digest",
+                "target",
+            }:
+                raise IntegrityError("Invalid manifest entry schema")
             entry = cls(**value)
             entry.validate()
             return entry
@@ -66,14 +75,30 @@ def dump_manifest(entries: Manifest) -> bytes:
     return encode({"version": 1, "entries": {p: asdict(e) for p, e in entries.items()}})
 
 
+def strict_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise IntegrityError("Duplicate JSON manifest key")
+        result[key] = value
+    return result
+
+
 def load_manifest(data: bytes, digest: str) -> Manifest:
     if hashlib.sha256(data).hexdigest() != digest:
         raise IntegrityError("Manifest hash mismatch")
     try:
-        value = json.loads(data)
-        if set(value) != {"version", "entries"} or value["version"] != 1:
+        value = json.loads(data, object_pairs_hook=strict_pairs)
+        if (
+            set(value) != {"version", "entries"}
+            or type(value["version"]) is not int
+            or value["version"] != 1
+        ):
             raise IntegrityError("Unsupported manifest format")
         entries = {safe_path(p): Entry.from_dict(e) for p, e in value["entries"].items()}
+        portable = [unicodedata.normalize("NFC", p).casefold() for p in entries]
+        if len(set(portable)) != len(portable):
+            raise IntegrityError("Portable manifest path collision")
         for path in entries:
             parent = path.rpartition("/")[0]
             if parent and (parent not in entries or entries[parent].kind != "directory"):

@@ -16,7 +16,7 @@ from .objects import CHUNK, ObjectStore
 from .project import Project
 from .restore_plan import Change, Plan
 from .scanner import scan
-from .security import DIR_FLAGS, parent_fd
+from .security import DIR_FLAGS, parent_fd, safe_path
 
 
 def observe(fd: int, name: str) -> tuple[Entry | None, tuple[int, ...] | None]:
@@ -60,6 +60,14 @@ def execute(
     """hook is a deterministic fault-injection seam; never used by the CLI."""
     if not plan.changes:
         return None
+    paths = [safe_path(c.path) for c in plan.changes]
+    if len(set(paths)) != len(paths):
+        raise IntegrityError("Duplicate restore-plan paths")
+    for change in plan.changes:
+        if change.expected:
+            change.expected.validate()
+        if change.target:
+            change.target.validate()
     objects = ObjectStore(project.store, project.config["quota_bytes"])
     for change in plan.changes:
         if change.target and change.target.digest:
@@ -142,6 +150,8 @@ def execute(
                     assert target is not None
                     directory_fd = os.open(name, DIR_FLAGS, dir_fd=fd)
                     try:
+                        if fingerprint(os.fstat(directory_fd)) != identity:
+                            raise ConflictError("Directory changed before mode update")
                         os.fchmod(directory_fd, target.mode)
                         os.fsync(directory_fd)
                     finally:
