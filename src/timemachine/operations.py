@@ -115,6 +115,10 @@ def redo(project: Project, *, acknowledge_git: bool = False) -> dict[str, Any]:
 
 def restore_plan(project: Project, identifier: str, selector: str | None = None) -> Plan:
     from .diff import selected
+    from .security import safe_path
+
+    if selector is not None:
+        safe_path(selector)
     from .scanner import scan
 
     target = get_checkpoint(project, identifier)

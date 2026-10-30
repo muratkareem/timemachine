@@ -60,3 +60,11 @@ explicit moved-root rebind. Last prior commit: 7c007dc. Push blocked: automatic
 approval review requires explicit user authorization for origin/main; question
 pending. Validation: `pytest tests/integration/test_redo_restore.py tests/safety -q`:
 19 passed; Ruff clean; mypy success (17 files). Next: M8 storage/retention.
+
+M8 complete: storage statistics, quotas, verify, tag/pin/delete, reference-aware
+pruning and GC. All journal-described object references retained conservatively.
+GC is idempotent after interrupted unlink; corruption blocks collection.
+Validation: `pytest tests/integration/test_retention.py -q`: 4 passed; Ruff clean;
+mypy success (18 files). Last prior commit: 837e01c. Push still awaiting explicit
+authorization after automatic-review rejection. Next: M9 real Textual browser.
+Compression/automatic scheduled retention deliberately not implemented.

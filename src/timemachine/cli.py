@@ -246,5 +246,75 @@ def rebind_command(yes: bool = False) -> None:
             output({"rebound": str(project.root), "id": config["id"]})
 
 
+@app.command("storage")
+def storage_command(json_mode: bool = typer.Option(False, "--json")) -> None:
+    """Report deduplicated bytes, quota, live references and reclaimable objects."""
+    from .retention import storage
+
+    project = Project.discover()
+    with project.lock(allow_pending=True):
+        output(storage(project), json_mode)
+
+
+@app.command("tag")
+def tag_command(checkpoint_id: str, label: str) -> None:
+    """Attach a retention-protecting label to a complete checkpoint."""
+    from .retention import tag
+
+    project = Project.discover()
+    with project.lock():
+        tag(project, checkpoint_id, label)
+    output({"tagged": checkpoint_id, "label": label})
+
+
+@app.command("pin")
+def pin_command(checkpoint_id: str) -> None:
+    """Retain a complete checkpoint against deletion/pruning."""
+    from .retention import pin
+
+    project = Project.discover()
+    with project.lock():
+        pin(project, checkpoint_id)
+    output({"pinned": checkpoint_id})
+
+
+@app.command("delete")
+def delete_command(checkpoint_id: str, preview: bool = False, yes: bool = False) -> None:
+    """Delete an unreferenced, unpinned, untagged checkpoint; gc is separate."""
+    from .retention import delete, deletion_plan
+
+    project = Project.discover()
+    with project.lock():
+        plan = deletion_plan(project, checkpoint_id)
+        if confirm(preview, yes, False, plan):
+            output(delete(project, checkpoint_id))
+
+
+@app.command("gc")
+def gc_command(dry_run: bool = False, yes: bool = False) -> None:
+    """Collect only unreferenced objects after integrity verification."""
+    from .retention import gc
+
+    project = Project.discover()
+    with project.lock():
+        plan = gc(project)
+        if confirm(dry_run, yes, False, plan):
+            output(gc(project, dry_run=False))
+
+
+@app.command("prune")
+def prune_command(
+    keep: int = typer.Option(20, min=0), preview: bool = False, yes: bool = False
+) -> None:
+    """Prune older unreferenced manual checkpoints, retaining protected history."""
+    from .retention import prune
+
+    project = Project.discover()
+    with project.lock():
+        plan = prune(project, keep)
+        if confirm(preview, yes, False, plan):
+            output(prune(project, keep, preview=False))
+
+
 if __name__ == "__main__":
     main()

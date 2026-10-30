@@ -35,3 +35,12 @@ failure; 2 usage/confirmation cancellation; wrapped command status is propagated
   file/directory subset. Current differences are explicitly authorized, including
   deletion of later files. Revalidation still refuses edits after preview/consent.
 - `rebind --yes`: explicitly update a moved project's canonical root identity.
+
+- `storage [--json]`: deduplicated object bytes, quota and reclaimable names.
+- `tag ID LABEL`, `pin ID`: protect checkpoints from deletion/pruning.
+- `delete ID [--preview] [--yes]`: only unreferenced, untagged, unpinned snapshots.
+- `gc [--dry-run] [--yes]`: verify live data then collect unreferenced objects.
+- `prune [--keep N] [--preview] [--yes]`: retain newest N checkpoints plus every
+  protected reference; delete eligible older metadata only. GC remains separate.
+  Run/recovery/journal history is retained indefinitely; quota exhaustion requires
+  deliberate storage management. Compression and automatic schedules are absent.
