@@ -141,3 +141,9 @@ Validation: final broad audit before last policy guard was 90 passed, 4 skipped,
 Ruff/format/mypy clean; rebuilt wheel and reinstalled demo pass. CI run
 41102164521 remains queued with zero assigned runners, no remote success claim.
 Next: record updated final full results, push scope closeout and delivery report.
+
+Final staging fault audit: injected actual short writes, zero-progress writes and
+ENOSPC at staged-file fsync. Short writes produce exact bytes; failures preserve
+the untouched destination, FAILED journal and verified recovery checkpoint, and
+explicit recovery clears the block. `pytest tests/safety/test_restore.py -q`:
+13 passed. Last pushed source: 91a6caf; no engine changes in this test-only slice.

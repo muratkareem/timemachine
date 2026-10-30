@@ -160,3 +160,57 @@ def test_recovery_refuses_newer_edit(project):
     with project.lock(allow_pending=True), pytest.raises(ConflictError):
         recover(project, identifier)
     assert (project.root / "a").read_text() == "user edit"
+
+
+@pytest.mark.parametrize("fault", ["short-write", "zero-write", "stage-fsync-full"])
+def test_actual_staging_io_faults_preserve_recovery(project, monkeypatch, fault):
+    import os
+
+    from timemachine.operations import recover
+
+    path = project.root / "x"
+    original_bytes = bytes(range(256)) * 4
+    path.write_bytes(original_bytes)
+    with project.lock():
+        before = checkpoint(project)
+        path.write_bytes(b"agent result")
+        after = checkpoint(project)
+        plan = make_plan(project, manifest(project, after), manifest(project, before))
+        real_write = os.write
+        real_fsync = os.fsync
+
+        def short_write(fd, data):
+            return real_write(fd, data[: max(1, len(data) // 2)])
+
+        def no_write(fd, data):
+            return 0
+
+        def full(fd):
+            raise OSError(28, "No space left on device")
+
+        def inject(path, action):
+            if action == "write":
+                if fault == "short-write":
+                    monkeypatch.setattr(os, "write", short_write)
+                elif fault == "zero-write":
+                    monkeypatch.setattr(os, "write", no_write)
+                else:
+                    monkeypatch.setattr(os, "fsync", full)
+
+        if fault == "short-write":
+            execute(project, plan, "test", hook=inject)
+            assert path.read_bytes() == original_bytes
+        else:
+            with pytest.raises(IntegrityError, match="recovery checkpoint"):
+                execute(project, plan, "test", hook=inject)
+            assert path.read_bytes() == b"agent result"
+            with connect(project.store) as db:
+                row = db.execute("SELECT * FROM transactions").fetchone()
+                assert row["status"] == "FAILED"
+                assert manifest(project, row["recovery"])["x"] == manifest(project, after)["x"]
+    monkeypatch.setattr(os, "write", real_write)
+    monkeypatch.setattr(os, "fsync", real_fsync)
+    if fault != "short-write":
+        with project.lock(allow_pending=True):
+            recover(project, row["id"])
+        assert path.read_bytes() == b"agent result"
