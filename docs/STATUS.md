@@ -1,3 +1,27 @@
+# Current status — UX/UI overhaul complete
+
+All eight UX phases delivered. Final tested implementation: **8d1b479** on
+**origin/main**. Local and six-job remote gate PASS: **110 passed, 4 skipped**,
+**84% coverage**. CI workflow **41125851544** is successful on macOS/Linux with
+Python 3.12/3.13/3.14. Ruff/format/mypy/build, real CLI demo and clean installed
+wheel/TUI export pass. Ten TUI pilots and the original 37 safety tests pass.
+
+Recovery/storage/Git engine files are unchanged from baseline **6d28695**.
+Terminal/redirected JSON compatibility, recovery confirmation and frozen plans
+remain enforced. Final formatter correction is included in the successful run.
+No unresolved blocker or outstanding approval. No publication/release/tag.
+
+Evidence, exact commands, commit ledger, before/after, real screenshots, workload
+measurements, installation and limits: **UX_DELIVERY.md** and **UX_CI.md**.
+Final closeout commit is docs-only; tested source/tests/dependencies/CI unchanged.
+Push authorization persists; final documentation is pushed without force and the
+working tree is verified clean. Next work is optional user research, broader
+scale measurement and the already-deferred advanced features, not unfinished UX.
+
+---
+
+## Historical implementation record (superseded by the summary above)
+
 # UX/UI overhaul — final local gate
 
 All eight phases implemented. Current full suite: **110 passed, 4 skipped**,

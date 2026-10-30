@@ -54,8 +54,7 @@ the pytest-process coverage figure. Final exclusion-copy adjustment: 5 CLI tests
 
 The clean wheel, including the real packaged stylesheet, ran both the disposable
 CLI undo/redo demo and headless TUI screenshot. CI now repeats isolated wheel/demo/
-TUI verification across macOS/Linux with Python 3.12–3.14. Remote result is recorded
-below once observed; local results alone do not establish remote success.
+TUI verification across macOS/Linux with Python 3.12–3.14. The six-job remote result is verified below and in UX_CI.md.
 
 Tested UX cases include narrow/empty views, typing without triggering shortcuts,
 help/theme/navigation, filtering/search, binary/long/Unicode/link previews,
@@ -129,16 +128,25 @@ be35bec feat: redesign Textual workspace with session history and guided recover
 6799ea6 docs: introduce original identity and real product walkthrough
 d035975 fix: keep recovery review exclusive and search input free of side effects
 7ece889 test: verify onboarding automation and packaged TUI installation
+e3b46b5 test: complete UX acceptance audit and record verified product evidence
+ece12c5 fix: allow explicit undo history advancement for unchanged sessions
+8d1b479 chore: complete final UX quality gate and formatter verification
 
 ```
 
-The final QA/evidence and remote-verification documentation commits follow this
-ledger and are available in git log. No artificial or empty commits were used.
+The final CI evidence commit is documentation-only and follows this ledger.
+See git log for its SHA; the final response also reports it. Original history and
+MIT license were preserved. No artificial/empty commits or force pushes.
 
 ## Push / CI
 
-Verified local work is being pushed to authorized origin/main after an ancestry
-check. The remote six-job result will be recorded here when actually observed.
+Verified implementation pushed to authorized **origin/main** through **8d1b479**.
+[Final workflow 41125851544](https://github.com/muratkareem/timemachine/actions/runs/41125851544)
+completed with **success**. All six macOS/Linux x Python 3.12/3.13/3.14 jobs passed:
+**110 passed, 4 skipped, 84% coverage** each, plus lint/type/build/demo and packaged
+TUI verification. Exact versions/job links: UX_CI.md. An earlier formatter failure
+was corrected; no test suppression. Final closeout is documentation-only.
+No unresolved execution blocker, release, publication or version tag.
 
 
 Final interaction audit: no-change sessions can explicitly advance undo/redo
