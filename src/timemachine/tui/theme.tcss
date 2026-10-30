@@ -47,3 +47,5 @@ Button:focus { text-style: bold underline; }
 .narrow #selection { display: none; }
 .narrow #notice { max-height: 3; padding: 0 1; }
 .narrow #activity { padding: 0 1; }
+
+#history-pane, #files-pane, #preview-pane { border-title-color: $foreground; border-title-style: bold; }

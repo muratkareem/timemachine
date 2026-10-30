@@ -207,3 +207,10 @@ quickstart, agent discovery, history filtering and unique checkpoint prefixes.
 Redirected and explicit JSON structures remain unchanged. Focused CLI/read-model
 checks: 10 passed; Ruff/mypy clean. Timeline now fetches headers in bounded batches,
 not manifest BLOBs or one query per row. Next: visual QA/docs and edge-case tests.
+
+Visual QA follow-up: inspected real dark dashboard, 70-column detail view and
+undo-review modal. Reduced footer noise, improved border/diff contrast, exposed
+mode/byte metadata and filename-based syntax highlighting. Snapshot fixture uses
+a real wrapped Python command and explicitly selects a color-capable demo terminal;
+the application still respects NO_COLOR. Focused UX tests: 10 passed. Next: branding,
+README, wider usability/safety regression and measured navigation benchmark.

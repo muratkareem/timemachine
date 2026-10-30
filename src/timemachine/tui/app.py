@@ -9,6 +9,7 @@ from rich.syntax import Syntax
 from rich.text import Text
 from textual import events
 from textual.app import App, ComposeResult
+from textual.binding import Binding
 from textual.containers import Grid, Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.theme import Theme
@@ -113,22 +114,22 @@ class TimeMachineApp(App[None]):
     TITLE = "TimeMachine"
     CSS_PATH = "theme.tcss"
     BINDINGS = [
-        ("q", "quit", "Quit"),
-        ("f5", "refresh", "Refresh"),
-        ("j", "next_row", "Next"),
-        ("k", "previous_row", "Previous"),
-        ("enter", "diff", "Open"),
-        ("slash", "search", "Search"),
-        ("escape", "history", "Back"),
-        ("question_mark", "help", "Help"),
-        ("b", "anchor", "Compare"),
-        ("d", "diff", "Diff"),
-        ("v", "toggle_file", "File/diff"),
-        ("n", "find_next", "Next match"),
-        ("u", "undo", "Undo preview"),
-        ("r", "restore", "Restore"),
-        ("ctrl+r", "redo", "Redo"),
-        ("t", "theme", "Theme"),
+        Binding("u", "undo", "Undo preview"),
+        Binding("r", "restore", "Restore"),
+        Binding("d", "diff", "Diff"),
+        Binding("slash", "search", "Search"),
+        Binding("question_mark", "help", "Help"),
+        Binding("escape", "history", "Back"),
+        Binding("q", "quit", "Quit"),
+        Binding("f5", "refresh", "Refresh", show=False),
+        Binding("j", "next_row", "Next", show=False),
+        Binding("k", "previous_row", "Previous", show=False),
+        Binding("enter", "diff", "Open", show=False),
+        Binding("b", "anchor", "Compare", show=False),
+        Binding("v", "toggle_file", "File/diff", show=False),
+        Binding("n", "find_next", "Next match", show=False),
+        Binding("ctrl+r", "redo", "Redo", show=False),
+        Binding("t", "theme", "Theme", show=False),
     ]
 
     def __init__(self, project: Project):
@@ -414,7 +415,10 @@ class TimeMachineApp(App[None]):
                 files = self.query_one("#files", DataTable)
                 files.clear()
                 counts = {
-                    kind: sum(f["change"] == kind for f in selected["files"])
+                    kind: sum(
+                        f["change"] == kind and (f["after"] or f["before"]).kind != "directory"
+                        for f in selected["files"]
+                    )
                     for kind in ("added", "modified", "deleted", "metadata", "type")
                 }
                 self.query_one("#card-changes", Static).update(
@@ -494,6 +498,13 @@ class TimeMachineApp(App[None]):
                 "\n[Truncated: 2,000 lines / 500 chars per line. Saved bytes intact.]"
             )
         self.match_index = -1
+        before_entry, after_entry = change["before"], change["after"]
+        metadata = (
+            f"Mode {oct(before_entry.mode) if before_entry else 'absent'} → "
+            f"{oct(after_entry.mode) if after_entry else 'absent'} · "
+            f"{size(before_entry.size) if before_entry else '0 B'} → "
+            f"{size(after_entry.size) if after_entry else '0 B'}"
+        )
         self.query_one("#preview-title", Static).update(
             Text(
                 safe(path)
@@ -501,20 +512,25 @@ class TimeMachineApp(App[None]):
                 + change["change"].upper()
                 + " · "
                 + ("Saved file" if self.file_mode else "Unified diff / metadata")
-                + " · v toggle"
+                + " · v toggle\n"
+                + metadata
             )
         )
         log = self.query_one("#preview", RichLog)
         log.clear()
-        lexer = "text" if self.file_mode else "diff"
+        lexer = (
+            Syntax.guess_lexer(path, code=self.preview_text)
+            if (self.file_mode or not self.selection or not self.selection["base"])
+            else "diff"
+        )
         log.write(
             Syntax(
                 self.preview_text or "Empty file",
                 lexer,
                 line_numbers=True,
                 word_wrap=False,
-                background_color="default",
-                theme="ansi_dark",
+                background_color="#F5F5F5" if self.theme == "textual-light" else "#151C27",
+                theme="friendly" if self.theme == "textual-light" else "monokai",
             )
         )
         log.scroll_home(animate=False)

@@ -47,8 +47,14 @@ def output(value: Any, json_mode: bool = False) -> None:
 
 
 @contextmanager
-def working(label: str) -> Iterator[None]:
-    if _human.get() and sys.stderr.isatty() and not _plain.get() and "NO_COLOR" not in os.environ:
+def working(label: str, json_mode: bool = False) -> Iterator[None]:
+    if (
+        not json_mode
+        and _human.get()
+        and sys.stderr.isatty()
+        and not _plain.get()
+        and "NO_COLOR" not in os.environ
+    ):
         with console(stderr=True).status(label, spinner="dots"):
             yield
     else:
@@ -117,7 +123,7 @@ def checkpoint_command(
     from .checkpoint import checkpoint
 
     project = Project.discover()
-    with project.lock(), working("Saving a verified checkpoint…"):
+    with project.lock(), working("Saving a verified checkpoint…", json_mode):
         identifier = checkpoint(project, message)
     output({"id": identifier, "status": "COMPLETE"}, json_mode)
 
@@ -192,7 +198,10 @@ def doctor_command(json_mode: bool = typer.Option(False, "--json")) -> None:
     from .history import doctor
 
     project = Project.discover()
-    with project.lock(allow_pending=True), working("Checking integrity and recovery state…"):
+    with (
+        project.lock(allow_pending=True),
+        working("Checking integrity and recovery state…", json_mode),
+    ):
         output(doctor(project), json_mode)
 
 
@@ -202,7 +211,7 @@ def verify_command(json_mode: bool = typer.Option(False, "--json")) -> None:
     from .checkpoint import verify
 
     project = Project.discover()
-    with project.lock(allow_pending=True), working("Verifying saved data…"):
+    with project.lock(allow_pending=True), working("Verifying saved data…", json_mode):
         output(verify(project), json_mode)
 
 
@@ -269,6 +278,11 @@ def run_command(ctx: typer.Context) -> None:
         result = run(project, args)
     if _human.get():
         console(plain=_plain.get(), stderr=True).print(human(result))
+        if result["status"] == "LAUNCH_FAILED":
+            console(plain=_plain.get(), stderr=True).print(
+                "Could not launch the executable. Check its path/permissions; "
+                "timemachine agents lists detected tools. No raw arguments were logged."
+            )
     else:
         typer.echo(json.dumps(result, ensure_ascii=True), err=True)
     raise typer.Exit(result["exit_code"])

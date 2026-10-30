@@ -195,7 +195,7 @@ def human(value: Any) -> Any:
 
         parts: list[Any] = [
             table(
-                f"{value.get('change_count', len(rows))} file changes",
+                f"{value.get('change_count', len(rows))} entry changes",
                 ("Change", "Path", "Size"),
                 rows,
             )
