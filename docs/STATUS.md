@@ -19,3 +19,9 @@ Validation: `pytest tests/unit/test_snapshots.py -q`: 10 passed, 1 skipped (the
 sandbox filesystem strips setuid; direct special-mode validator test passes).
 `mypy`: success, 11 source files. Ruff clean. Push not yet attempted.
 Next: M3 history/diff, then M4 restore safety gate.
+
+M3 complete: exact content/type/mode diff, safe JSON-escaped text previews,
+binary/encoding/size summaries, list/show/inspect/history/status/doctor/verify CLI.
+Validation: `pytest tests/unit -q`: 23 passed, 1 filesystem setuid skip;
+Ruff clean; mypy success (13 files). Last prior commit: 6e5a8fb. Push pending MVP.
+Next: M4 immutable plans, recovery snapshots, journals and conflict-safe undo.

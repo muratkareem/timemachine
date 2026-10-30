@@ -46,4 +46,4 @@ def test_cli_help_and_status(project, monkeypatch):
     assert runner.invoke(app, ["--help"]).exit_code == 0
     result = runner.invoke(app, ["status", "--json"])
     assert result.exit_code == 0
-    assert json.loads(result.stdout)["id"] == project.config["id"]
+    assert json.loads(result.stdout)["project"]["id"] == project.config["id"]
