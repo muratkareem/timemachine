@@ -1,6 +1,7 @@
 # Measured local benchmark
 
-Executed `python examples/benchmark.py --files 200 --bytes 4096` on 2026-10-30.
+Re-executed against the final runtime implementation at 91a6caf:
+`python examples/benchmark.py --files 200 --bytes 4096` on 2026-10-30.
 Disposable project, 200 distinct 4 KiB files (819,200 protected bytes). Store and
 project on the host local filesystem; one run, possible warm caches. This is a
 small baseline, not a large-repository performance or cross-platform guarantee.
@@ -12,9 +13,9 @@ small baseline, not a large-repository performance or cross-platform guarantee.
   "python": "3.12.14",
   "files": 200,
   "bytes_per_file": 4096,
-  "checkpoint_seconds": 0.13008233398431912,
-  "dedup_checkpoint_seconds": 0.05045454204082489,
-  "selective_restore_seconds": 0.08049879199825227,
+  "checkpoint_seconds": 0.13340925000375137,
+  "dedup_checkpoint_seconds": 0.051243667025119066,
+  "selective_restore_seconds": 0.08193837502039969,
   "object_bytes_including_recovery": 819208,
   "note": "Single local run, warm caches possible; not a throughput guarantee"
 }

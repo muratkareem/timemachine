@@ -1,4 +1,35 @@
-# Execution status
+# Current delivery status
+
+Runtime implementation complete at **91a6caf**; final staging fault tests at
+**8d1f50f**. All specified CLI commands and the optional real Textual TUI are
+implemented. M0–M10 gates passed in MVP-first order. M11 benchmark/demo delivered;
+watch/export/import/compression intentionally deferred. M12 local audit passed;
+remote matrix verification is pending GitHub runner assignment.
+
+Final local checks: `pytest --cov=timemachine --cov-report=term-missing
+--cov-report=xml`: **94 passed, 4 skipped**, 98 collected, **83% coverage**
+(1606 statements/277 missed), 11.50 s. Ruff/format clean (39 files), strict mypy
+clean (22 files), wheel/sdist build and clean-wheel CLI recovery demo pass.
+Four skips: three absent optional agents and sandbox-stripped setuid bit; direct
+mode rejection validator passes. No known critical restore defect found by the
+executed tests. Concurrency/hardware/metadata limitations remain in SAFETY.md.
+
+Push: user explicitly authorized origin/main. Runtime through 91a6caf pushed;
+final test/docs commits are pushed during delivery closeout without force. MIT
+and original history preserved. No package publication, release or version tag.
+Working tree is clean after the final documentation commit. Full commit ledger,
+commands, milestone evidence, installation, limits and priorities: DELIVERY.md.
+
+External verification dependency: six jobs for run 41103060048 are queued with
+no assigned runners; previous run 41102164521 also never started at last check.
+No remote success, Linux result or other Python-version result is claimed.
+Next concrete task: inspect GitHub Actions when runners become available, repair
+any real platform failures, then consider independent adversarial review and
+explicit future migration tooling. No outstanding permission/credential request.
+
+---
+
+## Milestone record
 
 M0 complete: architecture v1, scope, threat model, conflict/recovery state machine,
 roadmap and test strategy written. Inspected clean main at c32d009 (MIT preserved).
