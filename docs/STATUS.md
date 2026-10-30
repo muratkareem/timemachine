@@ -3,8 +3,7 @@
 Runtime implementation complete at **91a6caf**; final staging fault tests at
 **8d1f50f**. All specified CLI commands and the optional real Textual TUI are
 implemented. M0–M10 gates passed in MVP-first order. M11 benchmark/demo delivered;
-watch/export/import/compression intentionally deferred. M12 local audit passed;
-remote matrix verification is pending GitHub runner assignment.
+watch/export/import/compression intentionally deferred. M12 local audit and the full six-job remote matrix passed.
 
 Final local checks: `pytest --cov=timemachine --cov-report=term-missing
 --cov-report=xml`: **94 passed, 4 skipped**, 98 collected, **83% coverage**
@@ -15,17 +14,20 @@ mode rejection validator passes. No known critical restore defect found by the
 executed tests. Concurrency/hardware/metadata limitations remain in SAFETY.md.
 
 Push: user explicitly authorized origin/main. Runtime through 91a6caf pushed;
-final test/docs commits are pushed during delivery closeout without force. MIT
+final test/docs through 639548a are pushed; this verification record is pushed
+during closeout without force. MIT
 and original history preserved. No package publication, release or version tag.
 Working tree is clean after the final documentation commit. Full commit ledger,
 commands, milestone evidence, installation, limits and priorities: DELIVERY.md.
 
-External verification dependency: six jobs for run 41103060048 are queued with
-no assigned runners; previous run 41102164521 also never started at last check.
-No remote success, Linux result or other Python-version result is claimed.
-Next concrete task: inspect GitHub Actions when runners become available, repair
-any real platform failures, then consider independent adversarial review and
-explicit future migration tooling. No outstanding permission/credential request.
+Remote verification PASS: workflow 41103386128 completed successfully for
+639548a; six individually verified job conclusions, macOS/Linux x Python
+3.12/3.13/3.14. Every job: 94 passed, 4 skipped, 83% coverage; lint/type/build/
+demo/clean-install checks passed. See CI.md for exact Python versions and links.
+Earlier queued snapshots in the milestone record are historical and superseded.
+The final verification-record commit is documentation-only; tested code is unchanged.
+Next concrete task: optional independent adversarial review and explicit future
+migration tooling. No unresolved blocker or outstanding permission/credential request.
 
 ---
 
@@ -178,3 +180,9 @@ ENOSPC at staged-file fsync. Short writes produce exact bytes; failures preserve
 the untouched destination, FAILED journal and verified recovery checkpoint, and
 explicit recovery clears the block. `pytest tests/safety/test_restore.py -q`:
 13 passed. Last pushed source: 91a6caf; no engine changes in this test-only slice.
+
+
+M12 remote gate complete: workflow 41103386128 success at 639548a. Six jobs
+individually confirmed success, 94 passed/4 skipped each, 83% coverage. Final
+record commit changes docs only. All feasible core milestones delivered; optional
+M11 advanced features remain explicitly deferred. No unresolved execution blocker.

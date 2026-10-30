@@ -64,15 +64,15 @@ Environment: macOS 26.7.1 arm64; CPython 3.12.14. Commands run from repository:
 
 ## Remote CI
 
-[Latest runtime audit run](https://github.com/muratkareem/timemachine/actions/runs/41103060048)
-for 91a6caf is **queued**, with all six jobs awaiting runner assignment when last
-checked. [Previous run](https://github.com/muratkareem/timemachine/actions/runs/41102164521)
-for 5da4e1b likewise had no started jobs after several minutes. No remote pass or
-cross-platform verification is claimed. The matrix is macOS/Linux x Python
-3.12/3.13/3.14. GitHub runner assignment is an external verification dependency;
-there is no repository test failure to diagnose yet. Final test/documentation
-pushes may create additional queued runs. The exact latest state is visible in
-[GitHub Actions](https://github.com/muratkareem/timemachine/actions).
+[Workflow 41103386128](https://github.com/muratkareem/timemachine/actions/runs/41103386128)
+completed with **success** for 639548a. All **six jobs passed**: macOS and Linux
+on Python 3.12, 3.13 and 3.14. Each reports **94 passed, 4 skipped, 83% coverage**;
+Ruff, format, mypy, build, demo and isolated wheel installation also passed.
+Individual job conclusions and completed logs were verified, followed by the
+workflow's own success conclusion. See CI.md for exact Python versions/job links.
+Earlier queued observations were superseded once GitHub's summaries caught up.
+The final verification-record commit changes documentation only, with no runtime
+or test changes after the successful 639548a matrix.
 
 ## Commit ledger
 
@@ -129,9 +129,9 @@ Legacy unchecked development journals fail closed. Network filesystem/Windows
 support is not claimed. Journal/run references are retained conservatively and
 may require additional storage rather than automatic destructive pruning.
 
-Next priorities: observe and resolve the queued CI matrix first, then independent adversarial filesystem review, explicit future format
+Next priorities: independent adversarial filesystem review, explicit future format
 migration tooling, broader scale benchmarks, then separately tested optional
 watch/export/import and additional real-agent/platform coverage. No hidden stub
-features or published-package claims. No remaining human approval or credentials are required for local use. Remote
-verification is pending external runner availability; its underlying cause is not
-established, and no account/billing diagnosis is asserted.
+features or published-package claims. No remaining human approval or credentials are required for local use. All six remote matrix jobs and the workflow completed successfully. There are
+no unresolved execution blockers. Further adversarial review and advanced optional
+features remain future work, not incomplete core commands.
