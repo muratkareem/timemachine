@@ -1,7 +1,6 @@
 """Journaled, no-follow per-entry restore. Caller holds the project writer lock."""
 
 import hashlib
-import json
 import os
 import stat
 import uuid
@@ -10,6 +9,7 @@ from typing import Any
 
 from .checkpoint import checkpoint, manifest, now
 from .errors import ConflictError, IntegrityError
+from .journal import pack
 from .metadata import connect
 from .models import Entry, fingerprint, mode_bits
 from .objects import CHUNK, ObjectStore
@@ -84,9 +84,18 @@ def execute(
     identifier = uuid.uuid4().hex
     with connect(project.store) as db:
         db.execute(
-            "INSERT INTO transactions(id,created,kind,status,recovery,plan,run_id) "
-            "VALUES(?,?,?,?,?,?,?)",
-            (identifier, now(), kind, "PROTECTED", recovery, json.dumps(plan.data()), run_id),
+            "INSERT INTO transactions(id,created,kind,status,recovery,plan,run_id,progress) "
+            "VALUES(?,?,?,?,?,?,?,?)",
+            (
+                identifier,
+                now(),
+                kind,
+                "PROTECTED",
+                recovery,
+                pack("plan", plan.data()),
+                run_id,
+                pack("progress", []),
+            ),
         )
     progress: list[dict[str, Any]] = []
     expected = {c.path: c.expected for c in plan.changes}
@@ -99,7 +108,7 @@ def execute(
         with connect(project.store) as db:
             db.execute(
                 "UPDATE transactions SET status='APPLYING',progress=? WHERE id=?",
-                (json.dumps(progress), identifier),
+                (pack("progress", progress), identifier),
             )
 
     def guard(path: str) -> None:

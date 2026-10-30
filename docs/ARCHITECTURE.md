@@ -41,3 +41,10 @@ is atomic; multi-file operations are not. Pending/failed journals block subseque
 mutations except an explicit recovery operation. Recovery uses the recorded plan,
 refuses any current state other than its expected/target states, and restores the
 pre-transaction recovery snapshot with a new journal. No automatic rollback.
+
+Final v1 journals use a strict checksummed envelope (`version`, `kind`, `payload`,
+`digest`), with SHA-256 of canonical payload JSON. Both immutable plans and each
+mutable progress update are checked before recovery/verification/GC. Unsupported
+or development-era unchecked journal formats fail closed and require manual
+inspection with the original source version; there is no implicit trust-on-read
+migration. Back up a complete store before any future explicit format migration.

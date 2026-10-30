@@ -105,3 +105,12 @@ Validation: demo asserts byte-correct undo/redo; benchmark measured successfully
 TUI headless tests: 3 passed, including edits/history changes during confirmation.
 Visual screenshot inspected. `python -m build --no-isolation` builds wheel+sdist.
 Last code commit: 21679f7; last pushed: 363c16f. Next: final CI/coverage/install audit.
+
+M12 journal-integrity gate: versioned SHA-256 envelopes validate plan/progress
+before recovery, verify and GC. Retained journal bytes are verified too; shared
+object size contradictions are refused. Malformed legacy journals fail closed.
+Validation: full `pytest -q`: 87 passed, 4 expected skips; Ruff/format clean;
+mypy success (22 files); wheel/sdist build and content/license inspection pass;
+real CLI demo passes. Current source still awaiting final CI commit/push.
+Last prior commit: aefd165; last pushed: 363c16f. Next: CI matrix and clean-wheel
+workflow, then remote verification and final delivery audit.

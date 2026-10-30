@@ -56,9 +56,8 @@ def undo(
 
 def recover(project: Project, transaction_id: str, *, preview: bool = False) -> dict[str, Any]:
     """Explicitly restore a failed transaction's pre-state, refusing later edits."""
-    import json
-
     from .errors import ConflictError
+    from .journal import read_plan, read_progress
     from .models import Entry
     from .scanner import scan
     from .security import safe_path
@@ -67,8 +66,8 @@ def recover(project: Project, transaction_id: str, *, preview: bool = False) -> 
         row = db.execute("SELECT * FROM transactions WHERE id=?", (transaction_id,)).fetchone()
     if row is None or row["status"] in ("COMPLETE", "RECOVERED"):
         raise TimeMachineError("No unfinished transaction with that ID")
-    value = json.loads(row["plan"])
-    progress = json.loads(row["progress"])
+    value = read_plan(row["plan"])
+    progress = read_progress(row["progress"])
     current = scan(project)
     paths = []
     for change in value["changes"]:

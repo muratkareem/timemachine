@@ -1,5 +1,3 @@
-import json
-
 import pytest
 
 from timemachine.checkpoint import checkpoint, manifest
@@ -63,7 +61,9 @@ def test_interrupted_restore_retains_journal_and_recovery(project):
         row = db.execute("SELECT * FROM transactions").fetchone()
         assert row["status"] == "FAILED"
         assert manifest(project, row["recovery"])["a"] == post["a"]
-        assert json.loads(row["progress"])
+        from timemachine.journal import read_progress
+
+        assert read_progress(row["progress"])
     with pytest.raises(TimeMachineError, match="Unfinished"), project.lock():
         pass
 

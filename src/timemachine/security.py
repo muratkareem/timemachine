@@ -17,7 +17,8 @@ DIR_FLAGS = os.O_RDONLY | os.O_DIRECTORY | NOFOLLOW
 
 def safe_path(path: str) -> str:
     if (
-        not path
+        not isinstance(path, str)
+        or not path
         or path.startswith("/")
         or "\x00" in path
         or any(

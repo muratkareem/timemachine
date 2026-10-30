@@ -37,7 +37,10 @@ def connect(store: Path) -> Iterator[sqlite3.Connection]:
             raise IntegrityError("Metadata database must be a regular file")
     except FileNotFoundError as exc:
         raise IntegrityError("Metadata database missing; restore a whole-store backup") from exc
-    db = sqlite3.connect(path, timeout=0)
+    try:
+        db = sqlite3.connect(path, timeout=0)
+    except sqlite3.Error as exc:
+        raise IntegrityError(f"Cannot open metadata database: {exc}") from exc
     db.row_factory = sqlite3.Row
     try:
         db.execute("PRAGMA foreign_keys=ON")
@@ -54,7 +57,10 @@ def connect(store: Path) -> Iterator[sqlite3.Connection]:
 
 
 def initialize(store: Path) -> None:
-    db = sqlite3.connect(store / "metadata.sqlite3")
+    try:
+        db = sqlite3.connect(store / "metadata.sqlite3")
+    except sqlite3.Error as exc:
+        raise IntegrityError(f"Cannot initialize metadata database: {exc}") from exc
     try:
         db.execute("PRAGMA journal_mode=WAL")
         db.execute("PRAGMA synchronous=FULL")

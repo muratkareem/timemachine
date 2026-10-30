@@ -7,6 +7,7 @@ from typing import Any
 
 from .checkpoint import get_checkpoint, manifest, verify
 from .errors import TimeMachineError
+from .journal import read_plan
 from .metadata import connect
 from .objects import ObjectStore
 from .project import Project
@@ -24,7 +25,7 @@ def live_objects(project: Project) -> set[str]:
     for transaction in transactions:
         from .models import Entry
 
-        for change in json.loads(transaction["plan"])["changes"]:
+        for change in read_plan(transaction["plan"])["changes"]:
             for key in ("expected", "target"):
                 if change[key]:
                     entry = Entry.from_dict(change[key])
