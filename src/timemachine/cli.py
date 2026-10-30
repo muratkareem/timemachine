@@ -316,5 +316,17 @@ def prune_command(
             output(prune(project, keep, preview=False))
 
 
+@app.command("tui")
+def tui_command() -> None:
+    """Browse real checkpoints, file previews and confirmed restores interactively."""
+    try:
+        from .tui.app import TimeMachineApp
+    except ImportError as exc:
+        raise TimeMachineError(
+            "Install the optional TUI: pip install 'timemachine-cli[tui]'"
+        ) from exc
+    TimeMachineApp(Project.discover()).run()
+
+
 if __name__ == "__main__":
     main()

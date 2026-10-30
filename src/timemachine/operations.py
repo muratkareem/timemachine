@@ -32,8 +32,18 @@ def undo_plan(project: Project) -> tuple[dict[str, Any], Plan]:
     )
 
 
-def undo(project: Project, *, acknowledge_git: bool = False) -> dict[str, Any]:
+def undo(
+    project: Project,
+    *,
+    acknowledge_git: bool = False,
+    confirmed_plan: Plan | None = None,
+    run_id: str | None = None,
+) -> dict[str, Any]:
     run, plan = undo_plan(project)
+    if run_id is not None and run["id"] != run_id:
+        raise TimeMachineError("Run history changed since confirmation; preview again")
+    if confirmed_plan is not None:
+        plan = confirmed_plan
     if plan.warnings and not acknowledge_git:
         raise TimeMachineError(
             "Git metadata mismatch: preview and explicitly acknowledge with --yes"
@@ -101,8 +111,18 @@ def redo_plan(project: Project) -> tuple[dict[str, Any], Plan]:
     )
 
 
-def redo(project: Project, *, acknowledge_git: bool = False) -> dict[str, Any]:
+def redo(
+    project: Project,
+    *,
+    acknowledge_git: bool = False,
+    confirmed_plan: Plan | None = None,
+    run_id: str | None = None,
+) -> dict[str, Any]:
     run, plan = redo_plan(project)
+    if run_id is not None and run["id"] != run_id:
+        raise TimeMachineError("Run history changed since confirmation; preview again")
+    if confirmed_plan is not None:
+        plan = confirmed_plan
     if plan.warnings and not acknowledge_git:
         raise TimeMachineError(
             "Git metadata mismatch: preview and explicitly acknowledge with --yes"

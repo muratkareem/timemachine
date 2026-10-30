@@ -68,3 +68,12 @@ Validation: `pytest tests/integration/test_retention.py -q`: 4 passed; Ruff clea
 mypy success (18 files). Last prior commit: 837e01c. Push still awaiting explicit
 authorization after automatic-review rejection. Next: M9 real Textual browser.
 Compression/automatic scheduled retention deliberately not implemented.
+
+M9 complete: optional Textual live checkpoint timeline/file table, safely escaped
+text/binary preview, checkpoint comparison, progress indicator, keyboard controls,
+confirmed restore/undo/redo using frozen plans. Headless pilot exercises real
+history, diff, cancel and successful restore. No mock data.
+Validation: `pytest tests/integration/test_tui.py tests/integration/test_redo_restore.py -q`:
+10 passed; Ruff clean; mypy success (20 source files).
+Last prior commit: 6171305. Push awaiting user authorization. Next: M10 integrations,
+M11 justified advanced work/defer decision, M12 safety/quality/release audit.

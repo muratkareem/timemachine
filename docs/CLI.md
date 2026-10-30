@@ -44,3 +44,9 @@ failure; 2 usage/confirmation cancellation; wrapped command status is propagated
   protected reference; delete eligible older metadata only. GC remains separate.
   Run/recovery/journal history is retained indefinitely; quota exhaustion requires
   deliberate storage management. Compression and automatic schedules are absent.
+
+- `tui`: optional Textual browser (`pip install -e '.[tui]'`). Arrows/Tab navigate
+  real history/files; b selects comparison origin, d shows diff; r restores chosen
+  snapshot with a full preview modal; u undo; Ctrl+R redo; F5 refresh; q quit.
+  Escape/cancel leaves files unchanged. Progress appears while core services run.
+  Confirmation uses the original expected states; intervening edits refuse safely.
