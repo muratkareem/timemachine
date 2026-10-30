@@ -220,7 +220,12 @@ class TimeMachineApp(App[None]):
             def apply() -> dict[str, Any]:
                 with self.project.lock():
                     # PRE/POST expectations are fixed, even if the UI waits for consent.
-                    return (redo if redo_action else undo)(self.project, acknowledge_git=True)
+                    return (redo if redo_action else undo)(
+                        self.project,
+                        acknowledge_git=True,
+                        confirmed_plan=plan,
+                        run_id=run_record["id"],
+                    )
 
             self.pending = apply
             self.push_screen(ConfirmRestore(plan), self.confirmed)

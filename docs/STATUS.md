@@ -77,3 +77,12 @@ Validation: `pytest tests/integration/test_tui.py tests/integration/test_redo_re
 10 passed; Ruff clean; mypy success (20 source files).
 Last prior commit: 6171305. Push awaiting user authorization. Next: M10 integrations,
 M11 justified advanced work/defer decision, M12 safety/quality/release audit.
+
+M10 complete: executable capability discovery and documented generic wrappers for
+Codex/Claude/Gemini/Aider, verified vendor sources and truthful capability limits.
+Codex wrapped --help smoke passed; no account/API invocation. Other three absent.
+Validation: `pytest tests/integration/test_integrations.py tests/integration/test_tui.py -q`:
+3 passed, 3 absent-executable skips; Ruff clean; mypy success (21 files).
+TUI undo/redo confirmation now freezes both run ID and immutable plan.
+Last prior commit: e32f5f6. User explicitly authorized origin/main push; pending
+remote-state check. Next: M11 benchmark/defer decision and M12 full safety audit.

@@ -328,5 +328,13 @@ def tui_command() -> None:
     TimeMachineApp(Project.discover()).run()
 
 
+@app.command("agents")
+def agents_command(json_mode: bool = typer.Option(False, "--json")) -> None:
+    """Discover agent executables without launching them or requiring accounts."""
+    from .integrations import capabilities
+
+    output(capabilities(), json_mode)
+
+
 if __name__ == "__main__":
     main()
