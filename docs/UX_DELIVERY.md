@@ -14,7 +14,7 @@ background agent, package publication, release or tag was introduced.
 | Raw JSON diff and restoration data | File indicators, unified diff, line numbers, syntax/file toggle, modes/bytes, bounded preview/search |
 | No project overview | Project identity, saved-state availability, last session, file counts, storage and Git/recovery warnings |
 | One wide-only layout | Desktop workspace, narrow history/detail flow, visible shortcuts, help, dark/light palettes |
-| Generic recovery confirmation | Human review, Cancel default, no-op disabled, conflict next steps, verified completion/recovery data |
+| Generic recovery confirmation | Human review, Cancel default, explicit empty-session history steps, conflict next steps, verified completion/recovery data |
 | Expensive history reads on navigation | Bounded metadata pages, no manifest BLOBs in header queries, synchronized eight-manifest cache |
 | Sparse developer presentation | Original SVG identity, practical README, reproducible real screenshots and measured navigation fixture |
 

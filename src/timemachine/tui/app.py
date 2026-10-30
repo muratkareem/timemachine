@@ -100,7 +100,16 @@ class ConfirmRestore(ModalScreen[bool]):
 
     def on_mount(self) -> None:
         self.query_one("#plan", RichLog).write(human(self.plan.data()))
-        self.query_one("#apply", Button).disabled = not self.plan.changes
+        apply = self.query_one("#apply", Button)
+        if not self.plan.changes and self.operation in ("undo", "redo"):
+            apply.label = "Confirm history step"
+            self.query_one("#plan", RichLog).write(
+                Text(
+                    "No file changes. Confirmation advances only this session's history state."
+                )
+            )
+        else:
+            apply.disabled = not self.plan.changes
         self.query_one("#cancel", Button).focus()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:

@@ -258,3 +258,36 @@ def test_typing_does_not_trigger_actions_and_modal_is_exclusive(project):
             assert (project.root / "x").read_text() == "after"
 
     asyncio.run(exercise())
+
+
+def test_empty_session_can_advance_history_without_touching_files(project):
+    import sys
+
+    from textual.widgets import Button
+
+    from timemachine.metadata import connect
+    from timemachine.runner import run
+
+    (project.root / "x").write_text("unchanged")
+    with project.lock():
+        result = run(project, [sys.executable, "-c", "pass"], project.root)
+
+    async def exercise():
+        app = TimeMachineApp(project)
+        async with app.run_test(size=(120, 36)) as pilot:
+            await pilot.pause()
+            await pilot.press("u")
+            await pilot.pause()
+            assert isinstance(app.screen, ConfirmRestore)
+            assert str(app.screen.query_one("#apply", Button).label) == "Confirm history step"
+            await pilot.click("#apply")
+            await pilot.pause()
+            assert (project.root / "x").read_text() == "unchanged"
+
+    asyncio.run(exercise())
+    with connect(project.store) as db:
+        assert (
+            db.execute("SELECT state FROM runs WHERE id=?", (result["run"],)).fetchone()[0]
+            == "undone"
+        )
+        assert db.execute("SELECT count(*) FROM transactions").fetchone()[0] == 0

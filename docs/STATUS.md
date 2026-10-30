@@ -265,3 +265,9 @@ sdist builds and real CLI demo pass. Isolated wheel includes CSS, runs CLI demo
 and headless TUI. All recovery/storage/Git engine files match 6d28695 exactly.
 Final onboarding explicitly shows exclusion policy, including absent dependency
 folders (not only exclusions currently found). Focused CLI regression: 5 passed.
+
+CI-time interaction audit found a no-change session blocked TUI history advancement.
+Corrected through the existing backend: explicit "Confirm history step" for empty
+undo/redo, with no file writes or manufactured restore journal. Empty checkpoint
+restore stays disabled. TUI pilots: 10 passed; Ruff/mypy clean. Next: verify this
+last correction in the full platform matrix, then final documentation record.

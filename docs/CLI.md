@@ -62,7 +62,8 @@ failure; 2 usage error (confirmation cancellation returns 1); wrapped command st
   Find searches the selected preview; Enter/n finds the next match; v toggles
   saved file/unified diff; b sets comparison origin. u/r/Ctrl+R preview undo/full
   checkpoint restore/redo; ? opens help; t switches dark/light; F5 refreshes.
-  Review defaults to Cancel; empty plans cannot be applied. Frozen plans and run
+  Review defaults to Cancel. Empty restore plans cannot be applied; empty-session
+  undo/redo can explicitly advance history without filesystem writes. Frozen plans and run
   IDs are revalidated through the existing backend after confirmation.
   Suggested minimum: 60 columns x 24 rows. CLI remains the accessible alternative.
   File text is limited to 1 MiB before preview; displayed text is bounded to 2000
