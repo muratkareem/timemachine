@@ -171,5 +171,31 @@ def recover_command(
             output(recover(project, transaction_id), json_mode)
 
 
+@app.command("run", context_settings={"allow_extra_args": True, "ignore_unknown_options": True})
+def run_command(ctx: typer.Context) -> None:
+    """Checkpoint and execute: run -- COMMAND [ARGS...]; inherit terminal and env."""
+    from .runner import run
+
+    project = Project.discover()
+    args = ctx.args
+    if args and args[0] == "--":
+        args = args[1:]
+    with project.lock():
+        result = run(project, args)
+    typer.echo(json.dumps(result, ensure_ascii=True), err=True)
+    raise typer.Exit(result["exit_code"])
+
+
+@app.command("finish-run")
+def finish_run_command(run_id: str, yes: bool = False) -> None:
+    """Record a late POST for a crashed run after stopping all external writers."""
+    from .runner import finish_run
+
+    project = Project.discover()
+    with project.lock():
+        if confirm(False, yes, False, {}):
+            output(finish_run(project, run_id))
+
+
 if __name__ == "__main__":
     main()

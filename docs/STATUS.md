@@ -33,3 +33,10 @@ Validation: `pytest tests/safety tests/unit -q`: 33 passed, 1 filesystem skip;
 mypy success (16 files). Last prior commit: 7947bb0. Push pending M7 gate.
 Safety: multi-file restore is not atomic; external races remain documented.
 Next: M6 generic subprocess wrapper, then M7 end-to-end Git/non-Git gate.
+
+M6 complete: real argv subprocess without shell; inherited cwd/env/stdin/out/err
+and TTY; durable PRE/POST on nonzero/launch-failure/signals; signal forwarding;
+redacted metadata; late POST command for crashes, no automatic rollback.
+Validation: `pytest tests/integration/test_runner.py -q`: 6 passed, including PTY
+and SIGTERM subprocess checks. Ruff clean; mypy success (17 files).
+Last prior commit: 2d868eb. Push pending M7. Next: complete MVP acceptance gate.
