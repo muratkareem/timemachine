@@ -7,7 +7,7 @@ from .diff import changed
 from .errors import ConflictError
 from .models import Entry, Manifest
 from .project import Project
-from .scanner import Scan, scan
+from .scanner import Scan, excluded, scan
 
 
 @dataclass(frozen=True)
@@ -41,6 +41,10 @@ def make_plan(
     warnings: tuple[str, ...] = (),
 ) -> Plan:
     current = scan(project)
+    selected_paths = paths if paths is not None else changed(expected, target)
+    for path in selected_paths:
+        if excluded(project, path):
+            raise ConflictError(f"Path is excluded by current policy: {path!r}")
     return from_scan(current, expected, target, paths, warnings)
 
 

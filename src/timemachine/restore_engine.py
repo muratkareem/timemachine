@@ -225,6 +225,10 @@ def execute(
             db.execute("UPDATE transactions SET status='COMPLETE' WHERE id=?", (identifier,))
             if run_id and kind == "undo":
                 db.execute("UPDATE runs SET state='undone' WHERE id=?", (run_id,))
+            if run_id and kind == "redo":
+                db.execute("UPDATE runs SET state='applied' WHERE id=?", (run_id,))
+            if kind == "restore":
+                db.execute("UPDATE runs SET state='invalidated' WHERE state='undone'")
     except BaseException as exc:
         with connect(project.store) as db:
             db.execute(

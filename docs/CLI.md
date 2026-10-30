@@ -28,3 +28,10 @@ Mutations prompt unless `--yes`; machine-readable mutations require `--yes` or
 `--preview`. Preview is read-only. Exit 0 success; 1 actionable I/O/integrity/safety
 failure; 2 usage/confirmation cancellation; wrapped command status is propagated
 (128+signal for signal termination; 127 launch failure). No force-conflict flag.
+
+- `redo [--preview] [--yes] [--json]`: linear replay after undo. New successful
+  run/restore invalidates redo; checkpoint-only activity does not.
+- `restore ID [--path PATH] [--preview] [--yes] [--json]`: all protected scope or
+  file/directory subset. Current differences are explicitly authorized, including
+  deletion of later files. Revalidation still refuses edits after preview/consent.
+- `rebind --yes`: explicitly update a moved project's canonical root identity.

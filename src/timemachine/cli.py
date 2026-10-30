@@ -197,5 +197,54 @@ def finish_run_command(run_id: str, yes: bool = False) -> None:
             output(finish_run(project, run_id))
 
 
+@app.command("redo")
+def redo_command(
+    preview: bool = False, yes: bool = False, json_mode: bool = typer.Option(False, "--json")
+) -> None:
+    """Replay the most recently undone run, refusing newer conflicting edits."""
+    from .operations import redo, redo_plan
+
+    project = Project.discover()
+    with project.lock():
+        _, plan = redo_plan(project)
+        if confirm(preview, yes, json_mode, plan.data()):
+            output(redo(project, acknowledge_git=True), json_mode)
+
+
+@app.command("restore")
+def restore_command(
+    checkpoint_id: str,
+    path: str | None = None,
+    preview: bool = False,
+    yes: bool = False,
+    json_mode: bool = typer.Option(False, "--json"),
+) -> None:
+    """Restore all protected entries or a selected relative file/directory."""
+    from .operations import restore, restore_plan
+
+    project = Project.discover()
+    with project.lock():
+        plan = restore_plan(project, checkpoint_id, path)
+        if confirm(preview, yes, json_mode, plan.data()):
+            output(restore(project, checkpoint_id, path, plan=plan), json_mode)
+
+
+@app.command("rebind")
+def rebind_command(yes: bool = False) -> None:
+    """Explicitly bind a moved project identity to its current canonical root."""
+    from .security import atomic_write, encode
+
+    project = Project.discover(allow_moved=True)
+    with project.lock():
+        if confirm(False, yes, False, {}):
+            config = {**project.config, "root": str(project.root)}
+            atomic_write(
+                project.store / "project.json",
+                encode({"id": config["id"], "version": 1, "root": str(project.root)}),
+            )
+            atomic_write(project.root / ".timemachine.json", encode(config))
+            output({"rebound": str(project.root), "id": config["id"]})
+
+
 if __name__ == "__main__":
     main()

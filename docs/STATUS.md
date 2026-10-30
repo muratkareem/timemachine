@@ -53,3 +53,10 @@ Agent-created Git commit test emits mismatch and leaves Git metadata untouched.
 README, install/CLI/recovery docs describe actual MVP behavior and limitations.
 Last prior commit: 9969904. Push pending remote/auth check. Next: M5 redo and
 selective restore, then storage/TUI/integrations/final audit.
+
+M5 complete: linear multi-run redo, conflict checks/invalidation, full or selective
+file/directory restore, missing ancestor creation, confirmed immutable plans,
+explicit moved-root rebind. Last prior commit: 7c007dc. Push blocked: automatic
+approval review requires explicit user authorization for origin/main; question
+pending. Validation: `pytest tests/integration/test_redo_restore.py tests/safety -q`:
+19 passed; Ruff clean; mypy success (17 files). Next: M8 storage/retention.
