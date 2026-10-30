@@ -97,3 +97,77 @@ def test_tui_undo_refuses_changed_run_history(project):
             assert (project.root / "x").read_text() == "two"
 
     asyncio.run(exercise())
+
+
+def test_narrow_empty_help_theme_and_keyboard(project):
+    from textual.widgets import Input, Static
+
+    from timemachine.tui.app import HelpScreen
+
+    async def exercise():
+        app = TimeMachineApp(project)
+        async with app.run_test(size=(60, 24)) as pilot:
+            await pilot.pause()
+            assert app.has_class("narrow")
+            assert app.query_one("#timeline", DataTable).row_count == 0
+            await pilot.press("question_mark")
+            assert isinstance(app.screen, HelpScreen)
+            await pilot.press("escape")
+            await pilot.press("t")
+            assert app.theme == "textual-light"
+            await pilot.press("slash")
+            assert app.focused is app.query_one("#filter", Input)
+            assert app.query_one("#overview", Static).region.width <= 60
+
+    asyncio.run(exercise())
+
+
+def test_filter_unicode_search_and_narrow_details(project):
+    from textual.widgets import Input
+
+    (project.root / "файл[red].py").write_text("before\n")
+    with project.lock():
+        checkpoint(project, "Unicode checkpoint")
+        (project.root / "файл[red].py").write_text("after\n")
+        checkpoint(project, "Second checkpoint")
+
+    async def exercise():
+        app = TimeMachineApp(project)
+        async with app.run_test(size=(70, 26)) as pilot:
+            await pilot.pause()
+            await pilot.press("enter")
+            await pilot.pause()
+            assert app.has_class("detail-mode")
+            assert "+after" in app.preview_text
+            app.query_one("#find", Input).value = "after"
+            await pilot.pause()
+            assert app.match_index == 0
+            await pilot.press("escape")
+            assert not app.has_class("detail-mode")
+            app.query_one("#filter", Input).value = "Unicode"
+            await pilot.pause()
+            assert app.query_one("#timeline", DataTable).row_count == 1
+            assert "файл[red].py" in app.file_items
+
+    asyncio.run(exercise())
+
+
+def test_corrupt_manifest_refuses_selected_restore(project):
+    from timemachine.metadata import connect
+
+    (project.root / "x").write_text("data")
+    with project.lock():
+        identifier = checkpoint(project)
+    with connect(project.store) as db:
+        db.execute("UPDATE checkpoints SET digest=? WHERE id=?", ("0" * 64, identifier))
+
+    async def exercise():
+        app = TimeMachineApp(project)
+        async with app.run_test(size=(120, 36)) as pilot:
+            await pilot.pause()
+            assert app.selected_id is None
+            await pilot.press("r")
+            assert not isinstance(app.screen, ConfirmRestore)
+            assert (project.root / "x").read_text() == "data"
+
+    asyncio.run(exercise())

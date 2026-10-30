@@ -192,3 +192,11 @@ Shared safe Unicode/units/palette and metadata-paged UI read model implemented.
 Navigation uses lazy immutable manifest cache, no source scanning. Unique ID
 prefix resolution is explicit and rejects ambiguity. Focused tests: 2 passed;
 Ruff/mypy clean. Next: responsive workspace and guided backend recovery dialogs.
+
+UX workspace gate: dashboard, paged session/checkpoint/recovery timeline, filters,
+keyboard help, light-theme toggle, responsive history/detail navigation, bounded
+file/diff previews, search and semantic change labels implemented. All actions
+use real backend data and frozen plans/run IDs. Corrupt selections disable restore.
+Tests: `pytest tests/integration/test_tui.py -q`: 6 passed, including narrow/empty,
+Unicode/search, changed files/history during confirmation and corrupt manifests.
+Ruff and mypy pass. Next: CLI onboarding/presentation, visual inspection and QA.

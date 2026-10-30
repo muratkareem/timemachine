@@ -112,7 +112,7 @@ def human(value: Any) -> Any:
             ],
         )
     if not isinstance(value, dict):
-        return Text(safe(value))
+        return Text(safe(value, multiline=True))
     if value.get("initialized"):
         return Panel(
             Text(
