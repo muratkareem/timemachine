@@ -1,3 +1,34 @@
+# Current status — production release candidate prepared
+
+Version **0.1.0**, supported Python **3.12–3.14** on **macOS/Linux local filesystems**.
+Production runtime is committed through **9ae8c4d**; final acceptance/CI changes at
+**685291c** passed all seven remote jobs in workflow **41192391040**. All six test
+matrix jobs succeeded plus the reproducible candidate artifact job. Last local
+full suite: **139 passed, 4 skipped**, **85% statement coverage** (2370/359 missed),
+27.33 s. Ruff/format pass (56 files); strict mypy passes (26 source files).
+
+Exact-reviewed recovery, catalog authority/GC checks, explicit v1→v2 catalog
+migration and chained append-only journals are implemented and adversarially tested.
+Objects/manifests stay compatible. Measured scale includes 50,000 files, deep trees,
+64 MiB binaries, repeated 1,000-path undo/redo and 1,000 saved checkpoints.
+
+No-clone public-archive and wheel installations pass uv/pipx isolation, actual CLI
+acceptance and packaged TUI checks. Homebrew pinned formula build/test and installed
+acceptance/TUI pass on macOS arm64. Dark/light/narrow screenshots were regenerated
+and inspected; the current interface is preserved. A real scripted CLI recording
+is committed. No snapshots or user secrets were uploaded.
+
+Release candidates build twice with matching hashes. Final documentation, formula
+and release notes are being committed before the final artifact/CI gate. Push to
+origin/main is authorized. Publishing the tag/GitHub Release remains a separate
+maintainer approval; PyPI also lacks verified ownership/credentials. No publication
+is claimed. Native Windows, hunk recovery and vendor-hook adapters are deferred.
+See PRODUCTION_DELIVERY.md, PRODUCTION_AUDIT.md, BENCHMARKS.md and RELEASE.md.
+
+---
+
+## Historical record (the summaries below describe earlier gates)
+
 # Current status — UX/UI overhaul complete
 
 All eight UX phases delivered. Final tested implementation: **8d1b479** on
@@ -355,3 +386,12 @@ unchanged dedup, wrapped edits, undo/redo, verify and GC passed. Separate 64 MiB
 binary/1000-path/three-roundtrip restore and 1000-checkpoint navigation passed.
 Exact workloads/raw JSON in BENCHMARKS.md. Next: reproducible builds, clean tool
 installation, staged Homebrew validation, final acceptance and remote CI.
+
+Distribution/acceptance gate: no-clone pinned public archive installs pass with uv
+and pipx; isolated wheel installs pass both tools, CLI demo and packaged TUI. Twine
+metadata checks pass wheel/sdist. The pinned Homebrew formula built from source;
+brew test, installed acceptance and headless TUI pass on macOS arm64/Python 3.12.16.
+Temporary validation formula/tap is removed after checks; Homebrew installed normal
+Python/OpenSSL/SQLite dependency updates during the test. CI 685291c: all six test
+matrix jobs plus double-build/release-artifact job passed, run 41192391040.
+Native Windows and optional hunk/vendor-hook integrations remain explicitly deferred.

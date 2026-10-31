@@ -1,6 +1,6 @@
-![TimeMachine — local recovery for coding agents](docs/assets/wordmark.svg)
+![TimeMachine — local recovery for coding agents](https://raw.githubusercontent.com/muratkareem/timemachine/main/docs/assets/wordmark.svg)
 
-**Checkpoint your project. Run your agent. Inspect every change. Undo safely.**
+**Undo AI coding agent changes without losing your own work.**
 
 TimeMachine saves selected local files before and after a coding-agent session.
 Review the diff and undo that session while preserving unrelated work. It captures
@@ -9,14 +9,11 @@ No account, daemon or API key is required by TimeMachine.
 
 ## Try it in a minute
 
-Python **3.12+** · macOS / Linux · source installation (no PyPI release claimed).
+Python **3.12+** · macOS / Linux · version **0.1.0**, release candidate.
+Install from the verified commit archive with [uv](https://docs.astral.sh/uv/):
 
 ```sh
-git clone https://github.com/muratkareem/timemachine.git
-cd timemachine
-python3.12 -m venv .venv
-. .venv/bin/activate
-pip install -e '.[tui]'
+uv tool install --python 3.12 'timemachine-cli[tui] @ https://github.com/muratkareem/timemachine/archive/9ae8c4d07ef4acbdbe2c87220a0d562276810b16.tar.gz'
 
 cd /path/to/your/project
 timemachine init
@@ -30,17 +27,19 @@ Prefer the CLI? `timemachine diff`, then `timemachine undo --preview` and
 launching anything. The agents keep their own authentication and billing.
 
 **Initialization is setup, not a backup.** Wrap each session or create a checkpoint.
-If you leave the virtual environment, activate it again to use the installed CLI.
+The tool installation stays separate from your project dependencies.
+[Other installation methods](https://github.com/muratkareem/timemachine/blob/main/docs/INSTALL.md) include pipx and the macOS Homebrew tap.
+No PyPI publication is claimed; `timemachine` on PyPI is a different project.
 
 ## See the session, understand the recovery
 
-![Real TimeMachine dashboard and unified diff](docs/assets/tui.svg)
+![Real TimeMachine dashboard and unified diff](https://raw.githubusercontent.com/muratkareem/timemachine/main/docs/assets/tui.svg)
 
 The dashboard distinguishes saved checkpoints from current files. The timeline
 connects agent sessions to PRE/POST snapshots. Choose a file to read its diff,
 search its contents, or inspect its saved bytes, type and permissions.
 
-![Real undo review with explicit confirmation](docs/assets/recovery.svg)
+![Real undo review with explicit confirmation](https://raw.githubusercontent.com/muratkareem/timemachine/main/docs/assets/recovery.svg)
 
 Undo first checks affected current paths against the recorded result. A conflicting
 newer edit is refused. A recovery checkpoint and journal are retained before writes;
@@ -48,8 +47,8 @@ success appears only after the backend verifies the selected result.
 
 These are real screenshots from a disposable project and a wrapped synthetic
 Python command. Reproduce them with `python examples/tui_preview.py`. No billed
-agent or fake product data is used. [Narrow view](docs/assets/narrow.svg) · [Light theme](docs/assets/light.svg) ·
-[Before the redesign](docs/assets/tui-before.svg) · [UX decisions](docs/UX_OVERHAUL.md).
+agent or fake product data is used. [Narrow view](https://github.com/muratkareem/timemachine/blob/main/docs/assets/narrow.svg) · [Light theme](https://github.com/muratkareem/timemachine/blob/main/docs/assets/light.svg) ·
+[Before the redesign](https://github.com/muratkareem/timemachine/blob/main/docs/assets/tui-before.svg) · [UX decisions](https://github.com/muratkareem/timemachine/blob/main/docs/UX_OVERHAUL.md).
 
 ## A small before / after
 
@@ -61,6 +60,9 @@ timemachine undo --preview        # review first
 timemachine undo                  # confirm; hello.txt becomes before again
 ```
 
+A real [scripted terminal recording](https://github.com/muratkareem/timemachine/blob/main/docs/assets/demo.cast) can be played with
+`asciinema play docs/assets/demo.cast` from a checkout. Regenerate it with
+`python scripts/record_demo.py --output /tmp/timemachine-demo.cast`.
 For a fully disposable, self-checking demo, run `python examples/demo.py` from the
 installed checkout. It asserts the bytes after undo and redo, then removes its fixture.
 
@@ -70,6 +72,7 @@ installed checkout. It asserts the bytes after undo and redo, then removes its f
 | --- | --- |
 | Save a manual checkpoint | `timemachine checkpoint -m 'Before refactor'` |
 | Discover coding agents | `timemachine agents` |
+| Opt in once in Bash/Zsh | `timemachine integrate --output /new/path/agents.sh` |
 | Inspect sessions | `timemachine history` or `timemachine tui` |
 | Find a checkpoint | `timemachine history --search refactor` |
 | See the agent's changes | `timemachine diff` |
@@ -100,8 +103,10 @@ loaded history, **u** previews undo, **r** reviews restore, **?** opens help, an
 - Corruption and interrupted recovery need explicit attention; nothing silently
   rolls back. Keep an independent backup of valuable work.
 
-Read the [safety contract](docs/SAFETY.md) and [recovery guide](docs/RECOVERY.md).
-Watch mode, export/import, compression and Windows support remain deferred.
+Read the [safety contract](https://github.com/muratkareem/timemachine/blob/main/docs/SAFETY.md) and [recovery guide](https://github.com/muratkareem/timemachine/blob/main/docs/RECOVERY.md).
+Existing v1 catalogs require an explicit `timemachine migrate --preview` and
+`timemachine migrate --yes` before new writes. Manifests and objects stay compatible.
+Native Windows, hunk recovery, vendor hooks, watch, export and compression are deferred.
 
 ## When something needs attention
 
@@ -119,12 +124,14 @@ Watch mode, export/import, compression and Windows support remain deferred.
 ```sh
 pip install -e '.[dev]'
 pytest
-ruff check src tests examples
+ruff check src tests examples scripts
 mypy
 python -m build --no-isolation
 ```
 
-[Contributing](CONTRIBUTING.md) · [CLI reference](docs/CLI.md) ·
-[Installation](docs/INSTALL.md) · [Architecture](docs/ARCHITECTURE.md) ·
-[Agent wrappers](docs/INTEGRATIONS.md) · [Security](SECURITY.md) ·
-[Measured benchmarks](docs/BENCHMARKS.md) · [Status](docs/STATUS.md) · [MIT license](LICENSE)
+[Contributing](https://github.com/muratkareem/timemachine/blob/main/CONTRIBUTING.md) · [CLI reference](https://github.com/muratkareem/timemachine/blob/main/docs/CLI.md) ·
+[Installation](https://github.com/muratkareem/timemachine/blob/main/docs/INSTALL.md) · [Architecture](https://github.com/muratkareem/timemachine/blob/main/docs/ARCHITECTURE.md) ·
+[Agent wrappers](https://github.com/muratkareem/timemachine/blob/main/docs/INTEGRATIONS.md) · [Security](https://github.com/muratkareem/timemachine/blob/main/SECURITY.md) ·
+[Measured benchmarks](https://github.com/muratkareem/timemachine/blob/main/docs/BENCHMARKS.md) · [Status](https://github.com/muratkareem/timemachine/blob/main/docs/STATUS.md) · [MIT license](https://github.com/muratkareem/timemachine/blob/main/LICENSE)
+
+Prepared release details, publication blockers and reproducible checks: [Release procedure](https://github.com/muratkareem/timemachine/blob/main/docs/RELEASE.md).

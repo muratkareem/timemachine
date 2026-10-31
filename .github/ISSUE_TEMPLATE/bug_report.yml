@@ -1,0 +1,25 @@
+name: Bug report
+description: A reproducible behavior or installation problem
+body:
+  - type: markdown
+    attributes:
+      value: "For potential data loss or security issues, follow SECURITY.md. Never upload snapshot stores, secrets, raw agent arguments, or private file contents."
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: TimeMachine version, Python version, OS, filesystem, installation method
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Disposable reproduction
+      description: Minimal synthetic steps, expected behavior, actual behavior and sanitized error
+    validations:
+      required: true
+  - type: textarea
+    id: safety
+    attributes:
+      label: Recovery state
+      description: Were any operations interrupted? Preserve recovery artifacts locally. Share IDs/error types only.

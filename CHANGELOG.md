@@ -1,23 +1,27 @@
 # Changelog
 
-## Unreleased — product UX overhaul
+## 0.1.0 — prepared release candidate, not published
 
-- Responsive dark/light Textual workspace, project dashboard, session relationships,
-  filters, paged timeline, bounded searchable diff/file preview and keyboard help.
-- Guided recovery reviews and actionable conflicts using the unchanged safety engine.
-- Human terminal output, short useful onboarding, grouped help, quickstart, searchable
-  history and unique checkpoint prefixes. Redirected/explicit JSON stays compatible.
-- Original SVG identity, real screenshots and a practical README.
-- Lazy metadata/read cache with measured navigation results and usability regressions.
+- Conflict-safe local checkpoints, PRE/POST subprocess sessions, undo/redo and
+  selective file/directory restore without rewriting Git history/index.
+- Exact reviewed intent is retained through CLI and UI confirmation. Frozen Git,
+  root, ancestor and selected-path observations reject observable concurrent changes.
+- Bounded duplicate-key-rejecting config reads, private store validation, strict
+  catalog/reference checks and corruption-safe garbage collection.
+- Verified duplicate objects avoid rewrites; per-capture quota inventory is linear.
+- Catalog v2 adds indexed chained append-only recovery steps. Explicit v1 migration
+  preserves manifests, objects and legacy journals and saves a catalog backup.
+- Responsive Textual dark/light workspace, paged timeline, searchable unified/file
+  previews, line numbers, binary/large-file/type/permission summaries and safe reviews.
+- Human terminal and stable machine JSON output, quickstart, prefix lookup, version
+  reporting and explicit Bash/Zsh opt-in for discovered coding-agent executables.
+- Verified no-clone uv/pipx installs, pinned Homebrew formula, reproducible wheel/sdist,
+  package resource checks, dependency inventory and release CI candidate artifacts.
+- Adversarial audit, disposable acceptance/terminal demo and measured benchmarks
+  through 50,000 files, a 64 MiB binary and 1,000 checkpoints.
+- Native Windows, hunk recovery, automatic vendor hooks, watch/export/compression
+  deferred. Scope and unavoidable filesystem races remain explicit.
 
-## 0.1.0 — source implementation, not published
-
-- Private external project storage and strict versioned SQLite/manifest metadata.
-- SHA-256 deduplicated checkpoints, stable double scans and integrity verification.
-- Real subprocess PRE/POST recording with inherited terminal/environment and signals.
-- Conflict-safe scoped undo, linear redo and selective/full checkpoint restore.
-- Durable recovery checkpoints/journals and explicit partial-restore recovery.
-- Git context mismatch detection without index/history mutation.
-- JSON CLI, safe diff previews, storage/retention/GC and optional Textual browser.
-- Disposable demo, measured benchmark and macOS/Linux CI matrix configuration.
-- Watch/export/import/compression and Windows deferred. No PyPI/release claim.
+No PyPI package, GitHub Release or tag is announced by this changelog. Publication
+requires maintainer authorization; PyPI additionally needs ownership/credentials.
+The tested runtime source is installable from its pinned public commit archive.

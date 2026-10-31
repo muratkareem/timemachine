@@ -18,7 +18,7 @@ catalog/manifests/recovery metadata still grow.
 | 10,000 | 2.090 s | 0.818 s | 0.057 s | 1.630 s | 1.615 s | 0.335 s | 0.633 s | 75 MiB |
 | 50,000 | 13.672 s | 5.359 s | 0.291 s | 9.100 s | 9.113 s | 1.911 s | 3.738 s | 164 MiB |
 
-The 50,000-file history header page took 4.35 ms. Memory includes Python and
+The 50,000-file history header page took 4.35 ms. Peak RSS includes fixture creation, Python and
 complete in-memory manifests; file contents stream, but metadata is O(files).
 Small-file durability costs dominate fresh capture. No integrity hashing was
 removed. This is not a 50,000-path restore benchmark.

@@ -48,3 +48,9 @@ is subject to filesystem/hardware behavior. Permission failures, disk exhaustion
 concurrent changes and unsupported entries fail clearly. Interrupted runs are
 never silently undone. No PyPI publication or platform/CI success is implied by
 source availability.
+
+Production audit strengthens preview/execute binding, catalog collection authority
+and journal chain validation; see PRODUCTION_AUDIT.md. Manifests remain v1; catalog
+v2 requires explicit migration for writes. Corrupt/missing journal steps stop verify,
+recovery and GC. Catalog-only migration backups are not whole-store backups and do
+not independently retain object bytes against later deliberate GC.

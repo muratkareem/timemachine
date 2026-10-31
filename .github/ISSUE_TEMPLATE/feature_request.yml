@@ -1,0 +1,14 @@
+name: Feature request
+description: Describe a developer workflow that TimeMachine could improve
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and concrete workflow
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior and safety expectations
+      description: Include conflict handling, recovery expectations and simpler alternatives.

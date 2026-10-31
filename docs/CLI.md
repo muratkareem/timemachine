@@ -1,5 +1,16 @@
 # CLI
 
+`timemachine --version` prints the installed package version. `tmachine` is an alias;
+`python -m timemachine` uses the same supported-platform entry point.
+`integrate --output /new/path/agents.sh` generates reviewable Bash/Zsh functions
+for installed agents. It never edits startup files or activates them; see INTEGRATIONS.md.
+Human `run` prints the verified PRE ID before launching. Human `status` counts saved
+checkpoints and active/unfinished sessions; its existing JSON structure is preserved.
+
+`migrate --preview`, then `migrate --yes [--json]` explicitly upgrades catalog v1
+to v2 before writes. Existing manifests and legacy recovery journals stay readable;
+see RECOVERY.md for the backup scope and whole-store backup recommendation.
+
 All commands support `--help`, grouped into everyday, recovery and diagnostics.
 Interactive terminals get human-readable views. Redirected output keeps its
 previous JSON structures; `--json` always explicitly selects the stable JSON
