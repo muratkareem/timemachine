@@ -89,6 +89,7 @@ def test_pipe_stdin_stdout(project):
 def test_inherited_tty(project):
     import pty
     import select
+    import time
 
     master, slave = pty.openpty()
     command = [
@@ -99,23 +100,34 @@ def test_inherited_tty(project):
         "--",
         sys.executable,
         "-c",
-        "import os; print('TTY',os.isatty(0),os.isatty(1),os.isatty(2))",
+        "import os; print('TTY',os.isatty(0),os.isatty(1),os.isatty(2)); print('x'*16384)",
     ]
+    child = None
     try:
         child = subprocess.Popen(command, cwd=project.root, stdin=slave, stdout=slave, stderr=slave)
-        child.wait(timeout=10)
+        os.close(slave)
+        slave = -1
         data = b""
-        while select.select([master], [], [], 0.2)[0]:
-            try:
-                chunk = os.read(master, 8192)
+        deadline = time.monotonic() + 20
+        # A terminal emulator drains output while the child is running. Waiting
+        # first can deadlock when the smaller macOS PTY buffer fills.
+        while time.monotonic() < deadline:
+            if select.select([master], [], [], 0.1)[0]:
+                try:
+                    chunk = os.read(master, 8192)
+                except OSError:
+                    break
                 if not chunk:
                     break
                 data += chunk
-            except OSError:
-                break
+        child.wait(timeout=max(0.1, deadline - time.monotonic()))
         assert child.returncode == 0
         assert b"TTY True True True" in data
+        assert b"x" * 16384 in data
     finally:
+        if child is not None and child.poll() is None:
+            child.kill()
+            child.wait(timeout=5)
         os.close(master)
         if slave != -1:
             os.close(slave)
