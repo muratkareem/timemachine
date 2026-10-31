@@ -348,3 +348,10 @@ sessions show verified PRE before launch; human status reports complete checkpoi
 and unfinished sessions without changing status JSON. CLI --version/module entry
 and an early unsupported-platform gate are added. Focused gate: 13 passed, plus
 runner regression 9 passed in the preceding combined run. Windows is not validated.
+
+Production scale/full regression gate: 139 passed, 4 documented skips, 85% statement
+coverage (2370 statements/359 missed). MacOS local 100/1000/10000/50000-file captures,
+unchanged dedup, wrapped edits, undo/redo, verify and GC passed. Separate 64 MiB
+binary/1000-path/three-roundtrip restore and 1000-checkpoint navigation passed.
+Exact workloads/raw JSON in BENCHMARKS.md. Next: reproducible builds, clean tool
+installation, staged Homebrew validation, final acceptance and remote CI.

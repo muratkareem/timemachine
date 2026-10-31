@@ -1,5 +1,50 @@
 # Measured local benchmark
 
+## Production scale gate · 2026-10-31
+
+Measured after deddd13 with the new journal/capture implementation. Every fixture
+was disposable on local APFS, macOS 26.7.1 arm64, Python 3.12.14. One run per size,
+possible warm caches; these are observations, not cross-platform guarantees.
+Each contains unique 18-byte files, an 8 MiB binary and a 20-level empty-file tree.
+The wrapper changes ten files; undo/redo validates the whole snapshot scope and
+changes those ten. All byte checks, integrity verification and zero-reclaim GC
+checks passed. Unchanged checkpoints added **zero object bytes** at every size;
+catalog/manifests/recovery metadata still grow.
+
+| Files | Fresh checkpoint | Unchanged | Diff | Undo | Redo | Verify | GC dry-run | Peak RSS |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 100 | 0.055 s | 0.035 s | 0.002 s | 0.109 s | 0.110 s | 0.010 s | 0.017 s | 36 MiB |
+| 1,000 | 0.246 s | 0.096 s | 0.006 s | 0.276 s | 0.243 s | 0.036 s | 0.070 s | 43 MiB |
+| 10,000 | 2.090 s | 0.818 s | 0.057 s | 1.630 s | 1.615 s | 0.335 s | 0.633 s | 75 MiB |
+| 50,000 | 13.672 s | 5.359 s | 0.291 s | 9.100 s | 9.113 s | 1.911 s | 3.738 s | 164 MiB |
+
+The 50,000-file history header page took 4.35 ms. Memory includes Python and
+complete in-memory manifests; file contents stream, but metadata is O(files).
+Small-file durability costs dominate fresh capture. No integrity hashing was
+removed. This is not a 50,000-path restore benchmark.
+
+A separate 1,000-file / **64 MiB binary** fixture changed all 1,000 files and
+completed three undo/redo round trips. Undo took 1.92–1.98 s and redo 1.87–1.95 s;
+peak RSS was 107 MiB. A separate 1,000-checkpoint one-file history returned fifty
+headers in 0.51 ms with zero manifest loads; twenty repeated selections took
+6.98 ms and loaded two cached manifests. Cache capacity remains eight.
+
+Reproduce from an installed checkout (each command removes its own fixture):
+
+```sh
+python scripts/scale_benchmark.py --files 50000 --binary-mib 8
+python scripts/scale_benchmark.py --files 1000 --binary-mib 64 --edits 1000 --roundtrips 3
+python examples/ux_benchmark.py --checkpoints 1000
+```
+
+Raw measurements: [100](benchmarks/scale-100.json),
+[1,000](benchmarks/scale-1000.json), [10,000](benchmarks/scale-10000.json),
+[50,000](benchmarks/scale-50000.json), [repeated recovery](benchmarks/scale-repeated.json),
+[1,000-checkpoint history](benchmarks/history-1000.json).
+The script's session timing label was clarified after measurement; values are unchanged.
+
+## Historical baseline
+
 Re-executed against the final runtime implementation at 91a6caf:
 `python examples/benchmark.py --files 200 --bytes 4096` on 2026-10-30.
 Disposable project, 200 distinct 4 KiB files (819,200 protected bytes). Store and

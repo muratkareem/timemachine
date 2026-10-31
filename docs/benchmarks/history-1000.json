@@ -1,0 +1,14 @@
+{
+  "platform": "macOS-26.7.1-arm64-arm-64bit",
+  "python": "3.12.14",
+  "saved_checkpoints": 1000,
+  "page_size": 50,
+  "previous_history_seconds": 0.01859774999320507,
+  "previous_manifest_loads": 50,
+  "new_header_seconds": 0.0005126249743625522,
+  "new_header_manifest_loads": 0,
+  "twenty_selections_seconds": 0.00698091700905934,
+  "selection_manifest_loads": 2,
+  "cache_limit": 8,
+  "note": "Single small local run; not a large-project performance guarantee"
+}

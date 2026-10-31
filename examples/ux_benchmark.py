@@ -1,5 +1,6 @@
 """Measure actual UI read-model behavior on disposable saved history."""
 
+import argparse
 import json
 import platform
 import tempfile
@@ -14,6 +15,11 @@ from timemachine.ui_data import Workspace
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--checkpoints", type=int, default=120)
+    args = parser.parse_args()
+    if not 1 <= args.checkpoints <= 10000:
+        parser.error("checkpoints must be 1..10000")
     with tempfile.TemporaryDirectory(prefix="timemachine-ux-benchmark-") as temp:
         base = Path(temp)
         root = base / "project"
@@ -21,7 +27,7 @@ def main() -> None:
         project = Project.init(root, base / "store")
         (root / "file.py").write_text("print('checkpoint fixture')\n")
         with project.lock():
-            for index in range(120):
+            for index in range(args.checkpoints):
                 checkpoint(project, f"Saved iteration {index}")
         with patch("timemachine.history.get_checkpoint", wraps=get_checkpoint) as reads:
             start = time.perf_counter()
@@ -44,7 +50,7 @@ def main() -> None:
                 {
                     "platform": platform.platform(),
                     "python": platform.python_version(),
-                    "saved_checkpoints": 120,
+                    "saved_checkpoints": args.checkpoints,
                     "page_size": len(events),
                     "previous_history_seconds": baseline,
                     "previous_manifest_loads": baseline_reads,

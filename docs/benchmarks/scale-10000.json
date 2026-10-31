@@ -1,0 +1,23 @@
+{
+  "platform": "macOS-26.7.1-arm64-arm-64bit",
+  "python": "3.12.14",
+  "files": 10000,
+  "binary_mib": 8,
+  "directory_depth": 20,
+  "fresh_checkpoint_s": 2.090107,
+  "unchanged_checkpoint_s": 0.817798,
+  "diff_s": 0.057311,
+  "undo_s": 1.629959,
+  "redo_s": 1.615134,
+  "verify_s": 0.33544,
+  "gc_dry_run_s": 0.632627,
+  "history_headers_s": 0.001769,
+  "initial_object_bytes": 8568608,
+  "unchanged_object_bytes": 8568608,
+  "final_object_bytes": 8568621,
+  "peak_rss_bytes": 78512128,
+  "note": "One disposable run; undo/redo touches at most 10 files; warm cache possible",
+  "wrapped_session_s": 1.668063,
+  "edited_files": 10,
+  "roundtrips": 1
+}
