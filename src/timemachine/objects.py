@@ -16,6 +16,7 @@ class ObjectStore:
     def __init__(self, store: Path, quota: int):
         self.directory = store / "objects"
         self.quota = quota
+        self._known_bytes: int | None = None
 
     def path(self, digest: str) -> Path:
         if not re.fullmatch(r"[a-f0-9]{64}", digest):
@@ -26,6 +27,8 @@ class ObjectStore:
         return sum(p.lstat().st_size for p in self.directory.iterdir())
 
     def put_fd(self, source: int, max_size: int) -> tuple[str, int]:
+        if self._known_bytes is None:
+            self._known_bytes = self.usage()
         fd, name = tempfile.mkstemp(prefix=".tmp-", dir=self.directory)
         hasher = hashlib.sha256()
         size = 0
@@ -44,9 +47,10 @@ class ObjectStore:
             if os.path.lexists(target):
                 self.verify(digest, size)
             else:
-                if self.usage() > self.quota:
+                if self._known_bytes + size > self.quota:
                     raise TimeMachineError("Storage quota exceeded; checkpoint incomplete")
                 os.replace(name, target)
+                self._known_bytes += size
                 sync_dir(self.directory)
                 self.verify(digest, size)
             return digest, size

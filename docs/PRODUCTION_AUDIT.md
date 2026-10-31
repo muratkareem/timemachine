@@ -46,3 +46,12 @@ unfinished references, and missing foreign-key targets. Verify/GC run SQLite and
 reference health checks before object deletion. Errors preserve the store.
 Focused config/catalog/retention tests: 26 passed. No migration or version bump
 of valid v1 manifests is required.
+
+## Measured and corrected: quadratic object inventory
+
+A disposable 1,000-distinct-object profile made 1,000 complete inventory scans
+and took 2.054 s. Per-locked-capture inventory accounting made one scan and took
+0.206 s on the same macOS/Python fixture. Dedup remains fully verified; quota
+charges unique bytes only. The cache lasts only for one locked ObjectStore/capture,
+not across unrelated operations. External store edits do not obey this accounting
+or the lock and remain outside its threat boundary. Larger workloads follow.
