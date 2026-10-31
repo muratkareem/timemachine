@@ -54,7 +54,7 @@ def undo(
     return {"run": run["id"], "transaction": transaction, **plan.data()}
 
 
-def recover(project: Project, transaction_id: str, *, preview: bool = False) -> dict[str, Any]:
+def recovery_plan(project: Project, transaction_id: str) -> Plan:
     """Explicitly restore a failed transaction's pre-state, refusing later edits."""
     from .errors import ConflictError
     from .journal import read_plan, read_progress
@@ -84,6 +84,18 @@ def recover(project: Project, transaction_id: str, *, preview: bool = False) -> 
             raise ConflictError(f"Recovery conflict: later edit at {path!r}; no files changed")
     recovery = get_checkpoint(project, row["recovery"])
     plan = make_plan(project, current.entries, recovery["entries"], paths)
+    return plan
+
+
+def recover(
+    project: Project,
+    transaction_id: str,
+    *,
+    preview: bool = False,
+    confirmed_plan: Plan | None = None,
+) -> dict[str, Any]:
+    current = recovery_plan(project, transaction_id)
+    plan = confirmed_plan if confirmed_plan is not None else current
     if preview:
         return {"transaction": transaction_id, **plan.data()}
     identifier = execute(project, plan, "recover")

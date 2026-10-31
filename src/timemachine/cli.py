@@ -241,9 +241,12 @@ def undo_command(
 
     project = Project.discover()
     with project.lock():
-        _, plan = undo_plan(project)
+        run_record, plan = undo_plan(project)
         if confirm(preview, yes, json_mode, plan.data()):
-            output(undo(project, acknowledge_git=True), json_mode)
+            output(
+                undo(project, acknowledge_git=True, confirmed_plan=plan, run_id=run_record["id"]),
+                json_mode,
+            )
 
 
 @app.command("recover", rich_help_panel="Recovery")
@@ -254,13 +257,13 @@ def recover_command(
     json_mode: bool = typer.Option(False, "--json"),
 ) -> None:
     """Recover a partial restore explicitly; refuse subsequent conflicting edits."""
-    from .operations import recover
+    from .operations import recover, recovery_plan
 
     project = Project.discover()
     with project.lock(allow_pending=True):
-        plan = recover(project, transaction_id, preview=True)
-        if confirm(preview, yes, json_mode, plan):
-            output(recover(project, transaction_id), json_mode)
+        plan = recovery_plan(project, transaction_id)
+        if confirm(preview, yes, json_mode, {"transaction": transaction_id, **plan.data()}):
+            output(recover(project, transaction_id, confirmed_plan=plan), json_mode)
 
 
 @app.command(
@@ -310,9 +313,12 @@ def redo_command(
 
     project = Project.discover()
     with project.lock():
-        _, plan = redo_plan(project)
+        run_record, plan = redo_plan(project)
         if confirm(preview, yes, json_mode, plan.data()):
-            output(redo(project, acknowledge_git=True), json_mode)
+            output(
+                redo(project, acknowledge_git=True, confirmed_plan=plan, run_id=run_record["id"]),
+                json_mode,
+            )
 
 
 @app.command("restore", rich_help_panel="Recovery")

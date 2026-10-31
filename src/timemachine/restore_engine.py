@@ -9,6 +9,7 @@ from typing import Any
 
 from .checkpoint import checkpoint, manifest, now
 from .errors import ConflictError, IntegrityError
+from .git_context import git_context
 from .journal import pack
 from .metadata import connect
 from .models import Entry, fingerprint, mode_bits
@@ -16,7 +17,7 @@ from .objects import CHUNK, ObjectStore
 from .project import Project
 from .restore_plan import Change, Plan
 from .scanner import scan
-from .security import DIR_FLAGS, parent_fd, safe_path
+from .security import DIR_FLAGS, encode, parent_fd, safe_path
 
 
 def observe(fd: int, name: str) -> tuple[Entry | None, tuple[int, ...] | None]:
@@ -58,7 +59,24 @@ def execute(
     hook: Callable[[str, str], None] | None = None,
 ) -> str | None:
     """hook is a deterministic fault-injection seam; never used by the CLI."""
-    if not plan.changes:
+
+    def check_context() -> None:
+        if (
+            plan.git_fingerprint is not None
+            and encode(git_context(project.root)) != plan.git_fingerprint
+        ):
+            raise ConflictError("Git metadata changed after preview; preview and acknowledge again")
+        for path, device, inode in plan.identities:
+            if path:
+                with parent_fd(project.root, path) as (fd, name):
+                    info = os.stat(name, dir_fd=fd, follow_symlinks=False)
+            else:
+                info = project.root.lstat()
+            if (info.st_dev, info.st_ino) != (device, inode):
+                raise ConflictError(f"Path identity changed after preview: {path!r}")
+
+    check_context()
+    if not plan.changes and not plan.observed:
         return None
     paths = [safe_path(c.path) for c in plan.changes]
     if len(set(paths)) != len(paths):
@@ -78,6 +96,11 @@ def execute(
         if change.target and change.target.digest:
             objects.verify(change.target.digest, change.target.size)
     initial = scan(project)
+    for path, value in plan.observed:
+        if initial.entries.get(path) != value:
+            raise ConflictError(f"Path changed after preview: {path!r}")
+    if not plan.changes:
+        return None
     for change in plan.changes:
         if initial.entries.get(change.path) != change.expected:
             raise ConflictError(f"Plan stale before recovery checkpoint: {change.path!r}")
@@ -86,6 +109,7 @@ def execute(
     for change in plan.changes:
         if recovery_entries.get(change.path) != change.expected:
             raise ConflictError(f"Plan changed during recovery checkpoint: {change.path!r}")
+    check_context()
     identifier = uuid.uuid4().hex
     with connect(project.store) as db:
         db.execute(
@@ -143,6 +167,12 @@ def execute(
                 raise ConflictError(f"Concurrent edit before mutation: {path!r}")
             if identity is not None and identities.get(path) != identity[:2]:
                 raise ConflictError(f"Path identity changed: {path!r}")
+            parent = path.rpartition("/")[0]
+            expected_parent = identities.get(parent) if parent else root_identity
+            parent_info = os.fstat(fd)
+            if (parent_info.st_dev, parent_info.st_ino) != expected_parent:
+                raise ConflictError(f"Parent identity changed before mutation: {path!r}")
+            guard(path)
             target = change.target
             temporary = ".timemachine-stage-" + uuid.uuid4().hex
             try:

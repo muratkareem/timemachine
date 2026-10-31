@@ -18,3 +18,7 @@
   compatible. Plain/no-color views are supported without relying on color.
 - UI uses metadata pagination and lazy cached immutable manifests, never source
   scanning on navigation. "Undo available" requires an actual backend preview.
+- Production completion starts at 34b487b. Fix concrete safety defects before
+  distribution. Preserve v1 manifests and refuse unsupported metadata versions.
+- Publication is a final, separately authorized step after verified artifacts;
+  package-name availability does not prove PyPI ownership or upload permission.

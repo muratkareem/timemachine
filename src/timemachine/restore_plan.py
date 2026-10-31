@@ -1,13 +1,15 @@
 """Immutable validated restore intent. No filesystem mutations here."""
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from typing import Any
 
 from .diff import changed
 from .errors import ConflictError
+from .git_context import git_context
 from .models import Entry, Manifest
 from .project import Project
 from .scanner import Scan, excluded, scan
+from .security import encode
 
 
 @dataclass(frozen=True)
@@ -24,6 +26,10 @@ class Change:
 class Plan:
     changes: tuple[Change, ...]
     warnings: tuple[str, ...] = ()
+    # Ephemeral consent observations, deliberately outside the durable v1 plan schema.
+    observed: tuple[tuple[str, Entry | None], ...] = ()
+    identities: tuple[tuple[str, int, int], ...] = ()
+    git_fingerprint: bytes | None = None
 
     def data(self) -> dict[str, Any]:
         return {
@@ -40,7 +46,15 @@ def make_plan(
     paths: list[str] | None = None,
     warnings: tuple[str, ...] = (),
 ) -> Plan:
+    root_before = project.root.lstat()
+    git_before = encode(git_context(project.root))
     current = scan(project)
+    root_after = project.root.lstat()
+    if (root_before.st_dev, root_before.st_ino) != (
+        root_after.st_dev,
+        root_after.st_ino,
+    ) or git_before != encode(git_context(project.root)):
+        raise ConflictError("Root or Git state changed during preview; preview again")
     selected_paths = paths if paths is not None else changed(expected, target)
     for path in selected_paths:
         target_entry = target.get(path)
@@ -52,7 +66,25 @@ def make_plan(
             raise ConflictError(f"Symlink target refused by current policy: {path!r}")
         if excluded(project, path):
             raise ConflictError(f"Path is excluded by current policy: {path!r}")
-    return from_scan(current, expected, target, paths, warnings)
+    plan = from_scan(current, expected, target, paths, warnings)
+    ancestors = set(selected_paths)
+    for path in selected_paths:
+        parent = path.rpartition("/")[0]
+        while parent:
+            ancestors.add(parent)
+            parent = parent.rpartition("/")[0]
+    identities = [("", root_after.st_dev, root_after.st_ino)]
+    identities.extend(
+        (p, current.identities[p][0], current.identities[p][1])
+        for p in sorted(ancestors)
+        if p in current.identities
+    )
+    return replace(
+        plan,
+        observed=tuple((p, current.entries.get(p)) for p in selected_paths),
+        identities=tuple(identities),
+        git_fingerprint=git_before,
+    )
 
 
 def from_scan(

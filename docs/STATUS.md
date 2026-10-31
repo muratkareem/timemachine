@@ -312,3 +312,10 @@ Corrected through the existing backend: explicit "Confirm history step" for empt
 undo/redo, with no file writes or manufactured restore journal. Empty checkpoint
 restore stays disabled. TUI pilots: 10 passed; Ruff/mypy clean. Next: verify this
 last correction in the full platform matrix, then final documentation record.
+
+Production completion audit at 34b487b: fresh baseline 110 passed/4 skips.
+Confirmed three consent/context regressions with failing adversarial tests;
+fixed frozen intent for CLI undo/redo/recover, already-target revalidation, Git
+and path identity observations, and opened-parent validation. Focused safety:
+18 passed; earlier expanded safety/redo/TUI gate 59 passed; Ruff/mypy clean.
+Next: malformed metadata/configuration and GC integrity, then scale/distribution.
