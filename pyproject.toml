@@ -17,8 +17,8 @@ tui = ["textual>=6.12,<7"]
 dev = ["pytest>=8", "pytest-cov>=6", "hypothesis>=6", "ruff>=0.11", "mypy>=1.15", "build>=1.2", "hatchling>=1.26", "textual>=6.12,<7"]
 
 [project.scripts]
-timemachine = "timemachine.cli:main"
-tmachine = "timemachine.cli:main"
+timemachine = "timemachine.entrypoint:main"
+tmachine = "timemachine.entrypoint:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/timemachine"]
