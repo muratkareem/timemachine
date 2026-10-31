@@ -1,3 +1,26 @@
+# Current status — v0.1.0 published
+
+[GitHub Release v0.1.0](https://github.com/muratkareem/timemachine/releases/tag/v0.1.0) was published on 2026-10-31 at 10:55:45 UTC,
+following explicit maintainer approval. Annotated tag `v0.1.0` resolves to the
+approved commit **e10c054ec38eb129dc985d0b521b1214c4e65b19**. The four approved
+artifacts (wheel, sdist, SHA256SUMS, BUILD.json) were verified in draft, then downloaded
+again after publication and matched byte for byte. Their build provenance is unchanged.
+
+Installation from the public release wheel with uv succeeds; installed disposable
+acceptance including recovery, Git invariants and packaged TUI passes. The release
+commit's [seven-job CI](https://github.com/muratkareem/timemachine/actions/runs/41193647489)
+is green. Previously measured local suite: 139 passed, four skips, 85% coverage.
+This post-publication documentation update changes no runtime/tests/dependencies/CI
+and does not move the release tag or replace any asset. Existing push approval applies.
+
+PyPI is **not published**: verified package ownership and authorized credentials are
+still unavailable. Native Windows, hunk recovery and vendor-hook adapters stay deferred.
+No further GitHub release approval is pending. See INSTALL.md and PRODUCTION_DELIVERY.md.
+
+---
+
+## Historical preparation record
+
 # Current status — production release candidate prepared
 
 Version **0.1.0**, supported Python **3.12–3.14** on **macOS/Linux local filesystems**.

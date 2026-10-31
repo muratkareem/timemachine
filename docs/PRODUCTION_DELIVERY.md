@@ -4,6 +4,22 @@ Starting point: clean main at **34b487b**, independently rerun as 110 passes / f
 skips. Version remains **0.1.0**. MIT license/history preserved; no force push.
 This report distinguishes implemented/verified capabilities from publication gates.
 
+
+## Publication addendum · 2026-10-31
+
+The maintainer explicitly authorized GitHub publication after reviewing the verified
+commit/artifacts. [v0.1.0](https://github.com/muratkareem/timemachine/releases/tag/v0.1.0) is now published at
+`e10c054ec38eb129dc985d0b521b1214c4e65b19` (2026-10-31 10:55:45 UTC).
+The annotated tag was checked against that exact commit. All four approved files
+were downloaded from the draft and again from the published release and matched
+byte for byte. Installation from the public wheel URL and installed disposable
+acceptance/TUI checks pass. No release asset or approved tag was replaced.
+
+The preparation-time publication gate described below is resolved for GitHub.
+PyPI remains unpublished pending verified ownership and credentials. Repository
+metadata settings were not changed. The post-publication commit updates documentation
+only; the released runtime and artifact provenance remain at the approved commit.
+
 ## Product delivered
 
 SHA-256 deduplicated snapshots, PRE/POST inherited-terminal subprocess sessions,
@@ -159,7 +175,7 @@ CLI output: `asciinema play docs/assets/demo.cast`; regenerate using
 `python scripts/record_demo.py --output /tmp/timemachine-demo.cast`. It runs only
 a public synthetic temporary fixture and asserts Undo/Redo bytes.
 
-## Exact continuation when publication is authorized
+## Historical continuation prompt (GitHub publication now completed)
 
 “Continue TimeMachine at the clean pushed final production commit. Verify origin/main
 and all seven CI jobs. Rebuild with pinned release tools using scripts/build_release.py,

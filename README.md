@@ -9,11 +9,11 @@ No account, daemon or API key is required by TimeMachine.
 
 ## Try it in a minute
 
-Python **3.12+** · macOS / Linux · version **0.1.0**, release candidate.
-Install from the verified commit archive with [uv](https://docs.astral.sh/uv/):
+Python **3.12+** · macOS / Linux · version [**0.1.0**](https://github.com/muratkareem/timemachine/releases/tag/v0.1.0).
+Install the verified release wheel with [uv](https://docs.astral.sh/uv/):
 
 ```sh
-uv tool install --python 3.12 'timemachine-cli[tui] @ https://github.com/muratkareem/timemachine/archive/9ae8c4d07ef4acbdbe2c87220a0d562276810b16.tar.gz'
+uv tool install --python 3.12 'https://github.com/muratkareem/timemachine/releases/download/v0.1.0/timemachine_cli-0.1.0-py3-none-any.whl[tui]'
 
 cd /path/to/your/project
 timemachine init

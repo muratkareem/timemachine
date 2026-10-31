@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 — prepared release candidate, not published
+## 0.1.0 — 2026-10-31
 
 - Conflict-safe local checkpoints, PRE/POST subprocess sessions, undo/redo and
   selective file/directory restore without rewriting Git history/index.
@@ -22,6 +22,7 @@
 - Native Windows, hunk recovery, automatic vendor hooks, watch/export/compression
   deferred. Scope and unavoidable filesystem races remain explicit.
 
-No PyPI package, GitHub Release or tag is announced by this changelog. Publication
-requires maintainer authorization; PyPI additionally needs ownership/credentials.
-The tested runtime source is installable from its pinned public commit archive.
+[GitHub Release v0.1.0](https://github.com/muratkareem/timemachine/releases/tag/v0.1.0) is published at the approved commit
+`e10c054ec38eb129dc985d0b521b1214c4e65b19`. All four attached artifacts were
+downloaded and verified after publication; public wheel installation passes
+acceptance. PyPI remains unpublished pending verified ownership and credentials.

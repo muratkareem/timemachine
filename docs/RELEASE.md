@@ -1,6 +1,11 @@
 # Release procedure
 
-Target version: **0.1.0**. Distribution name: **timemachine-cli**. No PyPI ownership
+Published GitHub version: [**v0.1.0**](https://github.com/muratkareem/timemachine/releases/tag/v0.1.0) at
+`e10c054ec38eb129dc985d0b521b1214c4e65b19`. All four release assets were downloaded
+and verified against approved hashes, and public-wheel installation passes acceptance.
+PyPI remains unpublished.
+
+Release version: **0.1.0**. Distribution name: **timemachine-cli**. No PyPI ownership
 or publication is implied by repository ownership. The unrelated PyPI project
 `timemachine` must not be used. The public JSON endpoint for `timemachine-cli`
 returned 404 during the 2026-10-31 audit; this is not a name reservation. Recheck

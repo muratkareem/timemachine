@@ -5,6 +5,16 @@ shared/network filesystem recovery are not validated. See PLATFORMS.md.
 
 ## No clone required
 
+[GitHub v0.1.0](https://github.com/muratkareem/timemachine/releases/tag/v0.1.0) is published with wheel, source archive, checksums and
+build manifest. Its tag points to `e10c054ec38eb129dc985d0b521b1214c4e65b19`.
+The public release wheel install and installed acceptance/TUI checks pass:
+
+```sh
+uv tool install --python 3.12 'https://github.com/muratkareem/timemachine/releases/download/v0.1.0/timemachine_cli-0.1.0-py3-none-any.whl[tui]'
+```
+
+### Pinned source alternative
+
 The verified runtime commit is pinned so installation does not silently track
 future main-branch changes. Both uv and pipx isolate dependencies from your project:
 
