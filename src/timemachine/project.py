@@ -1,8 +1,9 @@
 """Project identity, explicit scope and cooperating-writer serialization."""
 
 import fcntl
-import json
 import os
+import re
+import stat
 import sys
 import uuid
 from collections.abc import Iterator
@@ -13,7 +14,7 @@ from typing import Any
 
 from .errors import TimeMachineError
 from .metadata import connect, initialize
-from .security import atomic_write, encode, private_directory
+from .security import atomic_write, encode, private_directory, read_json_object
 
 MARKER = ".timemachine.json"
 DEFAULT_EXCLUDES = [
@@ -91,12 +92,15 @@ class Project:
             if marker.is_symlink() or not marker.is_file():
                 raise TimeMachineError("Project marker must be a regular file")
             try:
-                config = json.loads(marker.read_bytes())
+                config = read_json_object(marker)
                 config.setdefault("symlink_policy", "record")
                 if (
                     type(config["version"]) is not int
                     or config["version"] != 1
                     or not isinstance(config["id"], str)
+                    or re.fullmatch(r"[a-f0-9]{32}", config["id"]) is None
+                    or not isinstance(config["root"], str)
+                    or not isinstance(config["storage"], str)
                     or config["symlink_policy"] not in ("record", "reject")
                     or not isinstance(config["exclude"], list)
                     or not all(isinstance(p, str) for p in config["exclude"])
@@ -111,8 +115,24 @@ class Project:
                 if not raw_store.is_absolute() or raw_store.is_symlink():
                     raise ValueError("Storage must be an absolute real directory")
                 cls.validate_store(root, store)
-                identity = json.loads((store / "project.json").read_bytes())
-                if identity["id"] != config["id"] or identity["version"] != 1:
+                for directory in (store, store / "objects"):
+                    info = directory.lstat()
+                    if (
+                        not stat.S_ISDIR(info.st_mode)
+                        or info.st_uid != os.getuid()
+                        or stat.S_IMODE(info.st_mode) & 0o077
+                    ):
+                        raise TimeMachineError(
+                            "Snapshot storage must be an owner-only real directory; "
+                            "stop writers and restore permissions to 0700"
+                        )
+                identity = read_json_object(store / "project.json", limit=4096)
+                if (
+                    identity["id"] != config["id"]
+                    or type(identity["version"]) is not int
+                    or identity["version"] != 1
+                    or not isinstance(identity["root"], str)
+                ):
                     raise ValueError("Project identity mismatch")
                 if not allow_moved and (
                     config["root"] != str(root) or identity["root"] != str(root)

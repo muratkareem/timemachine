@@ -76,3 +76,27 @@ def parent_fd(root: Path, relative: str) -> Iterator[tuple[int, str]]:
         yield fd, parts[-1]
     finally:
         os.close(fd)
+
+
+def read_json_object(path: Path, *, limit: int = 65536) -> dict[str, Any]:
+    """Read bounded regular JSON metadata without following a final symlink."""
+    from .errors import IntegrityError
+    from .models import strict_pairs
+
+    fd = os.open(path, os.O_RDONLY | NOFOLLOW | os.O_NONBLOCK)
+    try:
+        info = os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_size > limit:
+            raise IntegrityError("Metadata must be a bounded, non-hardlinked regular file")
+        with os.fdopen(fd, "rb", closefd=False) as stream:
+            raw = stream.read(limit + 1)
+        if len(raw) > limit:
+            raise IntegrityError("Metadata exceeds size limit")
+        value = json.loads(raw, object_pairs_hook=strict_pairs)
+        if not isinstance(value, dict):
+            raise IntegrityError("Metadata must be a JSON object")
+        return value
+    except (ValueError, TypeError) as exc:
+        raise IntegrityError("Malformed JSON metadata") from exc
+    finally:
+        os.close(fd)

@@ -319,3 +319,10 @@ fixed frozen intent for CLI undo/redo/recover, already-target revalidation, Git
 and path identity observations, and opened-parent validation. Focused safety:
 18 passed; earlier expanded safety/redo/TUI gate 59 passed; Ruff/mypy clean.
 Next: malformed metadata/configuration and GC integrity, then scale/distribution.
+
+Production metadata gate: bounded/no-follow config reads, private store checks,
+strict catalog/foreign-key/order health validation before GC; malformed metadata
+fails with actionable errors. 26 focused tests passed; Ruff/mypy clean. PyPI public
+API: timemachine exists (unrelated owner); timemachine-cli and timemachine-agent
+return 404. That does not prove name ownership/reservation. No publishing-token
+variables are present. Next: measured object-store scaling and snapshot reuse.

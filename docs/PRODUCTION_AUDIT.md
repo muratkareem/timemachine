@@ -36,3 +36,13 @@ plan through CLI undo/redo/recover. The persisted v1 journal shape is unchanged.
 Parent descriptor identity is now checked after opening, near mutation as well.
 Additional adversarial recovery-consent and parent-swap tests pass. External
 uncooperative races still cannot be eliminated globally.
+
+## Corrected: malformed metadata and unsafe collection authority
+
+Bounded, no-follow, duplicate-key-rejecting JSON reads now validate project/identity
+objects and enforce private real store directories. Catalog validation rejects
+unknown/contradictory checkpoint states, invalid tags/pins, invalid run ordering,
+unfinished references, and missing foreign-key targets. Verify/GC run SQLite and
+reference health checks before object deletion. Errors preserve the store.
+Focused config/catalog/retention tests: 26 passed. No migration or version bump
+of valid v1 manifests is required.

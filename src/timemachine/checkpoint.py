@@ -9,7 +9,7 @@ from typing import Any
 from .errors import IntegrityError, TimeMachineError
 from .git_context import git_context
 from .journal import read_plan, read_progress
-from .metadata import connect
+from .metadata import checkpoint_metadata, connect, health
 from .models import Entry, Manifest, dump_manifest, load_manifest
 from .objects import ObjectStore
 from .project import Project
@@ -52,6 +52,7 @@ def get_checkpoint(project: Project, identifier: str) -> dict[str, Any]:
         row = db.execute("SELECT * FROM checkpoints WHERE id=?", (identifier,)).fetchone()
     if row is None:
         raise TimeMachineError(f"Unknown checkpoint: {identifier!r}")
+    checkpoint_metadata(row)
     if row["status"] != "COMPLETE":
         raise IntegrityError("Checkpoint is INCOMPLETE and cannot be selected")
     result = dict(row)
@@ -73,6 +74,7 @@ def manifest(project: Project, identifier: str) -> Manifest:
 def verify(project: Project) -> dict[str, Any]:
     objects = ObjectStore(project.store, project.config["quota_bytes"])
     with connect(project.store) as db:
+        health(db)
         rows = db.execute("SELECT id,status FROM checkpoints").fetchall()
         journals = db.execute("SELECT plan,progress FROM transactions").fetchall()
     checked: dict[str, int] = {}

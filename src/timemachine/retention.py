@@ -8,7 +8,7 @@ from typing import Any
 from .checkpoint import get_checkpoint, manifest, verify
 from .errors import TimeMachineError
 from .journal import read_plan
-from .metadata import connect
+from .metadata import checkpoint_metadata, connect
 from .objects import ObjectStore
 from .project import Project
 from .security import sync_dir
@@ -78,6 +78,7 @@ def deletion_plan(project: Project, identifier: str) -> dict[str, Any]:
         ).fetchone()
     if row is None:
         raise TimeMachineError("Unknown checkpoint")
+    checkpoint_metadata(row)
     if row["pinned"] or json.loads(row["tags"]) or run or transaction or row["kind"] == "recovery":
         raise TimeMachineError("Checkpoint retained: pinned, tagged, run or recovery reference")
     return {"delete": identifier, "objects": "Retained until explicit gc; shared objects preserved"}
