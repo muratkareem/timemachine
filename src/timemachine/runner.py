@@ -11,7 +11,7 @@ from typing import Any
 
 from .checkpoint import checkpoint, now
 from .errors import TimeMachineError
-from .metadata import connect
+from .metadata import connect, require_current
 from .project import Project
 
 KNOWN_AGENTS = {"codex", "claude", "gemini", "aider"}
@@ -19,6 +19,7 @@ KNOWN_AGENTS = {"codex", "claude", "gemini", "aider"}
 
 def finalize(project: Project, identifier: str, exit_code: int | None, status: str) -> str:
     with connect(project.store) as db:
+        require_current(db)
         db.execute("UPDATE runs SET status='FINALIZING' WHERE id=?", (identifier,))
     post = checkpoint(project, "After wrapped command", "post")
     with connect(project.store) as db:

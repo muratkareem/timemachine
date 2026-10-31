@@ -79,3 +79,75 @@ def read_progress(raw: str) -> list[dict[str, str]]:
             raise IntegrityError("Invalid journal step")
         safe_path(step["path"])
     return value
+
+
+def read_transaction_progress(db: Any, row: Any) -> list[dict[str, str]]:
+    """Read legacy v1 arrays or verify v2 chained append-only steps."""
+    try:
+        value = json.loads(row["progress"], object_pairs_hook=strict_pairs)
+        if not isinstance(value, dict):
+            raise IntegrityError("Malformed progress envelope")
+    except (ValueError, TypeError) as exc:
+        raise IntegrityError("Malformed progress envelope") from exc
+    if value.get("kind") == "progress":
+        return read_progress(row["progress"])
+    head = unpack(row["progress"], "progress-head")
+    if (
+        not isinstance(head, dict)
+        or set(head) != {"count", "digest"}
+        or type(head["count"]) is not int
+        or head["count"] < 0
+    ):
+        raise IntegrityError("Invalid progress head")
+    previous = ""
+    result: list[dict[str, str]] = []
+    for record in db.execute(
+        "SELECT sequence,record FROM journal_steps WHERE transaction_id=? ORDER BY sequence",
+        (row["id"],),
+    ):
+        step = unpack(record["record"], "step")
+        if (
+            not isinstance(step, dict)
+            or set(step) != {"sequence", "previous", "path", "action", "state"}
+            or step["sequence"] != len(result) + 1
+            or record["sequence"] != step["sequence"]
+            or step["previous"] != previous
+        ):
+            raise IntegrityError("Broken recovery journal sequence")
+        item = {key: step[key] for key in ("path", "action", "state")}
+        read_progress(pack("progress", [item]))
+        result.append(item)
+        previous = hashlib.sha256(record["record"].encode()).hexdigest()
+    if len(result) != head["count"] or previous != head["digest"]:
+        raise IntegrityError("Recovery journal head mismatch")
+    return result
+
+
+def append_step(db: Any, identifier: str, path: str, action: str, state: str) -> None:
+    row = db.execute("SELECT progress FROM transactions WHERE id=?", (identifier,)).fetchone()
+    head = unpack(row["progress"], "progress-head")
+    sequence = head["count"] + 1
+    record = pack(
+        "step",
+        {
+            "sequence": sequence,
+            "previous": head["digest"],
+            "path": safe_path(path),
+            "action": action,
+            "state": state,
+        },
+    )
+    db.execute(
+        "INSERT INTO journal_steps(transaction_id,sequence,record) VALUES(?,?,?)",
+        (identifier, sequence, record),
+    )
+    db.execute(
+        "UPDATE transactions SET status='APPLYING',progress=? WHERE id=?",
+        (
+            pack(
+                "progress-head",
+                {"count": sequence, "digest": hashlib.sha256(record.encode()).hexdigest()},
+            ),
+            identifier,
+        ),
+    )

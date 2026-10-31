@@ -61,9 +61,9 @@ def test_interrupted_restore_retains_journal_and_recovery(project):
         row = db.execute("SELECT * FROM transactions").fetchone()
         assert row["status"] == "FAILED"
         assert manifest(project, row["recovery"])["a"] == post["a"]
-        from timemachine.journal import read_progress
+        from timemachine.journal import read_transaction_progress
 
-        assert read_progress(row["progress"])
+        assert read_transaction_progress(db, row)
     with pytest.raises(TimeMachineError, match="Unfinished"), project.lock():
         pass
 

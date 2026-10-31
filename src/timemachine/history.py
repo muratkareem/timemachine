@@ -7,7 +7,7 @@ from typing import Any
 from .checkpoint import get_checkpoint, verify
 from .errors import TimeMachineError
 from .git_context import git_context, path_categories
-from .journal import read_plan, read_progress
+from .journal import read_plan, read_transaction_progress
 from .metadata import connect
 from .project import Project
 from .scanner import scan
@@ -71,7 +71,8 @@ def history(project: Project, limit: int = 20) -> dict[str, Any]:
             run["integrity"] = "manifests verified; use verify for objects"
     for transaction in transactions:
         transaction["plan"] = read_plan(transaction["plan"])
-        transaction["progress"] = read_progress(transaction["progress"])
+        with connect(project.store) as db:
+            transaction["progress"] = read_transaction_progress(db, transaction)
         transaction["change_count"] = transaction["plan"]["change_count"]
     return {"checkpoints": checkpoints(project, limit), "runs": runs, "restores": transactions}
 

@@ -469,5 +469,19 @@ def quickstart_command(json_mode: bool = typer.Option(False, "--json")) -> None:
         output(capabilities())
 
 
+@app.command("migrate", rich_help_panel="Storage & diagnostics")
+def migrate_command(
+    preview: bool = False, yes: bool = False, json_mode: bool = typer.Option(False, "--json")
+) -> None:
+    """Explicitly upgrade a v1 catalog; preserve existing snapshots and journals."""
+    from .metadata import migrate, migration_plan
+
+    project = Project.discover(allow_moved=True)
+    with project.lock(allow_pending=True):
+        plan = migration_plan(project.store)
+        if confirm(preview, yes, json_mode, plan):
+            output(migrate(project.store), json_mode)
+
+
 if __name__ == "__main__":
     main()

@@ -1,4 +1,3 @@
-
 import pytest
 
 from timemachine.checkpoint import checkpoint, verify

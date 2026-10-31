@@ -57,7 +57,7 @@ def undo(
 def recovery_plan(project: Project, transaction_id: str) -> Plan:
     """Explicitly restore a failed transaction's pre-state, refusing later edits."""
     from .errors import ConflictError
-    from .journal import read_plan, read_progress
+    from .journal import read_plan, read_transaction_progress
     from .models import Entry
     from .scanner import scan
     from .security import safe_path
@@ -67,7 +67,10 @@ def recovery_plan(project: Project, transaction_id: str) -> Plan:
     if row is None or row["status"] in ("COMPLETE", "RECOVERED"):
         raise TimeMachineError("No unfinished transaction with that ID")
     value = read_plan(row["plan"])
-    progress = read_progress(row["progress"])
+    with connect(project.store) as db:
+        progress = read_transaction_progress(db, row)
+    removed = {p["path"] for p in progress if p["action"] == "remove"}
+    created = {p["path"] for p in progress if p["action"] == "directory"}
     current = scan(project)
     paths = []
     for change in value["changes"]:
@@ -76,9 +79,9 @@ def recovery_plan(project: Project, transaction_id: str) -> Plan:
         old = Entry.from_dict(change["expected"]) if change["expected"] else None
         target = Entry.from_dict(change["target"]) if change["target"] else None
         allowed = [old, target]
-        if any(p["path"] == path and p["action"] == "remove" for p in progress):
+        if path in removed:
             allowed.append(None)
-        if any(p["path"] == path and p["action"] == "directory" for p in progress):
+        if path in created:
             allowed.append(Entry("directory", 0o700))
         if current.entries.get(path) not in allowed:
             raise ConflictError(f"Recovery conflict: later edit at {path!r}; no files changed")

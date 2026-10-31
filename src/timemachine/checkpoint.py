@@ -8,8 +8,8 @@ from typing import Any
 
 from .errors import IntegrityError, TimeMachineError
 from .git_context import git_context
-from .journal import read_plan, read_progress
-from .metadata import checkpoint_metadata, connect, health
+from .journal import read_plan, read_transaction_progress
+from .metadata import checkpoint_metadata, connect, health, require_current
 from .models import Entry, Manifest, dump_manifest, load_manifest
 from .objects import ObjectStore
 from .project import Project
@@ -24,6 +24,7 @@ def checkpoint(project: Project, message: str = "", kind: str = "manual") -> str
     """Caller must hold project lock."""
     identifier = uuid.uuid4().hex
     with connect(project.store) as db:
+        require_current(db)
         db.execute(
             "INSERT INTO checkpoints(id,created,message,kind,status) VALUES(?,?,?,?,?)",
             (identifier, now(), message, kind, "INCOMPLETE"),
@@ -76,7 +77,9 @@ def verify(project: Project) -> dict[str, Any]:
     with connect(project.store) as db:
         health(db)
         rows = db.execute("SELECT id,status FROM checkpoints").fetchall()
-        journals = db.execute("SELECT plan,progress FROM transactions").fetchall()
+        journals = db.execute("SELECT id,plan,progress FROM transactions").fetchall()
+        for row in journals:
+            read_transaction_progress(db, row)
     checked: dict[str, int] = {}
 
     def check(entry: Entry) -> None:
@@ -97,7 +100,6 @@ def verify(project: Project) -> dict[str, Any]:
             check(entry)
     for journal in journals:
         plan = read_plan(journal["plan"])
-        read_progress(journal["progress"])
         for change in plan["changes"]:
             for key in ("expected", "target"):
                 if change[key]:

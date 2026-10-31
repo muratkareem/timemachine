@@ -8,7 +8,7 @@ from typing import Any
 from .checkpoint import get_checkpoint, manifest, verify
 from .errors import TimeMachineError
 from .journal import read_plan
-from .metadata import checkpoint_metadata, connect
+from .metadata import checkpoint_metadata, connect, require_current
 from .objects import ObjectStore
 from .project import Project
 from .security import sync_dir
@@ -58,12 +58,14 @@ def tag(project: Project, identifier: str, label: str) -> None:
         raise TimeMachineError("Tag must have 1–128 characters")
     tags = sorted(set(json.loads(checkpoint["tags"])) | {label})
     with connect(project.store) as db:
+        require_current(db)
         db.execute("UPDATE checkpoints SET tags=? WHERE id=?", (json.dumps(tags), identifier))
 
 
 def pin(project: Project, identifier: str) -> None:
     get_checkpoint(project, identifier)
     with connect(project.store) as db:
+        require_current(db)
         db.execute("UPDATE checkpoints SET pinned=1 WHERE id=?", (identifier,))
 
 
@@ -87,11 +89,15 @@ def deletion_plan(project: Project, identifier: str) -> dict[str, Any]:
 def delete(project: Project, identifier: str) -> dict[str, Any]:
     result = deletion_plan(project, identifier)
     with connect(project.store) as db:
+        require_current(db)
         db.execute("DELETE FROM checkpoints WHERE id=?", (identifier,))
     return result
 
 
 def gc(project: Project, *, dry_run: bool = True) -> dict[str, Any]:
+    if not dry_run:
+        with connect(project.store) as db:
+            require_current(db)
     # Manifest corruption prevents collection. Verify every live journal object too.
     verify(project)
     live = live_objects(project)

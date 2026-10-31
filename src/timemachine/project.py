@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from .errors import TimeMachineError
-from .metadata import connect, initialize
+from .metadata import connect, initialize, require_current
 from .security import atomic_write, encode, private_directory, read_json_object
 
 MARKER = ".timemachine.json"
@@ -157,6 +157,7 @@ class Project:
                 ) from exc
             if not allow_pending:
                 with connect(self.store) as db:
+                    require_current(db)
                     pending = db.execute(
                         "SELECT id FROM transactions "
                         "WHERE status NOT IN ('COMPLETE','RECOVERED') LIMIT 1"

@@ -10,6 +10,16 @@ from typing import Any
 
 from .errors import IntegrityError
 
+CURRENT_SCHEMA = 2
+MIGRATION_2 = (
+    "CREATE TABLE IF NOT EXISTS journal_steps ("
+    "transaction_id TEXT NOT NULL REFERENCES transactions(id), "
+    "sequence INTEGER NOT NULL, record TEXT NOT NULL, PRIMARY KEY(transaction_id,sequence))",
+    "CREATE INDEX IF NOT EXISTS checkpoint_time ON checkpoints(created)",
+    "CREATE INDEX IF NOT EXISTS run_order ON runs(state,sequence)",
+    "CREATE INDEX IF NOT EXISTS transaction_time ON transactions(created)",
+)
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS checkpoints (
  id TEXT PRIMARY KEY, created TEXT NOT NULL, message TEXT NOT NULL,
@@ -49,7 +59,7 @@ def connect(store: Path) -> Iterator[sqlite3.Connection]:
         db.execute("PRAGMA foreign_keys=ON")
         db.execute("PRAGMA synchronous=FULL")
         version = db.execute("PRAGMA user_version").fetchone()[0]
-        if version != 1:
+        if version not in (1, CURRENT_SCHEMA):
             raise IntegrityError(f"Unsupported database schema: {version}")
         with db:
             yield db
@@ -68,7 +78,9 @@ def initialize(store: Path) -> None:
         db.execute("PRAGMA journal_mode=WAL")
         db.execute("PRAGMA synchronous=FULL")
         db.executescript(SCHEMA)
-        db.execute("PRAGMA user_version=1")
+        for statement in MIGRATION_2:
+            db.execute(statement)
+        db.execute(f"PRAGMA user_version={CURRENT_SCHEMA}")
         db.commit()
     except sqlite3.Error as exc:
         raise IntegrityError(f"Cannot initialize metadata database: {exc}") from exc
@@ -143,3 +155,55 @@ def health(db: sqlite3.Connection) -> None:
             != "COMPLETE"
         ):
             raise IntegrityError("Recovery references an incomplete checkpoint")
+
+
+def require_current(db: sqlite3.Connection) -> None:
+    if db.execute("PRAGMA user_version").fetchone()[0] != CURRENT_SCHEMA:
+        raise IntegrityError("Catalog upgrade required: preview and run timemachine migrate --yes")
+
+
+def migration_plan(store: Path) -> dict[str, Any]:
+    with connect(store) as db:
+        version = db.execute("PRAGMA user_version").fetchone()[0]
+    return {
+        "from_version": version,
+        "to_version": CURRENT_SCHEMA,
+        "needed": version < CURRENT_SCHEMA,
+        "effect": "Add indexed recovery steps; preserve manifests, objects and old journals",
+    }
+
+
+def migrate(store: Path) -> dict[str, Any]:
+    """Caller holds project lock. SQLite DDL/version changes commit together."""
+    import os
+    import uuid
+
+    result = migration_plan(store)
+    if not result["needed"]:
+        return result
+    with connect(store) as db:
+        health(db)
+        backup = store / ("catalog-v1-" + uuid.uuid4().hex + ".sqlite3")
+        destination = sqlite3.connect(backup)
+        try:
+            db.backup(destination)
+        finally:
+            destination.close()
+        backup.chmod(0o600)
+        fd = os.open(backup, os.O_RDONLY | os.O_NOFOLLOW)
+        try:
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+        from .security import sync_dir
+
+        sync_dir(store)
+        db.execute("BEGIN IMMEDIATE")
+        for statement in MIGRATION_2:
+            db.execute(statement)
+        db.execute(f"PRAGMA user_version={CURRENT_SCHEMA}")
+    return {
+        **result,
+        "backup": str(backup),
+        "backup_scope": "Catalog only; keep a whole-store backup for independent recovery",
+    }

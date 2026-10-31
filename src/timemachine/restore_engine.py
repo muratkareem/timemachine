@@ -5,13 +5,12 @@ import os
 import stat
 import uuid
 from collections.abc import Callable
-from typing import Any
 
 from .checkpoint import checkpoint, manifest, now
 from .errors import ConflictError, IntegrityError
 from .git_context import git_context
-from .journal import pack
-from .metadata import connect
+from .journal import append_step, pack
+from .metadata import connect, require_current
 from .models import Entry, fingerprint, mode_bits
 from .objects import CHUNK, ObjectStore
 from .project import Project
@@ -59,6 +58,9 @@ def execute(
     hook: Callable[[str, str], None] | None = None,
 ) -> str | None:
     """hook is a deterministic fault-injection seam; never used by the CLI."""
+
+    with connect(project.store) as db:
+        require_current(db)
 
     def check_context() -> None:
         if (
@@ -123,22 +125,17 @@ def execute(
                 recovery,
                 pack("plan", plan.data()),
                 run_id,
-                pack("progress", []),
+                pack("progress-head", {"count": 0, "digest": ""}),
             ),
         )
-    progress: list[dict[str, Any]] = []
     expected = {c.path: c.expected for c in plan.changes}
     identities = {p: (v[0], v[1]) for p, v in initial.identities.items()}
     root_info = project.root.stat()
     root_identity = root_info.st_dev, root_info.st_ino
 
     def journal(path: str, action: str, state: str) -> None:
-        progress.append({"path": path, "action": action, "state": state})
         with connect(project.store) as db:
-            db.execute(
-                "UPDATE transactions SET status='APPLYING',progress=? WHERE id=?",
-                (pack("progress", progress), identifier),
-            )
+            append_step(db, identifier, path, action, state)
 
     def guard(path: str) -> None:
         current_root = project.root.lstat()

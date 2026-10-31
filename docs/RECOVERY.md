@@ -29,3 +29,15 @@ missing bytes. Permission or read-only filesystem failures may require manual
 repair. No Git index/history recovery, external-file recovery, or hardware-level
 backup is provided. Move detection requires explicit `rebind` (when available);
 never edit canonical roots casually.
+
+
+## Pre-release catalog upgrade
+
+If writes report an upgrade is required, run `timemachine migrate --preview --json`,
+then `timemachine migrate --yes --json`. This upgrades v1 metadata to v2 append-only
+journals, preserving snapshots/objects and readable old journals. It is allowed
+with an unfinished restore; recover it after migration. Unknown schema versions
+remain refused. Keep a whole-store backup before upgrading. The automatically
+created `catalog-v1-*.sqlite3` copy is catalog-only; future GC does not retain
+objects merely because an old catalog backup mentioned them. Never replace the
+live database while writers or WAL sessions are active.

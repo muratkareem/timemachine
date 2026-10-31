@@ -333,3 +333,10 @@ reads are nonblocking for special-entry refusal and UI reads have an explicit
 byte bound. Focused snapshot/object/staging tests: 28 passed, 1 expected skip.
 Next: append-only journal scaling with explicit compatible catalog migration,
 then measured 100/1000/10000/50000-file workloads and release packaging.
+
+Production journal gate: catalog v2 uses chained append-only step records and an
+atomically updated head. Legacy catalog v1 remains readable; explicit migration
+adds tables/indexes transactionally, preserves objects and takes a private catalog
+backup. Failed DDL rolls back; missing/reordered steps block GC/recovery. Recovery
+uses indexed path sets instead of quadratic progress scans. Focused migration +
+safety: 56 passed. Ruff/mypy clean. Next: full scale measurements and distribution.
