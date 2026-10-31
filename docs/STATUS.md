@@ -326,3 +326,10 @@ fails with actionable errors. 26 focused tests passed; Ruff/mypy clean. PyPI pub
 API: timemachine exists (unrelated owner); timemachine-cli and timemachine-agent
 return 404. That does not prove name ownership/reservation. No publishing-token
 variables are present. Next: measured object-store scaling and snapshot reuse.
+
+Object capture now hashes first and avoids temporary writes for verified duplicate
+objects; new objects are rehashed while copying and validated after fsync. Blob
+reads are nonblocking for special-entry refusal and UI reads have an explicit
+byte bound. Focused snapshot/object/staging tests: 28 passed, 1 expected skip.
+Next: append-only journal scaling with explicit compatible catalog migration,
+then measured 100/1000/10000/50000-file workloads and release packaging.

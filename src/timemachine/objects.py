@@ -29,37 +29,50 @@ class ObjectStore:
     def put_fd(self, source: int, max_size: int) -> tuple[str, int]:
         if self._known_bytes is None:
             self._known_bytes = self.usage()
-        fd, name = tempfile.mkstemp(prefix=".tmp-", dir=self.directory)
         hasher = hashlib.sha256()
         size = 0
+        start = os.lseek(source, 0, os.SEEK_CUR)
+        if start != 0:
+            raise TimeMachineError("Snapshot source must begin at offset zero")
+        while data := os.read(source, CHUNK):
+            size += len(data)
+            if size > max_size:
+                raise TimeMachineError("File exceeds max_file_bytes; checkpoint incomplete")
+            hasher.update(data)
+        digest = hasher.hexdigest()
+        target = self.path(digest)
+        if os.path.lexists(target):
+            self.verify(digest, size)
+            return digest, size
+        if self._known_bytes + size > self.quota:
+            raise TimeMachineError("Storage quota exceeded; checkpoint incomplete")
+        os.lseek(source, start, os.SEEK_SET)
+        fd, name = tempfile.mkstemp(prefix=".tmp-", dir=self.directory)
+        copied = hashlib.sha256()
+        count = 0
         try:
             with os.fdopen(fd, "wb") as destination:
                 while data := os.read(source, CHUNK):
-                    size += len(data)
-                    if size > max_size:
-                        raise TimeMachineError("File exceeds max_file_bytes; checkpoint incomplete")
-                    hasher.update(data)
+                    count += len(data)
+                    if count > size:
+                        raise IntegrityError("Source grew while storing object")
+                    copied.update(data)
                     destination.write(data)
+                if copied.hexdigest() != digest or count != size:
+                    raise IntegrityError("Source changed while storing object")
                 destination.flush()
                 os.fsync(destination.fileno())
-            digest = hasher.hexdigest()
-            target = self.path(digest)
-            if os.path.lexists(target):
-                self.verify(digest, size)
-            else:
-                if self._known_bytes + size > self.quota:
-                    raise TimeMachineError("Storage quota exceeded; checkpoint incomplete")
-                os.replace(name, target)
-                self._known_bytes += size
-                sync_dir(self.directory)
-                self.verify(digest, size)
+            os.replace(name, target)
+            self._known_bytes += size
+            sync_dir(self.directory)
+            self.verify(digest, size)
             return digest, size
         finally:
             if os.path.lexists(name):
                 os.unlink(name)
 
     def verify(self, digest: str, size: int | None = None) -> None:
-        fd = os.open(self.path(digest), os.O_RDONLY | os.O_NOFOLLOW)
+        fd = os.open(self.path(digest), os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
         try:
             from .models import fingerprint
 
@@ -82,12 +95,18 @@ class ObjectStore:
         finally:
             os.close(fd)
 
-    def read(self, digest: str) -> bytes:
+    def read(self, digest: str, *, max_bytes: int | None = None) -> bytes:
         self.verify(digest)
-        fd = os.open(self.path(digest), os.O_RDONLY | os.O_NOFOLLOW)
+        fd = os.open(self.path(digest), os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
         try:
             with os.fdopen(fd, "rb") as stream:
-                data = stream.read()
+                import stat
+
+                if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+                    raise IntegrityError("Object changed to a non-regular entry")
+                data = stream.read() if max_bytes is None else stream.read(max_bytes + 1)
+            if max_bytes is not None and len(data) > max_bytes:
+                raise IntegrityError("Object exceeds preview read limit")
             if hashlib.sha256(data).hexdigest() != digest:
                 raise IntegrityError("Object changed during read")
             return data

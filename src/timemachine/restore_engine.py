@@ -218,7 +218,8 @@ def execute(
                             # Stream verified objects without loading large files into RAM.
                             objects.verify(target.digest, target.size)
                             source = os.open(
-                                objects.path(target.digest), os.O_RDONLY | os.O_NOFOLLOW
+                                objects.path(target.digest),
+                                os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
                             )
                             hasher = hashlib.sha256()
                             count = 0

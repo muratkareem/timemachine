@@ -48,7 +48,7 @@ def text_content(objects: ObjectStore, entry: Entry | None) -> str | None:
         return ""
     if entry.kind != "file" or not entry.digest or entry.size > 1024 * 1024:
         return None
-    data = objects.read(entry.digest)
+    data = objects.read(entry.digest, max_bytes=1024 * 1024)
     if b"\0" in data:
         return None
     try:
