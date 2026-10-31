@@ -83,8 +83,11 @@ release candidate build/upload. The macOS 3.12 job reports 139 passes/four skips
 Ubuntu 3.12 reports 138/five (Zsh and four vendor executables absent).
 The first production run exposed a PTY test harness wait-before-drain deadlock on
 macOS. It was corrected and strengthened with 16 KiB of output; all jobs then passed.
-No runtime timeout or security checks were relaxed. Final documentation/formula
-commit CI is verified separately before closeout.
+No runtime timeout or security checks were relaxed. The complete delivery at c95659a also passed all seven jobs in
+[final CI 41193462517](https://github.com/muratkareem/timemachine/actions/runs/41193462517).
+Its independently built Linux CI wheel/sdist hashes match the local macOS artifacts.
+Both final wheel and sdist pass clean installed acceptance; a CLI-only wheel runs
+without Textual/test dependencies and gives actionable optional-extra guidance.
 
 ## Acceptance scenarios
 
@@ -126,7 +129,7 @@ and dependencies are unchanged from that installed runtime commit.
 Homebrew: pinned formula and 20 wheel resources, native macOS arm64 build,
 `brew test`, installed acceptance and TUI pass. Validation used a uniquely named
 temporary tap/formula, subsequently removed; public explicit tap instructions use
-this repository once pushed. Homebrew installed ordinary Python/OpenSSL/SQLite
+this pushed repository. Homebrew installed ordinary Python/OpenSSL/SQLite
 dependency updates while validating. No Intel/Linux brew or bottle claim.
 
 Release artifacts: version 0.1.0 wheel, sdist, SHA256SUMS and BUILD.json, rebuilt

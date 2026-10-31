@@ -18,9 +18,11 @@ acceptance/TUI pass on macOS arm64. Dark/light/narrow screenshots were regenerat
 and inspected; the current interface is preserved. A real scripted CLI recording
 is committed. No snapshots or user secrets were uploaded.
 
-Release candidates build twice with matching hashes. Final documentation, formula
-and release notes are being committed before the final artifact/CI gate. Push to
-origin/main is authorized. Publishing the tag/GitHub Release remains a separate
+Release candidates build twice with matching hashes. The complete delivery at **c95659a** passed the final seven-job CI gate
+**41193462517**. Final wheel/sdist installs pass in separate clean environments;
+the CLI-only wheel passes without Textual/development tools. Linux CI artifacts
+and local macOS artifacts have identical hashes. Source/formula/notes are pushed;
+the documentation closeout preserves runtime/tests/dependencies/CI. Push to origin/main is authorized. Publishing the tag/GitHub Release remains a separate
 maintainer approval; PyPI also lacks verified ownership/credentials. No publication
 is claimed. Native Windows, hunk recovery and vendor-hook adapters are deferred.
 See PRODUCTION_DELIVERY.md, PRODUCTION_AUDIT.md, BENCHMARKS.md and RELEASE.md.
@@ -395,3 +397,10 @@ Temporary validation formula/tap is removed after checks; Homebrew installed nor
 Python/OpenSSL/SQLite dependency updates during the test. CI 685291c: all six test
 matrix jobs plus double-build/release-artifact job passed, run 41192391040.
 Native Windows and optional hunk/vendor-hook integrations remain explicitly deferred.
+
+Final production gate: c95659a is clean and pushed; CI run 41193462517 succeeded
+with all seven jobs. Final wheel and sdist acceptance pass; CLI-only wheel has no
+Textual/test dependency and gives actionable missing-extra guidance. Reproduced
+macOS artifacts match the downloaded Linux CI wheel/sdist hashes. Homebrew validation
+tap/formula is removed. Publishing v0.1.0 remains the only pending authorization;
+PyPI additionally requires verified ownership/credentials. No tag/release exists.

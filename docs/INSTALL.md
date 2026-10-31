@@ -43,7 +43,7 @@ timemachine --version
 The formula pins the same runtime commit and dependency-wheel hashes. It was built
 from source and its undo/redo/integrity test executed on macOS arm64 with Homebrew
 Python 3.12. A uniquely named temporary validation tap/formula was used locally;
-the public tap is usable once the formula commit is pushed. Intel and Linux brew
+the public formula commit is now pushed. Intel and Linux brew
 installation are not validated. The CLI itself is tested separately on macOS/Linux.
 
 ## Built artifact or developer checkout
