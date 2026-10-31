@@ -72,7 +72,8 @@ large project or the exit of the complete agent process. The documented
 [Aider scripting interface](https://aider.chat/docs/scripting.html) supports normal
 command execution; no automatic lifecycle adapter is claimed here.
 
-Codex's documented plugin hook surface requires explicit user trust. No Codex hook
+Codex's [documented plugin hook surface](https://developers.openai.com/plugins/build/plugins)
+requires explicit user trust. No Codex hook
 adapter is shipped or enabled: desktop conversations and CLI process lifetimes
 need separate handling and verification. The subprocess wrapper stays the
 supported integration boundary. No vendor configuration or trust policy is changed.
