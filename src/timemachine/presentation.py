@@ -271,6 +271,7 @@ def human(value: Any) -> Any:
                     f"{safe(value['project']['root'])}\n"
                     f"{len(value['included'])} in scope · {size(value['protected_bytes'])}\n"
                     "Current files were scanned; a checkpoint is a separate action."
+                    + ("\n" + safe(value["saved_summary"]) if "saved_summary" in value else "")
                 ),
                 title="Protection scope",
                 border_style=COLORS["protected"],

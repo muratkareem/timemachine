@@ -5,6 +5,7 @@ import signal
 import subprocess
 import threading
 import uuid
+from collections.abc import Callable
 from pathlib import Path
 from types import FrameType
 from typing import Any
@@ -31,7 +32,13 @@ def finalize(project: Project, identifier: str, exit_code: int | None, status: s
     return post
 
 
-def run(project: Project, argv: list[str], cwd: Path | None = None) -> dict[str, Any]:
+def run(
+    project: Project,
+    argv: list[str],
+    cwd: Path | None = None,
+    *,
+    on_protected: Callable[[str], None] | None = None,
+) -> dict[str, Any]:
     """Caller holds lock across the entire session. Never persist raw argv/env."""
     if threading.current_thread() is not threading.main_thread():
         raise TimeMachineError("Runner must execute on the main thread for signal handling")
@@ -60,6 +67,8 @@ def run(project: Project, argv: list[str], cwd: Path | None = None) -> dict[str,
                 pass
 
     try:
+        if on_protected is not None:
+            on_protected(pre)
         for signum in (signal.SIGINT, signal.SIGTERM):
             previous[signum] = signal.signal(signum, forward)
         try:

@@ -11,6 +11,7 @@ from typing import Annotated, Any
 
 import typer
 
+from . import __version__
 from .errors import TimeMachineError
 from .presentation import console, guidance, human
 from .project import Project
@@ -27,16 +28,20 @@ _human: ContextVar[bool] = ContextVar("human_output", default=False)
 _plain: ContextVar[bool] = ContextVar("plain_output", default=False)
 
 
-@app.callback()
+@app.callback(invoke_without_command=True)
 def options(
     human_output: bool = typer.Option(
         False, "--human", help="Readable output, including in pipes."
     ),
     plain: bool = typer.Option(False, "--plain", help="Readable output without color/animation."),
+    version: bool = typer.Option(False, "--version", is_eager=True, help="Print package version."),
 ) -> None:
     """Checkpoint → run your agent → inspect → preview undo. Use --json for automation."""
     _human.set(human_output or plain or sys.stdout.isatty())
     _plain.set(plain)
+    if version:
+        typer.echo(__version__)
+        raise typer.Exit()
 
 
 def output(value: Any, json_mode: bool = False) -> None:
@@ -95,7 +100,22 @@ def status(json_mode: bool = typer.Option(False, "--json")) -> None:
     project = Project.discover()
     from .history import status as project_status
 
-    output(project_status(project), json_mode)
+    result = project_status(project)
+    if _human.get() and not json_mode:
+        from .metadata import connect
+
+        with connect(project.store) as db:
+            saved = db.execute(
+                "SELECT COUNT(*) FROM checkpoints WHERE status='COMPLETE'"
+            ).fetchone()[0]
+            unfinished = db.execute(
+                "SELECT COUNT(*) FROM runs WHERE status IN ('RUNNING','FINALIZING')"
+            ).fetchone()[0]
+        result["saved_summary"] = (
+            f"{saved} complete checkpoints · {unfinished} active or unfinished sessions. "
+            "Use doctor to inspect unfinished work."
+        )
+    output(result, json_mode)
 
 
 def main() -> None:
@@ -280,7 +300,14 @@ def run_command(ctx: typer.Context) -> None:
     if args and args[0] == "--":
         args = args[1:]
     with project.lock():
-        result = run(project, args)
+
+        def protected(pre: str) -> None:
+            if _human.get():
+                console(plain=_plain.get(), stderr=True).print(
+                    "PRE " + pre + " verified. Session protected within the configured scope."
+                )
+
+        result = run(project, args, on_protected=protected)
     if _human.get():
         console(plain=_plain.get(), stderr=True).print(human(result))
         if result["status"] == "LAUNCH_FAILED":
@@ -437,7 +464,7 @@ def tui_command() -> None:
         from .tui.app import TimeMachineApp
     except ImportError as exc:
         raise TimeMachineError(
-            "TUI extra missing. From the TimeMachine checkout: pip install -e '.[tui]'"
+            "TUI extra missing. Reinstall TimeMachine with the [tui] extra; see docs/INSTALL.md."
         ) from exc
     TimeMachineApp(Project.discover()).run()
 
@@ -448,6 +475,19 @@ def agents_command(json_mode: bool = typer.Option(False, "--json")) -> None:
     from .integrations import capabilities
 
     output(capabilities(), json_mode)
+
+
+@app.command("integrate", rich_help_panel="Everyday")
+def integrate_command(
+    destination: Path = typer.Option(
+        ..., "--output", help="New Bash/Zsh file to review and source"
+    ),
+    json_mode: bool = typer.Option(False, "--json"),
+) -> None:
+    """Opt in once: generate shell functions for installed agents; never activate them."""
+    from .integrations import shell_integration
+
+    output(shell_integration(destination), json_mode)
 
 
 @app.command("quickstart", rich_help_panel="Everyday")

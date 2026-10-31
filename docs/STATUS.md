@@ -340,3 +340,11 @@ adds tables/indexes transactionally, preserves objects and takes a private catal
 backup. Failed DDL rolls back; missing/reordered steps block GC/recovery. Recovery
 uses indexed path sets instead of quadratic progress scans. Focused migration +
 safety: 56 passed. Ruff/mypy clean. Next: full scale measurements and distribution.
+
+Agent opt-in gate: reviewable Bash/Zsh functions wrap explicitly resolved agent
+executables; no shell/vendor startup configuration is edited. Synthetic transport
+tests cover quoting, cwd, stdin/environment, nonzero exit and redaction. Human
+sessions show verified PRE before launch; human status reports complete checkpoints
+and unfinished sessions without changing status JSON. CLI --version/module entry
+and an early unsupported-platform gate are added. Focused gate: 13 passed, plus
+runner regression 9 passed in the preceding combined run. Windows is not validated.

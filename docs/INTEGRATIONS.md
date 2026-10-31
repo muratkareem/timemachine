@@ -35,6 +35,48 @@ It never invokes a shell, logs raw arguments or stores the environment. Agent ou
 is intentionally passed through unchanged; it may itself contain secrets. Shell
 history is outside TimeMachine's control. Do not put secrets in checkpoint messages.
 
+## Opt in once in Bash or Zsh
+
+Generate a new file outside the project; generation launches nothing and refuses
+to overwrite existing files or links:
+
+```sh
+timemachine integrate --output "$HOME/.timemachine-agents.sh"
+cat "$HOME/.timemachine-agents.sh"   # review the executable paths
+source "$HOME/.timemachine-agents.sh"
+cd /path/to/initialized/project
+codex                               # now protected in this shell
+```
+
+The functions cover installed `codex`, `claude`, `gemini`, and `aider` executables.
+They call their absolute paths through the same `run` service, passing arguments,
+stdin, terminal, environment, cwd and exit status. They fail before launch outside
+an initialized project. `unset -f codex claude gemini aider` disables them in this
+shell. Review and regenerate after moving/reinstalling either tool. Startup files
+are never modified; adding `source` to your own shell configuration is your choice.
+Aliases may take precedence: remove a conflicting alias before sourcing. Direct
+executable paths, IDE launches, desktop agents and other shells remain separate.
+
+Both Bash and Zsh integration paths are tested with synthetic executables,
+quoted paths/arguments, inherited stdin/environment and a nonzero exit. That
+verifies the transport, not vendor authentication or billed model sessions.
+Human sessions print the verified PRE ID before launching and the result after POST.
+
+## Lifecycle hooks investigated
+
+The official [Claude hooks](https://code.claude.com/docs/en/hooks) include session
+events, but SessionEnd also occurs on clear/resume, is advisory and has a bounded
+timeout. [Gemini hooks](https://geminicli.com/docs/hooks/) likewise distinguish
+session and turn events. These boundaries do not guarantee a durable POST for a
+large project or the exit of the complete agent process. The documented
+[Aider scripting interface](https://aider.chat/docs/scripting.html) supports normal
+command execution; no automatic lifecycle adapter is claimed here.
+
+Codex's documented plugin hook surface requires explicit user trust. No Codex hook
+adapter is shipped or enabled: desktop conversations and CLI process lifetimes
+need separate handling and verification. The subprocess wrapper stays the
+supported integration boundary. No vendor configuration or trust policy is changed.
+
 The lock is held until the direct child exits and POST is captured. An agent may
 spawn detached children, use a daemon, change working directories or write outside
 root. These actions are not sandboxed. A detached process can modify files after
