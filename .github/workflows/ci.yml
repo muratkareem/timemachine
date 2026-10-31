@@ -2,6 +2,7 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
@@ -18,8 +19,8 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - run: python -m pip install -e '.[dev]'
-      - run: ruff check src tests examples
-      - run: ruff format --check src tests examples
+      - run: ruff check src tests examples scripts
+      - run: ruff format --check src tests examples scripts
       - run: mypy
       - run: pytest --cov=timemachine --cov-report=term-missing --cov-report=xml
       - run: python -m build --no-isolation
@@ -33,3 +34,20 @@ jobs:
       - run: cd /tmp && /tmp/timemachine-wheel-check/bin/timemachine --help
       - run: /tmp/timemachine-wheel-check/bin/python examples/demo.py
       - run: /tmp/timemachine-wheel-check/bin/python examples/tui_preview.py --output /tmp/timemachine-wheel-preview.svg
+      - run: /tmp/timemachine-wheel-check/bin/python scripts/acceptance.py
+  release-artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements/release.txt twine
+      - run: python scripts/build_release.py
+      - run: twine check release-artifacts/*.whl release-artifacts/*.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: timemachine-release-candidate
+          path: release-artifacts/
+          if-no-files-found: error
+          retention-days: 14
