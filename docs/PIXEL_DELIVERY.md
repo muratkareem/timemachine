@@ -76,7 +76,8 @@ Actual Textual gallery: nineteen states, including all six sizes in dark/light,
 archive, inspector, Undo/Redo/full restore, conflict, empty and narrow review.
 The 60x24 header was refined to preserve more code lines and project identity.
 Captures are generated from real disposable snapshots and a wrapped Python agent.
-The gallery was rendered and inspected; source captures were not fabricated.
+The final gallery was refreshed from the installed candidate wheel and inspected;
+source captures were not fabricated. README assets pin that exact gallery revision.
 See assets/pixel, PIXEL_UI_GUIDE.md and `examples/pixel_gallery.py`.
 
 | Requested real-world scenario | Verification |
@@ -141,7 +142,7 @@ No hosted service or image-generation/runtime dependency was added.
 
 [Review PR #1](https://github.com/muratkareem/timemachine/pull/1) targets main from
 codex/pixel-tui-v0.2.0. The implementation/evidence range starts at ca9646f after
-7b3a548, with 27 cohesive commits before this documentation closeout. The final
+7b3a548, with 30 cohesive commits including the final installed-gallery and documentation closeout. The final
 source SHA is recorded by the candidate BUILD.json and PR head. main remains at
 7b3a548; the PR is open, not merged. No history was rewritten or force-pushed.
 
@@ -151,7 +152,10 @@ passed all seven jobs for 4c3eada: macOS/Linux × Python 3.12/3.13/3.14, plus cl
 reproducible artifact validation. MacOS 3.12 reports 163 passes/four skips; Ubuntu
 3.12 reports 162/five (four vendor tools absent; Zsh also absent on Ubuntu). Local
 164/three reflects installed Codex and Claude help and host-stripped setuid bits.
-The final documentation closeout changes no runtime/tests/dependencies/workflow;
+[Runtime-identical head CI 41329744412](https://github.com/muratkareem/timemachine/actions/runs/41329744412)
+and [PR CI 41329748618](https://github.com/muratkareem/timemachine/actions/runs/41329748618)
+also passed all seven jobs at 5bc9dd8. The final installed-gallery/documentation
+closeout changes no runtime/tests/dependencies/workflow;
 its head checks remain visible on the PR and are verified at handoff.
 
 Wheel/sdist double builds match; Twine checks pass. Isolated wheel and sdist installs

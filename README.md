@@ -1,4 +1,4 @@
-![TimeMachine — local recovery for coding agents](https://raw.githubusercontent.com/muratkareem/timemachine/6ca4525535877a53d3c8cf4e096b142091aeb606/docs/assets/pixel/wordmark.svg)
+![TimeMachine — local recovery for coding agents](https://raw.githubusercontent.com/muratkareem/timemachine/9f804707fc229321daf520e5ee91d029b9186320/docs/assets/pixel/wordmark.svg)
 
 **Undo AI coding agent changes without losing your own work.**
 
@@ -37,7 +37,7 @@ No PyPI publication is claimed; `timemachine` on PyPI is a different project.
 
 ## See the session, understand the recovery
 
-![Real TimeMachine dashboard and unified diff](https://raw.githubusercontent.com/muratkareem/timemachine/6ca4525535877a53d3c8cf4e096b142091aeb606/docs/assets/pixel/dark-160x45.svg)
+![Real TimeMachine dashboard and unified diff](https://raw.githubusercontent.com/muratkareem/timemachine/9f804707fc229321daf520e5ee91d029b9186320/docs/assets/pixel/dark-160x45.svg)
 
 The dashboard distinguishes saved checkpoints from current files. The timeline
 connects agent sessions to PRE/POST snapshots. Choose a file to read its diff,
@@ -45,7 +45,7 @@ filter directory paths, or inspect its saved bytes, type and permissions. The pr
 action follows actual Undo/Redo session order. File pages remain bounded, and theme
 switching preserves selection without reloading snapshot data.
 
-![Real undo review with explicit confirmation](https://raw.githubusercontent.com/muratkareem/timemachine/6ca4525535877a53d3c8cf4e096b142091aeb606/docs/assets/pixel/undo.svg)
+![Real undo review with explicit confirmation](https://raw.githubusercontent.com/muratkareem/timemachine/9f804707fc229321daf520e5ee91d029b9186320/docs/assets/pixel/undo.svg)
 
 Undo first checks affected current paths against the recorded result. A conflicting
 newer edit is refused. A recovery checkpoint and journal are retained before writes;
@@ -53,7 +53,7 @@ success appears only after the backend verifies the selected result.
 
 These are real screenshots from a disposable project and a wrapped synthetic
 Python command. Reproduce them with `python examples/tui_preview.py`. No billed
-agent or fake product data is used. [Narrow view](https://raw.githubusercontent.com/muratkareem/timemachine/6ca4525535877a53d3c8cf4e096b142091aeb606/docs/assets/pixel/dark-60x24.svg) · [Light theme](https://raw.githubusercontent.com/muratkareem/timemachine/6ca4525535877a53d3c8cf4e096b142091aeb606/docs/assets/pixel/light-120x40.svg) ·
+agent or fake product data is used. [Narrow view](https://raw.githubusercontent.com/muratkareem/timemachine/9f804707fc229321daf520e5ee91d029b9186320/docs/assets/pixel/dark-60x24.svg) · [Light theme](https://raw.githubusercontent.com/muratkareem/timemachine/9f804707fc229321daf520e5ee91d029b9186320/docs/assets/pixel/light-120x40.svg) ·
 [Before the redesign](https://github.com/muratkareem/timemachine/blob/main/docs/assets/tui-before.svg) · [Pixel UI guide](docs/PIXEL_UI_GUIDE.md) · [Design and measurements](docs/PIXEL_OVERHAUL.md).
 
 ## A small before / after

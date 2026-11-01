@@ -2,13 +2,14 @@
 
 Candidate **0.2.0** is prepared on **codex/pixel-tui-v0.2.0** with
 [review PR #1](https://github.com/muratkareem/timemachine/pull/1), not merged/published.
-27 implementation/evidence commits from ca9646f through 4c3eada precede the final
-documentation closeout. main and the published v0.1.0 release remain unchanged.
+30 cohesive implementation/evidence commits from ca9646f include the final installed
+gallery and documentation closeout. main and the published v0.1.0 release remain unchanged.
 
 Final local gate: **164 passed, 3 documented skips, 86% coverage** (2728 statements,
 375 missed), 42.18 s. Ruff lint/format: 68 files; strict mypy: 29 source files; all
 pass. Both seven-job branch/PR CI runs at 4c3eada pass (41328985700 / 41329081554).
-The closeout changes no runtime/tests/dependencies/CI; final head checks are on PR #1.
+Both branch/PR seven-job gates also pass at 5bc9dd8 (41329744412 / 41329748618).
+The final gallery/docs closeout changes no runtime/tests/dependencies/CI; head checks are on PR #1.
 
 Wheel/sdist clean double builds, Twine checks, isolated installs and installed
 acceptance/gallery pass. Linux CI and macOS artifact hashes match. No-clone pinned
