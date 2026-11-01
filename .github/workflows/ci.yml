@@ -22,7 +22,7 @@ jobs:
       - run: ruff check src tests examples scripts
       - run: ruff format --check src tests examples scripts
       - run: mypy
-      - run: pytest --cov=timemachine --cov-report=term-missing --cov-report=xml
+      - run: pytest --cov=timemachine --cov-report=term-missing --cov-report=xml -W error::RuntimeWarning
       - run: python -m build --no-isolation
       - run: python examples/demo.py
       - run: python -m venv /tmp/timemachine-wheel-check
@@ -35,6 +35,16 @@ jobs:
       - run: /tmp/timemachine-wheel-check/bin/python examples/demo.py
       - run: /tmp/timemachine-wheel-check/bin/python examples/tui_preview.py --output /tmp/timemachine-wheel-preview.svg
       - run: /tmp/timemachine-wheel-check/bin/python scripts/acceptance.py
+      - name: Capture installed pixel workspace gallery
+        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.12'
+        run: /tmp/timemachine-wheel-check/bin/python examples/pixel_gallery.py --output /tmp/timemachine-pixel-gallery
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.12'
+        with:
+          name: pixel-ui-gallery
+          path: /tmp/timemachine-pixel-gallery/
+          if-no-files-found: error
+          retention-days: 14
   release-artifacts:
     runs-on: ubuntu-latest
     steps:
