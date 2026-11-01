@@ -410,8 +410,14 @@ class TimeMachineApp(App[None]):
                 "Initialization alone does not back up your project."
             )
 
-    def render_timeline(self) -> None:
+    def render_timeline(self, *, repaint: bool = False) -> None:
         table = self.query_one("#timeline", DataTable)
+        if repaint:
+            for key, item in self.visible_events.items():
+                stamp, body = archive_record(item, self.palette)
+                table.update_cell(key, "event", stamp)
+                table.update_cell(key, "description", body)
+            return
         previous = self.selected_event["id"] if self.selected_event else None
         table.clear()
         self.visible_events.clear()
@@ -452,7 +458,11 @@ class TimeMachineApp(App[None]):
         key = str(event.row_key.value)
         if event.data_table.id == "timeline" and key in self.visible_events:
             item = self.visible_events[key]
-            if item is self.selected_event and self.selection is not None:
+            if item is self.selected_event and (
+                self.selection is not None
+                or self.selection_worker is not None
+                and not self.selection_worker.is_finished
+            ):
                 return
             self.selected_event = item
             self.selected_id = None
@@ -485,7 +495,7 @@ class TimeMachineApp(App[None]):
             if self.selected_event is item:
                 self.failure(exc)
 
-    def render_files(self) -> None:
+    def render_files(self, *, repaint: bool = False) -> None:
         selected = self.selection
         if selected is None:
             return
@@ -495,7 +505,8 @@ class TimeMachineApp(App[None]):
             if files.row_count
             else None
         )
-        files.clear()
+        if not repaint:
+            files.clear()
         counts = {
             kind: sum(
                 f["change"] == kind and (f["after"] or f["before"]).kind != "directory"
@@ -534,21 +545,18 @@ class TimeMachineApp(App[None]):
             name = PurePosixPath(path)
             location = str(name.parent) if str(name.parent) != "." else "/ project root"
             entry = change["after"] or change["before"]
-            files.add_row(
-                Text(labels[label], style=self.palette.get(label, "")),
-                Text(
-                    safe(name.name) + "\n" + safe(location),
-                    overflow="ellipsis",
-                    no_wrap=True,
-                ),
-                Text(
-                    "dir" if entry.kind == "directory" else size(entry.size),
-                    style=self.palette["muted"],
-                ),
-                key=path,
-                height=2,
+            state = Text(labels[label], style=self.palette.get(label, ""))
+            file = Text(safe(name.name) + "\n" + safe(location), overflow="ellipsis", no_wrap=True)
+            byte_text = Text(
+                "dir" if entry.kind == "directory" else size(entry.size),
+                style=self.palette["muted"],
             )
-        if selected_path in self.file_items:
+            if repaint:
+                for column, value in (("state", state), ("path", file), ("bytes", byte_text)):
+                    files.update_cell(path, column, value)
+            else:
+                files.add_row(state, file, byte_text, key=path, height=2)
+        if not repaint and selected_path in self.file_items:
             files.move_cursor(row=list(self.file_items).index(selected_path))
         self.call_after_refresh(self.fit_tables)
         if not self.file_items:
@@ -778,9 +786,9 @@ class TimeMachineApp(App[None]):
         self.theme = "timemachine-light" if self.theme == "timemachine" else "timemachine"
         if self.catalog:
             self.render_dashboard(self.catalog)
-        self.render_timeline()
+        self.render_timeline(repaint=True)
         if self.selection:
-            self.render_files()
+            self.render_files(repaint=True)
             if self.preview_path:
                 self.update_ledger(self.preview_path)
                 self.draw_preview()
