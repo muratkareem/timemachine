@@ -23,6 +23,7 @@ from ..presentation import guidance, human, safe, short, size
 from ..project import Project
 from ..restore_plan import Plan
 from ..ui_data import Workspace
+from .components import SaveSlot, archive_record
 from .design import DARK, LIGHT, SaveStateSyntax, console_theme
 
 
@@ -194,7 +195,7 @@ class TimeMachineApp(App[None]):
             yield Static("LOCAL ONLY\nNO DAEMON  /  ? GUIDE", id="tagline")
         with Grid(id="dashboard"):
             for name in ("protection", "session", "changes", "storage"):
-                yield Static("Reading archive…", id=f"card-{name}", classes="card")
+                yield SaveSlot("Reading archive…", id=f"card-{name}", classes="card")
         yield Static("Reading archive…", id="overview")
         with Horizontal(id="actions"):
             yield Button("Review undo [u]", id="undo-button", variant="primary")
@@ -269,7 +270,8 @@ class TimeMachineApp(App[None]):
         self.query_one("#history-pane").border_title = "1 / SESSION ARCHIVE"
         self.query_one("#files-pane").border_title = "2 / FILE INVENTORY"
         self.query_one("#preview-pane").border_title = "3 / CHANGE INSPECTOR"
-        self.query_one("#timeline", DataTable).add_columns("UTC / event", "Description / state")
+        self.query_one("#timeline", DataTable).add_column("UTC / STATE", width=18)
+        self.query_one("#timeline", DataTable).add_column("SESSION / SAVE POINT")
         self.query_one("#files", DataTable).add_columns("Change", "Path")
         self.set_class(self.ascii, "ascii")
         self.layout_width(self.size.width)
@@ -381,27 +383,29 @@ class TimeMachineApp(App[None]):
             self.query_one("#brand", Static).update(
                 Text("TIME / MACHINE\nSAVE-STATE CONSOLE / " + safe(self.project.root.name))
             )
-            self.query_one("#card-protection", Static).update(
-                Text(
-                    "PROTECTION\n" + state + "\nCurrent files not scanned",
-                    style=self.palette["protected"],
-                )
+            self.query_one("#card-protection", SaveSlot).show(
+                "SYSTEM STATUS",
+                state,
+                "Live files not scanned",
+                self.palette,
+                "warning" if needs_attention else "protected",
             )
-            session = (
-                f"{run['agent']} · {run['status']}\nExit {run['exit_code']} · {run['state']}"
-                if run
-                else "No sessions yet\nrun -- COMMAND to begin"
+            self.query_one("#card-session", SaveSlot).show(
+                "LATEST SESSION",
+                (run["agent"] + " / " + run["state"].upper()) if run else "NO SESSIONS",
+                f"{run['status']} / exit {run['exit_code']}" if run else "run -- COMMAND to begin",
+                self.palette,
+                "primary",
             )
-            self.query_one("#card-session", Static).update(
-                Text("LATEST SESSION\n" + safe(session, multiline=True))
-            )
-            self.query_one("#card-storage", Static).update(
-                Text(
-                    "SNAPSHOT STORAGE\n"
-                    + size(data["bytes"])
-                    + "\n"
-                    + ("Latest " + short(cp["id"]) if cp else "No saved checkpoints")
-                )
+            percent = min(100.0, data["bytes"] / self.project.config["quota_bytes"] * 100)
+            filled = min(8, int(percent / 12.5))
+            meter = "[" + "#" * filled + "." * (8 - filled) + f"] {percent:.1f}% quota"
+            self.query_one("#card-storage", SaveSlot).show(
+                "OBJECT STORAGE",
+                size(data["bytes"]) + " / " + size(self.project.config["quota_bytes"]),
+                meter,
+                self.palette,
+                "text",
             )
             self.query_one("#card-changes", Static).update(
                 "SELECTED CHANGES\nSelect a session\nUndo preview checks conflicts"
@@ -446,31 +450,8 @@ class TimeMachineApp(App[None]):
             self.visible_events[key] = item
             if item["id"] == previous:
                 selected_row = table.row_count
-            description = (
-                item.get("message") or item.get("agent") or item.get("kind") or "Checkpoint"
-            )
-            status = item["status"]
-            if item["category"] == "run":
-                status += f" · {item['state']} · exit {item['exit_code']}"
-            available = (
-                "PRE/POST"
-                if item.get("post")
-                else "PRE only"
-                if item["category"] == "run"
-                else "saved"
-            )
-            table.add_row(
-                Text(
-                    item["created"][5:16].replace("T", " ")
-                    + "\n"
-                    + item["category"].upper()
-                    + " "
-                    + short(item["id"])
-                ),
-                Text(safe(description) + "\n" + safe(status) + " · " + available),
-                key=key,
-                height=2,
-            )
+            stamp, body = archive_record(item, self.palette)
+            table.add_row(stamp, body, key=key, height=2)
         if table.row_count:
             table.move_cursor(row=selected_row)
         else:
