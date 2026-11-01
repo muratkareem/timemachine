@@ -1,6 +1,6 @@
 # v0.2.0 pixel workspace delivery · 2026-11-01
 
-**Verdict: RELEASE CANDIDATE · 89/100**, subject to the remote/package closeout below.
+**Verdict: RELEASE CANDIDATE · 89/100**, with verified local/package and remote gates below.
 These scores are engineering/design judgments supported by the stated fixtures and
 limits, not independent certification, a user study or measured perfection.
 
@@ -60,8 +60,8 @@ to 0.2.0. v0.1.0 release/tag/assets are read-only throughout this work.
 
 Baseline at 7b3a548 was re-executed: **140 passed, three skips**, 85% coverage.
 Full local visual gate: **164 passed, three skipped, zero failed**, **86% coverage**
-(2,724 statements / 375 missed), 41.89 s, with RuntimeWarning treated as an error.
-Final compact-header extraction additionally passes the focused layout/worker gate.
+(2,728 statements / 375 missed), 42.18 s, with RuntimeWarning treated as an error.
+The final compact header is included in that full gate; focused layout/worker checks also pass.
 All original assertions remain; asynchronous pilots explicitly await read workers.
 The local skips are unavailable Gemini/Aider executables and a host-stripped setuid
 bit, with pure mode validation still tested. No test is disabled or weakened.
@@ -70,7 +70,7 @@ Ruff lint/format: 68 files; strict mypy: 29 source files. All pass. A no-I/O the
 test exposed a queued row-selection race; repainting existing cells and lazy worker
 factories corrected it. A visual review found stale cached column widths, tall small
 reviews and ellipsized recovery paths; those are corrected and regression-tested.
-Full gate, package and remote status are finalized in the closeout record below.
+Package and remote verification are recorded in the closeout below.
 
 Actual Textual gallery: nineteen states, including all six sizes in dark/light,
 archive, inspector, Undo/Redo/full restore, conflict, empty and narrow review.
@@ -137,11 +137,40 @@ Important future work: external user testing, more terminal emulators, native Wi
 on real runners. Optional: hunk recovery, automatic hooks, watch/export/compression.
 No hosted service or image-generation/runtime dependency was added.
 
-## GitHub and release closeout (in progress)
+## GitHub and release closeout
 
-Branch codex/pixel-tui-v0.2.0 from 7b3a548; cohesive Conventional Commits preserve
-history. A review PR and seven-job remote gate will be recorded here after verified
-push. main and v0.1.0 remain unchanged. The screenshots are actual captures, not
-proof of recovery safety; safety comes from backend execution and adversarial tests.
-Final count/range, SHA, PR/CI, build/install checks and publication status follow in
-the closeout addendum. Publication remains a later explicit maintainer decision.
+[Review PR #1](https://github.com/muratkareem/timemachine/pull/1) targets main from
+codex/pixel-tui-v0.2.0. The implementation/evidence range starts at ca9646f after
+7b3a548, with 27 cohesive commits before this documentation closeout. The final
+source SHA is recorded by the candidate BUILD.json and PR head. main remains at
+7b3a548; the PR is open, not merged. No history was rewritten or force-pushed.
+
+Both [branch CI 41328985700](https://github.com/muratkareem/timemachine/actions/runs/41328985700)
+and [PR CI 41329081554](https://github.com/muratkareem/timemachine/actions/runs/41329081554)
+passed all seven jobs for 4c3eada: macOS/Linux × Python 3.12/3.13/3.14, plus clean
+reproducible artifact validation. MacOS 3.12 reports 163 passes/four skips; Ubuntu
+3.12 reports 162/five (four vendor tools absent; Zsh also absent on Ubuntu). Local
+164/three reflects installed Codex and Claude help and host-stripped setuid bits.
+The final documentation closeout changes no runtime/tests/dependencies/workflow;
+its head checks remain visible on the PR and are verified at handoff.
+
+Wheel/sdist double builds match; Twine checks pass. Isolated wheel and sdist installs
+both pass disposable acceptance. The installed wheel generates the nineteen-state
+pixel gallery. Candidate source installation from the pinned public commit archive
+also passes version/acceptance without cloning. Wheel resources include theme.tcss,
+design.py, components.py and dialogs.py; source/archive contents were checked for
+project markers, stores and credential files. No snapshots or user secrets upload.
+The independent Linux CI wheel/sdist hashes match the local macOS build hashes.
+
+v0.1.0 verification after delivery: release ID 429878043, tag target e10c054, and all
+four original asset IDs, byte sizes and SHA-256 digests match the initial record.
+No v0.2.0 tag/release or PyPI upload was created. The prepared candidate files in
+release-artifacts/v0.2.0 have checksums and exact provenance in BUILD.json; CI also
+retains candidate artifacts/gallery for fourteen days. The GitHub connector's PR
+write integration returned 403, so the authorized GitHub CLI created the requested
+PR. Repository metadata/settings and the stable Homebrew source pin are unchanged.
+
+Known limits are the explicit preview/page/review bounds and unvalidated external
+vendor/terminal/platform cases above. There is no unresolved critical defect in
+the tested scope. Merge/release publication is a later maintainer decision; this
+assignment prepares the candidate and review evidence without publishing it.

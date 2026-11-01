@@ -1,5 +1,15 @@
 # Release procedure
 
+## Current review candidate: v0.2.0
+
+[PR #1](https://github.com/muratkareem/timemachine/pull/1) contains the verified pixel
+workspace. It is not merged, tagged or published. Candidate artifacts are prepared
+in release-artifacts/v0.2.0; BUILD.json identifies the exact source and checksums.
+See PIXEL_DELIVERY.md for gates, scores and limits. A future v0.2.0 publication
+requires new explicit approval. Never replace/move v0.1.0 or its four assets.
+The stable release and general build procedure below remain applicable.
+
+
 Published GitHub version: [**v0.1.0**](https://github.com/muratkareem/timemachine/releases/tag/v0.1.0) at
 `e10c054ec38eb129dc985d0b521b1214c4e65b19`. All four release assets were downloaded
 and verified against approved hashes, and public-wheel installation passes acceptance.
@@ -42,9 +52,9 @@ are no unresolved critical data-loss findings and the working tree is clean.
 ## Publication gate
 
 Publishing a tag/GitHub Release needs explicit maintainer authorization separate
-from pushing implementation commits. After authorization, create `v0.1.0` at the
+from pushing implementation commits. After authorization for the new candidate, create `v0.2.0` at the
 reviewed commit, push that tag without force, and publish the exact verified wheel,
-sdist, checksums and build manifest with `docs/releases/v0.1.0.md` as release notes.
+sdist, checksums and build manifest with `docs/releases/v0.2.0.md` as release notes.
 Check that remote tag/commit, downloaded asset hashes and installed bytes match.
 Do not silently replace existing tag/assets. Publication is intentionally manual.
 

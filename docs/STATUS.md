@@ -1,3 +1,34 @@
+# Current status — v0.2.0 pixel release candidate delivered
+
+Candidate **0.2.0** is prepared on **codex/pixel-tui-v0.2.0** with
+[review PR #1](https://github.com/muratkareem/timemachine/pull/1), not merged/published.
+27 implementation/evidence commits from ca9646f through 4c3eada precede the final
+documentation closeout. main and the published v0.1.0 release remain unchanged.
+
+Final local gate: **164 passed, 3 documented skips, 86% coverage** (2728 statements,
+375 missed), 42.18 s. Ruff lint/format: 68 files; strict mypy: 29 source files; all
+pass. Both seven-job branch/PR CI runs at 4c3eada pass (41328985700 / 41329081554).
+The closeout changes no runtime/tests/dependencies/CI; final head checks are on PR #1.
+
+Wheel/sdist clean double builds, Twine checks, isolated installs and installed
+acceptance/gallery pass. Linux CI and macOS artifact hashes match. No-clone pinned
+candidate source installation passes. Nineteen actual captures cover both palettes,
+six sizes, undo/redo/full restore/conflict/empty and narrow review. The 60x24 inspector
+has additional code space while retaining project identity and recovery controls.
+
+Native Windows/hunk restore/vendor hooks remain deferred. UI previews, file pages
+and reviews have explicit bounds; no unsafe fallback. Original restore/snapshot/
+storage/Git engines are unchanged; the shared eligible-run query is identical.
+Release ID/tag target and all four v0.1.0 asset IDs/sizes/digests are unchanged.
+PyPI remains unpublished. No new tag/release approval is requested or assumed.
+
+Verdict **RELEASE CANDIDATE · 89/100**. Full scores, test evidence, measured
+performance, screenshots, installation and limitations: PIXEL_DELIVERY.md.
+
+---
+
+## Historical implementation record
+
 # Current status — v0.2.0 pixel workspace in verification
 
 Development branch: codex/pixel-tui-v0.2.0; baseline 7b3a548. v0.1.0 tag/asset
