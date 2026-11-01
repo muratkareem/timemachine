@@ -4,6 +4,7 @@ import asyncio
 import difflib
 import os
 from collections.abc import Callable
+from functools import partial
 from pathlib import PurePosixPath
 from typing import Any
 
@@ -15,6 +16,7 @@ from textual.binding import Binding
 from textual.containers import Grid, Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, DataTable, Footer, Input, RichLog, Select, Static
+from textual.worker import Worker
 
 from ..diff import text_content
 from ..git_context import git_context
@@ -75,6 +77,8 @@ class TimeMachineApp(App[None]):
         self.has_more = False
         self.page_size = 50
         self.service_lock = asyncio.Lock()
+        self.selection_worker: Worker[None] | None = None
+        self.preview_worker: Worker[None] | None = None
         self.register_theme(console_theme())
         self.register_theme(console_theme(light=True))
         self.theme = "timemachine"
@@ -322,8 +326,12 @@ class TimeMachineApp(App[None]):
 
     async def action_refresh(self) -> None:
         try:
-            self.workspace.reset()
-            page = await self.service(lambda: self.workspace.timeline(self.page_size + 1))
+
+            def refresh_page() -> list[dict[str, Any]]:
+                self.workspace.reset()
+                return self.workspace.timeline(self.page_size + 1)
+
+            page = await self.service(refresh_page)
             self.has_more = len(page) > self.page_size
             self.events = page[: self.page_size]
             self.render_timeline()
@@ -436,85 +444,101 @@ class TimeMachineApp(App[None]):
 
     async def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         key = str(event.row_key.value)
+        if event.data_table.id == "timeline" and key in self.visible_events:
+            item = self.visible_events[key]
+            if item is self.selected_event and self.selection is not None:
+                return
+            self.selected_event = item
+            self.selected_id = None
+            self.selection = None
+            self.file_items.clear()
+            self.query_one("#files", DataTable).clear()
+            self.recovery_controls()
+            self.query_one("#preview-title", Static).update("Reading saved selection…")
+            self.selection_worker = self.run_worker(
+                partial(self.read_selection, item, self.anchor), group="selection", exclusive=True
+            )
+        elif event.data_table.id == "files" and key in self.file_items:
+            self.preview_worker = self.run_worker(
+                partial(self.read_preview, key), group="preview", exclusive=True
+            )
+
+    async def read_selection(self, item: dict[str, Any], anchor: str | None) -> None:
         try:
-            if event.data_table.id == "timeline" and key in self.visible_events:
-                item = self.visible_events[key]
-                self.selected_event = item
-                self.recovery_controls()
-                self.selected_id = None
-                self.selection = None
-                self.file_items.clear()
-                self.query_one("#files", DataTable).clear()
-                self.query_one("#preview-title", Static).update("Reading saved selection…")
-                selected = await self.service(lambda: self.workspace.selection(item, self.anchor))
-                if self.selected_event is not item:
-                    return
-                self.selection = selected
-                self.selected_id = selected["target"]
-                self.recovery_controls()
-                self.file_items = {f["path"]: f for f in selected["files"]}
-                files = self.query_one("#files", DataTable)
-                files.clear()
-                counts = {
-                    kind: sum(
-                        f["change"] == kind and (f["after"] or f["before"]).kind != "directory"
-                        for f in selected["files"]
-                    )
-                    for kind in ("added", "modified", "deleted", "metadata", "type")
-                }
-                self.query_one("#card-changes", Static).update(
-                    Text(
-                        f"CHANGES\n+{counts['added']} added ~{counts['modified']} edited\n"
-                        f"-{counts['deleted']} deleted "
-                        f"{counts['metadata'] + counts['type']} mode/type"
-                    )
-                )
-                self.query_one("#selection", Static).update(
-                    Text(
-                        f"{len(selected['files'])} entries · {short(selected['target'])}\n"
-                        + (
-                            "Compared with " + short(selected["base"])
-                            if selected["base"]
-                            else "Saved baseline"
-                        )
-                    )
-                )
-                self.update_ledger()
-                labels = {
-                    "added": "+ ADD",
-                    "modified": "~ EDIT",
-                    "deleted": "- DEL",
-                    "type": "! TYPE",
-                    "metadata": "= MODE",
-                    "saved": "S SAVE",
-                }
-                for path, change in self.file_items.items():
-                    label = change["change"]
-                    name = PurePosixPath(path)
-                    location = str(name.parent) if str(name.parent) != "." else "/ project root"
-                    entry = change["after"] or change["before"]
-                    files.add_row(
-                        Text(labels[label], style=self.palette.get(label, "")),
-                        Text(
-                            safe(name.name) + "\n" + safe(location),
-                            overflow="ellipsis",
-                            no_wrap=True,
-                        ),
-                        Text(
-                            "dir" if entry.kind == "directory" else size(entry.size),
-                            style=self.palette["muted"],
-                        ),
-                        key=path,
-                        height=2,
-                    )
-                self.call_after_refresh(self.fit_tables)
-                if not self.file_items:
-                    self.query_one("#preview-title", Static).update("No filesystem differences")
-                    self.show_result("No filesystem differences in this selection.")
-            elif event.data_table.id == "files" and key in self.file_items:
-                await self.preview_file(key)
+            selected = await self.service(lambda: self.workspace.selection(item, anchor))
+            if self.selected_event is not item:
+                return
+            self.selection = selected
+            self.selected_id = selected["target"]
+            self.file_items = {f["path"]: f for f in selected["files"]}
+            self.recovery_controls()
+            self.render_files()
         except Exception as exc:
-            self.failure(exc)
+            if self.selected_event is item:
+                self.failure(exc)
+
+    def render_files(self) -> None:
+        selected = self.selection
+        if selected is None:
+            return
+        files = self.query_one("#files", DataTable)
+        files.clear()
+        counts = {
+            kind: sum(
+                f["change"] == kind and (f["after"] or f["before"]).kind != "directory"
+                for f in selected["files"]
+            )
+            for kind in ("added", "modified", "deleted", "metadata", "type")
+        }
+        self.query_one("#card-changes", Static).update(
+            Text(
+                f"CHANGES\n+{counts['added']} added ~{counts['modified']} edited\n"
+                f"-{counts['deleted']} deleted "
+                f"{counts['metadata'] + counts['type']} mode/type"
+            )
+        )
+        self.query_one("#selection", Static).update(
+            Text(
+                f"{len(selected['files'])} entries · {short(selected['target'])}\n"
+                + (
+                    "Compared with " + short(selected["base"])
+                    if selected["base"]
+                    else "Saved baseline"
+                )
+            )
+        )
+        self.update_ledger()
+        labels = {
+            "added": "+ ADD",
+            "modified": "~ EDIT",
+            "deleted": "- DEL",
+            "type": "! TYPE",
+            "metadata": "= MODE",
+            "saved": "S SAVE",
+        }
+        for path, change in self.file_items.items():
+            label = change["change"]
+            name = PurePosixPath(path)
+            location = str(name.parent) if str(name.parent) != "." else "/ project root"
+            entry = change["after"] or change["before"]
+            files.add_row(
+                Text(labels[label], style=self.palette.get(label, "")),
+                Text(
+                    safe(name.name) + "\n" + safe(location),
+                    overflow="ellipsis",
+                    no_wrap=True,
+                ),
+                Text(
+                    "dir" if entry.kind == "directory" else size(entry.size),
+                    style=self.palette["muted"],
+                ),
+                key=path,
+                height=2,
+            )
+        self.call_after_refresh(self.fit_tables)
+        if not self.file_items:
+            self.query_one("#preview-title", Static).update("No filesystem differences")
+            self.show_result("No filesystem differences in this selection.")
 
     async def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         if event.data_table.id == "timeline":
@@ -548,6 +572,14 @@ class TimeMachineApp(App[None]):
                 )
             text.append("\n\ns / restore selected path\nv / saved file or unified diff")
         self.query_one("#ledger-content", Static).update(text)
+
+    async def read_preview(self, path: str) -> None:
+        item = self.file_items.get(path)
+        try:
+            await self.preview_file(path)
+        except Exception as exc:
+            if self.file_items.get(path) is item:
+                self.failure(exc)
 
     async def preview_file(self, path: str) -> None:
         change = self.file_items[path]
