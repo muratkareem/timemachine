@@ -258,6 +258,8 @@ class TimeMachineApp(App[None]):
         self.layout_width(event.size.width)
         if self.query("#timeline"):
             self.call_after_refresh(self.fit_tables)
+            if self.catalog:
+                self.render_brand()
 
     def notify_state(self, message: str, state: str = "") -> None:
         widget = self.query_one("#notice", Static)
@@ -356,6 +358,18 @@ class TimeMachineApp(App[None]):
         except Exception as exc:
             self.failure(exc)
 
+    def render_brand(self) -> None:
+        self.query_one("#brand", Static).update(
+            Text(
+                (
+                    "TIME / MACHINE / "
+                    if self.has_class("narrow") and self.has_class("short")
+                    else "TIME / MACHINE\nSAVE-STATE CONSOLE / "
+                )
+                + safe(self.project.root.name)
+            )
+        )
+
     def render_dashboard(self, data: dict[str, Any]) -> None:
         cp, run = data["checkpoint"], data["run"]
         needs_attention = bool(data["blocked"])
@@ -367,10 +381,8 @@ class TimeMachineApp(App[None]):
             state = "Checkpoint available"
         else:
             state = "Ready to checkpoint"
-        self.notify_state("Saved snapshots are not a live backup. Preview undo checks conflicts.")
-        self.query_one("#brand", Static).update(
-            Text("TIME / MACHINE\nSAVE-STATE CONSOLE / " + safe(self.project.root.name))
-        )
+        self.notify_state("Saved snapshots only / live files checked at review.")
+        self.render_brand()
         self.query_one("#card-protection", SaveSlot).show(
             "SYSTEM STATUS",
             state,

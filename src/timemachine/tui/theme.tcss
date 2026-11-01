@@ -77,3 +77,6 @@ Footer { background: $panel; }
 .ascii #dialog, .ascii #help { border: ascii $warning; }
 #file-page { height: 1; display: none; }
 #file-page Button { width: 1fr; min-width: 0; height: 1; min-height: 1; border: none; padding: 0; color: $primary; }
+
+.narrow.short #brandbar, .narrow.short #brand { height: 1; }
+.narrow.short.detail-mode #overview { display: none; }
