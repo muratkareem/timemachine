@@ -62,6 +62,7 @@ Path('tests/test_names.py').write_text(
         app = TimeMachineApp(project)
         async with app.run_test(size=(width, height)) as pilot:
             await pilot.pause()
+            await app.workers.wait_for_complete()
             if light:
                 await app.action_theme()
             if view == "diff":
@@ -69,6 +70,7 @@ Path('tests/test_names.py').write_text(
             elif view == "restore":
                 await pilot.press("u")
             await pilot.pause()
+            await app.workers.wait_for_complete()
             output.parent.mkdir(parents=True, exist_ok=True)
             app.save_screenshot(filename=output.name, path=str(output.parent))
 

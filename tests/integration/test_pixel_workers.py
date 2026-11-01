@@ -39,3 +39,36 @@ def test_slow_selection_does_not_block_typing_or_repopulate_stale_files(project,
             release.set()
 
     asyncio.run(exercise())
+
+
+def test_theme_switch_reuses_saved_data_and_preserves_selected_file(project, monkeypatch):
+    (project.root / "a.py").write_text("first")
+    (project.root / "z.py").write_text("last")
+    with project.lock():
+        checkpoint(project)
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Theme switching must not read catalog, objects or live files")
+
+    async def exercise():
+        app = TimeMachineApp(project)
+        async with app.run_test(size=(160, 45)) as pilot:
+            await pilot.pause()
+            await app.workers.wait_for_complete()
+            table = app.query_one("#files", DataTable)
+            table.move_cursor(row=1)
+            await pilot.pause()
+            await app.workers.wait_for_complete()
+            assert app.preview_path == "z.py"
+            monkeypatch.setattr(app, "dashboard", forbidden)
+            monkeypatch.setattr(app.workspace, "timeline", forbidden)
+            monkeypatch.setattr(app.workspace, "selection", forbidden)
+            monkeypatch.setattr("timemachine.tui.app.text_content", forbidden)
+            await app.action_theme()
+            await pilot.pause()
+            await app.workers.wait_for_complete()
+            assert app.theme == "timemachine-light"
+            assert app.preview_path == "z.py" and app.preview_text == "last"
+            assert table.cursor_row == 1
+
+    asyncio.run(exercise())

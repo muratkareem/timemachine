@@ -70,6 +70,9 @@ class TimeMachineApp(App[None]):
         self.file_items: dict[str, dict[str, Any]] = {}
         self.pending: Callable[[], dict[str, Any]] | None = None
         self.preview_text = ""
+        self.preview_lexer = "text"
+        self.preview_path: str | None = None
+        self.preview_item: dict[str, Any] | None = None
         self.file_mode = False
         self.match_index = -1
         self.catalog: dict[str, Any] = {}
@@ -251,6 +254,8 @@ class TimeMachineApp(App[None]):
         widget.update(Text(safe(message)))
 
     def show_result(self, value: Any) -> None:
+        self.preview_path = None
+        self.preview_item = None
         self.preview_text = ""
         log = self.query_one("#preview", RichLog)
         log.clear()
@@ -338,71 +343,72 @@ class TimeMachineApp(App[None]):
             data = await self.service(self.dashboard)
             self.catalog = data
             self.recovery_controls()
-            cp, run = data["checkpoint"], data["run"]
-            needs_attention = bool(data["blocked"])
-            if needs_attention:
-                state = "Recovery needs attention"
-            elif cp and cp["status"] != "COMPLETE":
-                state = "Latest checkpoint incomplete"
-            elif cp:
-                state = "Checkpoint available"
-            else:
-                state = "Ready to checkpoint"
-            self.notify_state(
-                "Saved snapshots are not a live backup. Preview undo checks conflicts."
-            )
-            self.query_one("#brand", Static).update(
-                Text("TIME / MACHINE\nSAVE-STATE CONSOLE / " + safe(self.project.root.name))
-            )
-            self.query_one("#card-protection", SaveSlot).show(
-                "SYSTEM STATUS",
-                state,
-                "Live files not scanned",
-                self.palette,
-                "warning" if needs_attention else "protected",
-            )
-            self.query_one("#card-session", SaveSlot).show(
-                "LATEST SESSION",
-                (run["agent"] + " / " + run["state"].upper()) if run else "NO SESSIONS",
-                f"{run['status']} / exit {run['exit_code']}" if run else "run -- COMMAND to begin",
-                self.palette,
-                "primary",
-            )
-            percent = min(100.0, data["bytes"] / self.project.config["quota_bytes"] * 100)
-            filled = min(8, int(percent / 12.5))
-            meter = "[" + "#" * filled + "." * (8 - filled) + f"] {percent:.1f}% quota"
-            self.query_one("#card-storage", SaveSlot).show(
-                "OBJECT STORAGE",
-                size(data["bytes"]) + " / " + size(self.project.config["quota_bytes"]),
-                meter,
-                self.palette,
-                "text",
-            )
-            self.query_one("#card-changes", Static).update(
-                "SELECTED CHANGES\nSelect a session\nUndo preview checks conflicts"
-            )
-            self.query_one("#overview", Static).update(
-                Text(state + " · " + size(data["bytes"]) + " saved")
-            )
-            if data["git_warning"]:
-                self.notify_state(
-                    "Git context differs. File recovery never reverses commits or index.", "error"
-                )
-            if needs_attention:
-                self.notify_state(
-                    "Session/recovery unfinished. Run timemachine doctor for next steps.",
-                    "error",
-                )
-            if not self.events:
-                self.query_one("#preview-title", Static).update("Start with one protected session")
-                self.show_result(
-                    "No snapshots yet.\n\nIn your terminal:\n"
-                    "  timemachine run -- codex\n\nOr save a manual checkpoint:\n"
-                    "  timemachine checkpoint -m 'Before my changes'\n\n"
-                    "Initialization alone does not back up your project."
-                )
+            self.render_dashboard(data)
         except Exception as exc:
             self.failure(exc)
+
+    def render_dashboard(self, data: dict[str, Any]) -> None:
+        cp, run = data["checkpoint"], data["run"]
+        needs_attention = bool(data["blocked"])
+        if needs_attention:
+            state = "Recovery needs attention"
+        elif cp and cp["status"] != "COMPLETE":
+            state = "Latest checkpoint incomplete"
+        elif cp:
+            state = "Checkpoint available"
+        else:
+            state = "Ready to checkpoint"
+        self.notify_state("Saved snapshots are not a live backup. Preview undo checks conflicts.")
+        self.query_one("#brand", Static).update(
+            Text("TIME / MACHINE\nSAVE-STATE CONSOLE / " + safe(self.project.root.name))
+        )
+        self.query_one("#card-protection", SaveSlot).show(
+            "SYSTEM STATUS",
+            state,
+            "Live files not scanned",
+            self.palette,
+            "warning" if needs_attention else "protected",
+        )
+        self.query_one("#card-session", SaveSlot).show(
+            "LATEST SESSION",
+            (run["agent"] + " / " + run["state"].upper()) if run else "NO SESSIONS",
+            f"{run['status']} / exit {run['exit_code']}" if run else "run -- COMMAND to begin",
+            self.palette,
+            "primary",
+        )
+        percent = min(100.0, data["bytes"] / self.project.config["quota_bytes"] * 100)
+        filled = min(8, int(percent / 12.5))
+        meter = "[" + "#" * filled + "." * (8 - filled) + f"] {percent:.1f}% quota"
+        self.query_one("#card-storage", SaveSlot).show(
+            "OBJECT STORAGE",
+            size(data["bytes"]) + " / " + size(self.project.config["quota_bytes"]),
+            meter,
+            self.palette,
+            "text",
+        )
+        self.query_one("#card-changes", Static).update(
+            "SELECTED CHANGES\nSelect a session\nUndo preview checks conflicts"
+        )
+        self.query_one("#overview", Static).update(
+            Text(state + " · " + size(data["bytes"]) + " saved")
+        )
+        if data["git_warning"]:
+            self.notify_state(
+                "Git context differs. File recovery never reverses commits or index.", "error"
+            )
+        if needs_attention:
+            self.notify_state(
+                "Session/recovery unfinished. Run timemachine doctor for next steps.",
+                "error",
+            )
+        if not self.events:
+            self.query_one("#preview-title", Static).update("Start with one protected session")
+            self.show_result(
+                "No snapshots yet.\n\nIn your terminal:\n"
+                "  timemachine run -- codex\n\nOr save a manual checkpoint:\n"
+                "  timemachine checkpoint -m 'Before my changes'\n\n"
+                "Initialization alone does not back up your project."
+            )
 
     def render_timeline(self) -> None:
         table = self.query_one("#timeline", DataTable)
@@ -459,6 +465,8 @@ class TimeMachineApp(App[None]):
                 partial(self.read_selection, item, self.anchor), group="selection", exclusive=True
             )
         elif event.data_table.id == "files" and key in self.file_items:
+            if self.preview_path == key and self.preview_item is self.file_items[key]:
+                return
             self.preview_worker = self.run_worker(
                 partial(self.read_preview, key), group="preview", exclusive=True
             )
@@ -482,6 +490,11 @@ class TimeMachineApp(App[None]):
         if selected is None:
             return
         files = self.query_one("#files", DataTable)
+        selected_path = (
+            str(files.coordinate_to_cell_key(files.cursor_coordinate).row_key.value)
+            if files.row_count
+            else None
+        )
         files.clear()
         counts = {
             kind: sum(
@@ -535,6 +548,8 @@ class TimeMachineApp(App[None]):
                 key=path,
                 height=2,
             )
+        if selected_path in self.file_items:
+            files.move_cursor(row=list(self.file_items).index(selected_path))
         self.call_after_refresh(self.fit_tables)
         if not self.file_items:
             self.query_one("#preview-title", Static).update("No filesystem differences")
@@ -643,23 +658,27 @@ class TimeMachineApp(App[None]):
                 + metadata
             )
         )
-        log = self.query_one("#preview", RichLog)
-        log.clear()
-        lexer = (
+        self.preview_path, self.preview_item = path, change
+        self.preview_lexer = (
             Syntax.guess_lexer(path, code=self.preview_text)
             if (self.file_mode or not self.selection or not self.selection["base"])
             else "diff"
         )
+        self.draw_preview()
+        self.query_one("#preview", RichLog).scroll_home(animate=False)
+
+    def draw_preview(self) -> None:
+        log = self.query_one("#preview", RichLog)
+        log.clear()
         log.write(
             Syntax(
                 self.preview_text or "Empty file",
-                lexer,
+                self.preview_lexer,
                 line_numbers=True,
                 word_wrap=False,
                 theme=SaveStateSyntax(self.palette),
             )
         )
-        log.scroll_home(animate=False)
 
     async def on_input_changed(self, event: Input.Changed) -> None:
         if event.input.id == "filter":
@@ -757,7 +776,15 @@ class TimeMachineApp(App[None]):
 
     async def action_theme(self) -> None:
         self.theme = "timemachine-light" if self.theme == "timemachine" else "timemachine"
-        await self.action_refresh()
+        if self.catalog:
+            self.render_dashboard(self.catalog)
+        self.render_timeline()
+        if self.selection:
+            self.render_files()
+            if self.preview_path:
+                self.update_ledger(self.preview_path)
+                self.draw_preview()
+        self.recovery_controls()
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         if isinstance(self.screen, ModalScreen):
