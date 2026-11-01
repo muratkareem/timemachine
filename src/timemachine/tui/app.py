@@ -2,6 +2,7 @@
 
 import asyncio
 import difflib
+import os
 from collections.abc import Callable
 from typing import Any
 
@@ -160,6 +161,7 @@ class TimeMachineApp(App[None]):
         self.register_theme(console_theme(light=True))
         self.theme = "timemachine"
         self.animation_level = "none"
+        self.ascii = os.environ.get("TIMEMACHINE_ASCII") == "1" or os.environ.get("TERM") == "dumb"
 
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
         if isinstance(self.screen, ModalScreen) and action in {
@@ -180,63 +182,104 @@ class TimeMachineApp(App[None]):
 
     def compose(self) -> ComposeResult:
         with Horizontal(id="brandbar"):
-            yield Static(Text("TIME / MACHINE", style="bold"), id="brand")
-            yield Static("LOCAL RECOVERY  /  ? HELP", id="tagline")
+            yield Static(
+                Text("[]==[]\n  ><  \n[]==[]" if self.ascii else "██▀▀██\n ▀██▀ \n██▄▄██"),
+                id="pixel-mark",
+            )
+            yield Static(
+                Text("TIME / MACHINE\nSAVE-STATE CONSOLE  /  " + safe(self.project.root.name)),
+                id="brand",
+            )
+            yield Static("LOCAL ONLY\nNO DAEMON  /  ? GUIDE", id="tagline")
         with Grid(id="dashboard"):
             for name in ("protection", "session", "changes", "storage"):
-                yield Static("Loading…", id=f"card-{name}", classes="card")
-        yield Static("Loading project…", id="overview")
+                yield Static("Reading archive…", id=f"card-{name}", classes="card")
+        yield Static("Reading archive…", id="overview")
         with Horizontal(id="actions"):
-            yield Button("Preview undo", id="undo-button", variant="primary")
-            yield Button("Restore", id="restore-button")
-            yield Button("Refresh", id="refresh-button")
-            yield Button("Help ?", id="help-button")
+            yield Button("Review undo [u]", id="undo-button", variant="primary")
+            yield Button("Restore [r]", id="restore-button")
+            yield Button("Refresh [F5]", id="refresh-button")
+            yield Button("Field guide [?]", id="help-button")
+        yield Static("Reading session order…", id="action-context")
         yield Static(
-            "Saved snapshots are not a live backup. Select a session to inspect its files.",
-            id="notice",
+            "Saved snapshots are not a live backup. Review checks current files.", id="notice"
         )
-        with Horizontal(id="workarea"):
+        with Horizontal(id="pane-tabs"):
+            yield Button("1 Archive", id="tab-archive", classes="active")
+            yield Button("2 Files", id="tab-files")
+            yield Button("3 Inspector", id="tab-inspect")
+        with Grid(id="workarea"):
             with Vertical(id="history-pane"):
                 with Horizontal(id="filterbar"):
-                    yield Input(placeholder="Filter timeline /", id="filter")
+                    yield Input(placeholder="Search archive /", id="filter")
                     yield Select(
                         [
                             ("All", "all"),
                             ("Sessions", "run"),
-                            ("Checkpoints", "checkpoint"),
+                            ("Saves", "checkpoint"),
                             ("Recovery", "restore"),
                         ],
                         value="all",
                         allow_blank=False,
                         id="kind",
                     )
-                yield DataTable(id="timeline", cursor_type="row")
-                yield Button("Load older history", id="more")
-            with Vertical(id="files-pane"):
-                yield Static("Select a session or checkpoint", id="selection")
-                yield DataTable(id="files", cursor_type="row")
-            with Vertical(id="preview-pane"):
-                yield Static("A clearer view of every change", id="preview-title")
-                yield Input(placeholder="Find in this file · Enter for next", id="find")
-                yield RichLog(
-                    id="preview", markup=False, highlight=False, wrap=False, auto_scroll=False
+                yield DataTable(
+                    id="timeline",
+                    cursor_type="row",
+                    zebra_stripes=True,
+                    show_row_labels=False,
+                    cell_padding=1,
                 )
+                yield Button("Load older entries", id="more")
+            with Vertical(id="files-pane"):
+                yield Static("Select an archive entry", id="selection")
+                yield DataTable(
+                    id="files",
+                    cursor_type="row",
+                    zebra_stripes=True,
+                    show_row_labels=False,
+                    cell_padding=1,
+                )
+            with Horizontal(id="preview-pane"):
+                with Vertical(id="diff-column"):
+                    yield Static("Select a saved file", id="preview-title")
+                    yield Input(placeholder="Find text / Enter: next match", id="find")
+                    yield RichLog(
+                        id="preview",
+                        markup=False,
+                        highlight=False,
+                        wrap=False,
+                        auto_scroll=False,
+                        min_width=20,
+                        max_lines=2100,
+                    )
+                with Vertical(id="ledger"):
+                    yield Static("SAVE-STATE LEDGER", classes="heading")
+                    yield Static("Select a session or checkpoint.", id="ledger-content")
+                    yield Static(
+                        "SCOPE / LOCAL FILES\nGit history and index stay intact.\n"
+                        "Stop external writers before recovery.",
+                        id="scope-note",
+                    )
         yield Static("Ready · navigation reads saved snapshots", id="activity")
         yield Footer()
 
     async def on_mount(self) -> None:
-        self.query_one("#history-pane").border_title = "TIMELINE · UTC"
-        self.query_one("#files-pane").border_title = "FILES"
-        self.query_one("#preview-pane").border_title = "INSPECT"
+        self.query_one("#history-pane").border_title = "1 / SESSION ARCHIVE"
+        self.query_one("#files-pane").border_title = "2 / FILE INVENTORY"
+        self.query_one("#preview-pane").border_title = "3 / CHANGE INSPECTOR"
         self.query_one("#timeline", DataTable).add_columns("UTC / event", "Description / state")
         self.query_one("#files", DataTable).add_columns("Change", "Path")
+        self.set_class(self.ascii, "ascii")
         self.layout_width(self.size.width)
         await self.action_refresh()
         self.query_one("#timeline", DataTable).focus()
 
     def layout_width(self, width: int) -> None:
-        self.set_class(width < 116, "compact")
-        self.set_class(width < 88, "narrow")
+        self.set_class(width < 120, "compact")
+        self.set_class(width < 90, "narrow")
+        self.set_class(self.size.height <= 30, "short")
+        self.set_class(width >= 150, "wide")
 
     def on_resize(self, event: events.Resize) -> None:
         self.layout_width(event.size.width)

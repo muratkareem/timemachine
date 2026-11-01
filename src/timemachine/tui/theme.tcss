@@ -1,51 +1,75 @@
 Screen { background: $background; color: $foreground; }
-#brandbar { height: 3; padding: 0 2; background: $surface; align-vertical: middle; }
-#brand { width: 1fr; text-style: bold; color: $primary; }
-#tagline { width: auto; color: $text-muted; }
-#dashboard { grid-size: 4; grid-columns: 1fr 1fr 1fr 1fr; grid-gutter: 1; height: 7; margin: 1 2 0 2; }
-.card { border: round $panel; padding: 0 1; background: $surface; }
-#overview { display: none; height: 2; padding: 0 1; }
+#brandbar { height: 4; padding: 0 2; border-bottom: heavy $frame; align-vertical: middle; }
+#pixel-mark { width: 8; height: 3; color: $primary; text-style: bold; }
+#brand { width: 1fr; height: 2; text-style: bold; color: $primary; }
+#tagline { width: auto; height: 2; text-align: right; color: $ink-muted; }
+#dashboard { grid-size: 4; grid-columns: 1fr 1fr 1fr 1fr; grid-gutter: 0 1; height: 5; margin: 0 2; }
+.card { border: solid $frame; padding: 0 1; background: $surface; }
+#card-protection { border-left: thick $secondary; }
+#card-session { border-left: thick $primary; }
+#card-changes { border-left: thick $warning; }
+#card-storage { border-left: thick $frame; }
+#overview { display: none; height: 1; padding: 0 1; color: $secondary; }
 #actions { height: 3; margin: 0 2; }
-#actions Button { min-width: 12; margin-right: 1; border: none; height: 3; }
-#notice { height: auto; max-height: 5; min-height: 2; padding: 0 2; color: $text-muted; }
-#notice.error { color: $error; }
+#actions Button { min-width: 10; width: auto; margin-right: 1; border: tall $frame; height: 3; padding: 0 2; }
+Button { background: $panel; color: $foreground; text-style: bold; }
+Button.-primary { background: $primary; color: $background; border: tall $primary; }
+Button.-warning { background: $warning; color: $background; border: tall $warning; }
+Button:focus { text-style: bold underline; tint: $primary 8%; }
+Button:disabled { opacity: 55%; }
+#action-context { height: 1; margin: 0 2; color: $secondary; }
+#notice { height: auto; max-height: 2; min-height: 1; margin: 0 2; color: $ink-muted; }
+#notice.error { color: $error; background: $error 8%; }
 #notice.success { color: $success; }
-#workarea { height: 1fr; margin: 0 2; }
-#history-pane { width: 38; border: round $panel; background: $surface; }
+#pane-tabs { display: none; height: 3; margin: 0 1; }
+#pane-tabs Button { width: 1fr; min-width: 0; height: 3; border: none; padding: 0; }
+#pane-tabs .active { color: $primary; border-bottom: heavy $primary; }
+#workarea { height: 1fr; margin: 0 2; layout: grid; grid-size: 2; grid-columns: 1fr 1fr; grid-rows: 1fr 1fr; grid-gutter: 0 1; }
+#history-pane, #files-pane, #preview-pane { border: double $frame; background: $surface; border-title-color: $secondary; border-title-style: bold; }
+#history-pane:focus-within, #files-pane:focus-within, #preview-pane:focus-within { border: double $primary; border-title-color: $primary; }
 #filterbar { height: 3; }
-#filter { width: 1fr; border: none; }
-#kind { width: 15; border: none; }
-#timeline { height: 1fr; }
-#more { height: 3; min-height: 3; width: 100%; border: none; }
-#files-pane { width: 29; border: round $panel; margin-left: 1; background: $surface; }
-#files { height: 1fr; }
-#selection { height: auto; max-height: 5; padding: 0 1; color: $text-muted; }
-#preview-pane { width: 1fr; border: round $panel; margin-left: 1; background: $surface; }
-#preview-title { height: auto; max-height: 4; padding: 0 1; text-style: bold; }
-#find { height: 3; border: none; }
-#preview { height: 1fr; padding: 0 1; }
-#activity { height: 1; padding: 0 2; color: $text-muted; }
+Input { background: $surface; color: $foreground; border: none; height: 3; padding: 1 1; }
+Input:focus { background: $panel; border-bottom: heavy $primary; padding: 0 1; }
+#filter { width: 1fr; }
+#kind { width: 16; border: none; }
+#timeline, #files { height: 1fr; }
+#more { height: 1; min-height: 1; width: 100%; border: none; padding: 0; color: $primary; }
+#selection { height: 2; padding: 0 1; color: $ink-muted; }
+#preview-pane { column-span: 2; }
+#diff-column { width: 1fr; }
+#preview-title { height: auto; max-height: 3; padding: 0 1; text-style: bold; }
+#find { height: 1; min-height: 1; padding: 0 1; }
+#preview { height: 1fr; padding: 0 1; background: $surface; }
+#ledger { display: none; width: 33; padding: 0 2; border-left: solid $frame; }
+.heading { color: $secondary; text-style: bold; height: 1; }
+#ledger-content { height: auto; color: $ink-muted; margin-top: 1; }
+#scope-note { height: auto; margin-top: 1; color: $ink-muted; }
+#activity { height: 1; padding: 0 2; color: $ink-muted; }
 DataTable { background: $surface; }
 DataTable > .datatable--header { background: $panel; color: $foreground; text-style: bold; }
-DataTable:focus { border-left: thick $primary; }
-Input:focus { border-bottom: solid $primary; }
-Button:focus { text-style: bold underline; }
-.compact #dashboard { grid-size: 2; height: 10; grid-rows: 4 4; }
-.compact #history-pane { width: 34; }
-.compact #files-pane { width: 24; }
-.narrow #tagline, .narrow #dashboard { display: none; }
-.narrow #overview { display: block; }
+DataTable > .datatable--odd-row { background: $surface; }
+DataTable > .datatable--even-row { background: $background; }
+DataTable > .datatable--cursor { background: $primary 22%; color: $foreground; text-style: bold; }
+DataTable:focus > .datatable--cursor { background: $primary; color: $background; }
+DataTable > .datatable--header-cursor { background: $panel; color: $foreground; }
+Footer { background: $panel; }
+.wide #ledger { display: block; }
+.short #dashboard, .narrow #dashboard { display: none; }
+.short #overview, .narrow #overview { display: block; }
+.short #brandbar { height: 3; border: none; }
+.short #pixel-mark { display: none; }
+.narrow #tagline { display: none; }
 .narrow #brandbar { padding: 0 1; }
-.narrow #actions { margin: 0 1; }
+.narrow #actions, .narrow #notice, .narrow #action-context { margin: 0 1; }
 .narrow #refresh-button, .narrow #help-button { display: none; }
+.narrow #pane-tabs { display: block; }
 .narrow #workarea { layout: vertical; margin: 0 1; }
 .narrow #history-pane { width: 100%; height: 1fr; }
 .narrow #files-pane, .narrow #preview-pane { display: none; }
-.narrow.detail-mode #history-pane { display: none; }
-.narrow.detail-mode #files-pane { display: block; width: 100%; height: 7; margin: 0; }
-.narrow.detail-mode #preview-pane { display: block; width: 100%; height: 1fr; margin: 0; }
-.narrow #selection { display: none; }
-.narrow #notice { max-height: 3; padding: 0 1; }
+.narrow.pane-files #history-pane, .narrow.detail-mode #history-pane { display: none; }
+.narrow.pane-files #files-pane { display: block; height: 1fr; }
+.narrow.detail-mode #preview-pane { display: block; height: 1fr; }
+.narrow #preview-title { max-height: 3; }
 .narrow #activity { padding: 0 1; }
-
-#history-pane, #files-pane, #preview-pane { border-title-color: $foreground; border-title-style: bold; }
+.ascii #history-pane, .ascii #files-pane, .ascii #preview-pane { border: ascii $frame; }
+.ascii #history-pane:focus-within, .ascii #files-pane:focus-within, .ascii #preview-pane:focus-within { border: ascii $primary; }
