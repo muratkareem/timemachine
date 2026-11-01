@@ -98,7 +98,7 @@ class ConfirmRestore(ModalScreen[bool]):
                 f"{len(self.plan.changes) - created - removed} replace or mode",
                 id="review-summary",
             )
-            yield RichLog(id="plan", markup=False, wrap=True, min_width=20, max_lines=4000)
+            yield RichLog(id="plan", markup=False, wrap=True, min_width=20)
             yield Static(
                 "Recovery checkpoint + journal before writes; revalidate after consent.\n"
                 "Git history/index intact. Stop writers; multi-file recovery is not atomic.",

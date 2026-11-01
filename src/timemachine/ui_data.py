@@ -88,18 +88,26 @@ class Workspace:
             "redo": redo if not blocked else None,
         }
 
-    def timeline(self, limit: int = 50, offset: int = 0) -> list[dict[str, Any]]:
+    def timeline(
+        self,
+        limit: int = 50,
+        offset: int = 0,
+        *,
+        before: tuple[str, str, str] | None = None,
+    ) -> list[dict[str, Any]]:
         with connect(self.project.store) as db:
             rows = db.execute(
                 """
+                SELECT * FROM (
                 SELECT 'checkpoint' AS category,id,created FROM checkpoints
                 WHERE id NOT IN (SELECT pre FROM runs UNION
                     SELECT post FROM runs WHERE post IS NOT NULL)
                 UNION ALL SELECT 'run',id,created FROM runs
                 UNION ALL SELECT 'restore',id,created FROM transactions
-                ORDER BY created DESC LIMIT ? OFFSET ?
+                ) WHERE (? IS NULL OR (created,category,id) < (?,?,?))
+                ORDER BY created DESC,category DESC,id DESC LIMIT ? OFFSET ?
             """,
-                (limit, offset),
+                (before[0] if before else None, *(before or ("", "", "")), limit, offset),
             ).fetchall()
             details: dict[str, dict[str, Any]] = {}
             columns = {

@@ -72,6 +72,7 @@ class TimeMachineApp(App[None]):
         self.match_index = -1
         self.catalog: dict[str, Any] = {}
         self.primary_operation: str | None = None
+        self.has_more = False
         self.page_size = 50
         self.service_lock = asyncio.Lock()
         self.register_theme(console_theme())
@@ -322,7 +323,9 @@ class TimeMachineApp(App[None]):
     async def action_refresh(self) -> None:
         try:
             self.workspace.reset()
-            self.events = await self.service(lambda: self.workspace.timeline(self.page_size))
+            page = await self.service(lambda: self.workspace.timeline(self.page_size + 1))
+            self.has_more = len(page) > self.page_size
+            self.events = page[: self.page_size]
             self.render_timeline()
             data = await self.service(self.dashboard)
             self.catalog = data
@@ -412,6 +415,13 @@ class TimeMachineApp(App[None]):
                 selected_row = table.row_count
             stamp, body = archive_record(item, self.palette)
             table.add_row(stamp, body, key=key, height=2)
+        more_button = self.query_one("#more", Button)
+        more_button.disabled = not self.has_more
+        more_button.label = (
+            "Load older / next 50"
+            if self.has_more
+            else f"Archive loaded / {len(self.events)} entries"
+        )
         if table.row_count:
             table.move_cursor(row=selected_row)
         else:
@@ -738,13 +748,19 @@ class TimeMachineApp(App[None]):
         elif event.button.id == "help-button":
             self.action_help()
         elif event.button.id == "more":
-            more = await self.service(
-                lambda: self.workspace.timeline(self.page_size, len(self.events))
-            )
-            self.events.extend(more)
-            self.render_timeline()
-            if not more:
-                self.notify_state("All history loaded.")
+            await self.load_older()
+
+    async def load_older(self) -> None:
+        if not self.events or not self.has_more:
+            return
+        last = self.events[-1]
+        before = last["created"], last["category"], last["id"]
+        more = await self.service(
+            lambda: self.workspace.timeline(self.page_size + 1, before=before)
+        )
+        self.has_more = len(more) > self.page_size
+        self.events.extend(more[: self.page_size])
+        self.render_timeline()
 
     def plan_restore(self, identifier: str, selector: str | None = None) -> Plan:
         with self.project.lock():

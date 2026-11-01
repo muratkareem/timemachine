@@ -59,3 +59,19 @@ def test_ambiguous_prefix_and_paged_timeline(project):
         resolve_checkpoint(project, "abcd")
     assert len(Workspace(project).timeline(1, 1)) == 1
     assert Workspace(project).timeline(1, 2) == []
+
+
+def test_archive_cursor_remains_stable_when_new_records_arrive(project):
+    from timemachine.checkpoint import checkpoint
+
+    with project.lock():
+        oldest = checkpoint(project, "oldest")
+        checkpoint(project, "middle")
+        checkpoint(project, "newest")
+    workspace = Workspace(project)
+    first = workspace.timeline(2)
+    last = first[-1]
+    with project.lock():
+        checkpoint(project, "arrived while browsing")
+    more = workspace.timeline(2, before=(last["created"], last["category"], last["id"]))
+    assert [row["id"] for row in more] == [oldest]
