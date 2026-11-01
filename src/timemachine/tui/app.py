@@ -12,7 +12,6 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Grid, Horizontal, Vertical
 from textual.screen import ModalScreen
-from textual.theme import Theme
 from textual.widgets import Button, DataTable, Footer, Input, RichLog, Select, Static
 
 from ..diff import text_content
@@ -20,10 +19,11 @@ from ..git_context import git_context
 from ..metadata import connect
 from ..objects import ObjectStore
 from ..operations import redo, redo_plan, restore, restore_plan, undo, undo_plan
-from ..presentation import COLORS, LIGHT_COLORS, guidance, human, safe, short, size
+from ..presentation import guidance, human, safe, short, size
 from ..project import Project
 from ..restore_plan import Plan
 from ..ui_data import Workspace
+from .design import DARK, LIGHT, SaveStateSyntax, console_theme
 
 
 class HelpScreen(ModalScreen[None]):
@@ -156,38 +156,8 @@ class TimeMachineApp(App[None]):
         self.match_index = -1
         self.page_size = 50
         self.service_lock = asyncio.Lock()
-        self.register_theme(
-            Theme(
-                name="timemachine",
-                primary="#82D9C4",
-                secondary="#C4B5FD",
-                background="#0D1117",
-                surface="#151C27",
-                panel="#263142",
-                foreground="#E4EBF5",
-                success="#8ED6A4",
-                warning="#F2CA82",
-                error="#F397A4",
-                accent="#C4B5FD",
-                dark=True,
-            )
-        )
-        self.register_theme(
-            Theme(
-                name="timemachine-light",
-                primary="#166B58",
-                secondary="#6944A0",
-                background="#F4F6F9",
-                surface="#FFFFFF",
-                panel="#DAE1EB",
-                foreground="#162535",
-                success="#22663E",
-                warning="#825A00",
-                error="#AD2942",
-                accent="#6944A0",
-                dark=False,
-            )
-        )
+        self.register_theme(console_theme())
+        self.register_theme(console_theme(light=True))
         self.theme = "timemachine"
         self.animation_level = "none"
 
@@ -583,8 +553,7 @@ class TimeMachineApp(App[None]):
                 lexer,
                 line_numbers=True,
                 word_wrap=False,
-                background_color="#F5F5F5" if self.theme == "timemachine-light" else "#151C27",
-                theme="friendly" if self.theme == "timemachine-light" else "monokai",
+                theme=SaveStateSyntax(self.palette),
             )
         )
         log.scroll_home(animate=False)
@@ -663,7 +632,7 @@ class TimeMachineApp(App[None]):
 
     @property
     def palette(self) -> dict[str, str]:
-        return LIGHT_COLORS if self.theme == "timemachine-light" else COLORS
+        return LIGHT if self.theme == "timemachine-light" else DARK
 
     async def action_theme(self) -> None:
         self.theme = "timemachine-light" if self.theme == "timemachine" else "timemachine"
