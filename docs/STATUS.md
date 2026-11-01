@@ -1,3 +1,34 @@
+# Current status — v0.2.0 pixel workspace in verification
+
+Development branch: codex/pixel-tui-v0.2.0; baseline 7b3a548. v0.1.0 tag/asset
+identities recorded; the published release is not modified. New candidate version
+0.2.0 is local/unpublished. No v0.2.0 tag or release will be created without approval.
+
+Implemented: original save-state palette/hourglass and pixel frames; broader archive
+and file inventory; bounded diff stage/ledger; backend-derived Undo/Redo candidates;
+file/path recovery; Cancel-first bounded reviews; six responsive layouts; Unicode
+path search and 200-row file pages; stable archive cursors; nonblocking read workers;
+no-I/O theme repaint; ASCII/no-color/reduced-motion support.
+
+Fresh baseline 140 passed/3 skips. First full visual gate: 161 passed/3 skips,
+86% coverage. Subsequent file-filter/layout focused gate: 19 passed. A no-I/O theme
+regression exposed a queued selection race; cell repaint and worker handling were
+corrected and the tests pass. Existing test assertions remain, with explicit waits
+for the new asynchronous read workers. Core restore/storage/Git formats unchanged;
+only the identical backend candidate query is shared with the read model.
+
+Published v0.1.0 wheel reinstalled and disposable acceptance passes. Nineteen actual
+Textual captures cover six sizes/two palettes plus recovery/conflict/empty states;
+visual inspection found and corrected cached widths and overlarge dialogs. Final
+captures and comprehensive gate are pending. No billable agent calls.
+
+Next: measured UI comparison against published v0.1.0, final gallery/branding/docs,
+full tests/build/clean install, branch push + review PR and remote seven-job CI.
+
+---
+
+## Previous release record
+
 # Current status — v0.1.0 published
 
 [GitHub Release v0.1.0](https://github.com/muratkareem/timemachine/releases/tag/v0.1.0) was published on 2026-10-31 at 10:55:45 UTC,
