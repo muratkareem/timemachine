@@ -35,6 +35,7 @@ class TimeMachineApp(App[None]):
     BINDINGS = [
         Binding("u", "undo", "Undo preview"),
         Binding("r", "restore", "Restore"),
+        Binding("s", "restore_file", "Restore file", show=False),
         Binding("d", "diff", "Diff"),
         Binding("slash", "search", "Search"),
         Binding("question_mark", "help", "Help"),
@@ -187,6 +188,19 @@ class TimeMachineApp(App[None]):
         self.query_one("#history-pane").border_title = "1 / SESSION ARCHIVE"
         self.query_one("#files-pane").border_title = "2 / FILE INVENTORY"
         self.query_one("#preview-pane").border_title = "3 / CHANGE INSPECTOR"
+        self.query_one(
+            "#restore-button", Button
+        ).tooltip = (
+            "Review full selected save. May remove newer paths. s reviews only the selected file."
+        )
+        self.query_one(
+            "#undo-button", Button
+        ).tooltip = (
+            "Session-order candidate only. Live files are checked before the confirmation dialog."
+        )
+        self.query_one(
+            "#files", DataTable
+        ).tooltip = "Enter opens file / s reviews recovery for this path / v toggles saved bytes"
         self.query_one("#timeline", DataTable).add_column("UTC / STATE", width=18, key="event")
         self.query_one("#timeline", DataTable).add_column(
             "SESSION / SAVE POINT", key="description", width=30
@@ -723,24 +737,45 @@ class TimeMachineApp(App[None]):
             if not more:
                 self.notify_state("All history loaded.")
 
-    def plan_restore(self, identifier: str) -> Plan:
+    def plan_restore(self, identifier: str, selector: str | None = None) -> Plan:
         with self.project.lock():
-            return restore_plan(self.project, identifier)
+            return restore_plan(self.project, identifier, selector)
+
+    async def action_restore_file(self) -> None:
+        files = self.query_one("#files", DataTable)
+        if not files.row_count:
+            self.notify_state("Select a saved file/path first.")
+            return
+        path = str(files.coordinate_to_cell_key(files.cursor_coordinate).row_key.value)
+        await self.review_restore(path)
 
     async def action_restore(self) -> None:
+        await self.review_restore()
+
+    async def review_restore(self, selector: str | None = None) -> None:
         if not self.selected_id:
             self.notify_state("Select a saved checkpoint or session first.")
             return
         identifier = self.selected_id
         try:
-            plan = await self.service(lambda: self.plan_restore(identifier))
+            plan = await self.service(lambda: self.plan_restore(identifier, selector))
 
             def apply() -> dict[str, Any]:
                 with self.project.lock():
-                    return restore(self.project, identifier, plan=plan)
+                    return restore(self.project, identifier, selector, plan=plan)
 
             self.pending = apply
-            self.push_screen(ConfirmRestore(plan, "restore"), self.confirmed)
+            self.push_screen(
+                ConfirmRestore(
+                    plan,
+                    "restore",
+                    "SAVE "
+                    + short(identifier)
+                    + " / "
+                    + (safe(selector) if selector else "FULL CHECKPOINT"),
+                ),
+                self.confirmed,
+            )
         except Exception as exc:
             self.failure(exc)
 
@@ -775,7 +810,17 @@ class TimeMachineApp(App[None]):
 
             self.pending = apply
             self.push_screen(
-                ConfirmRestore(plan, "redo" if redo_action else "undo"), self.confirmed
+                ConfirmRestore(
+                    plan,
+                    "redo" if redo_action else "undo",
+                    "SESSION "
+                    + short(run_record["id"])
+                    + " / PRE "
+                    + short(run_record["pre"])
+                    + " / POST "
+                    + short(run_record["post"]),
+                ),
+                self.confirmed,
             )
         except Exception as exc:
             self.failure(exc)
