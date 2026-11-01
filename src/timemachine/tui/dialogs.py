@@ -39,7 +39,7 @@ class HelpScreen(ModalScreen[None]):
                 "1 Archive / 2 Files / 3 Inspector    Tab moves focus\n"
                 "Arrows or j/k navigate; Enter/d opens the selected file.\n"
                 "/ filters loaded archive entries; Load older fetches the next page.\n"
-                "Find searches the bounded visible preview; Enter/n moves through matches.\n"
+                "f filters paths. Find searches this preview; Enter/n cycles matches.\n"
                 "v toggles saved file/diff. b sets a saved comparison origin.\n\n"
                 "03 / RECOVER DELIBERATELY\n"
                 "u reviews Undo; Ctrl+R reviews Redo; the primary button follows session order.\n"

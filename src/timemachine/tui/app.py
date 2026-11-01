@@ -38,6 +38,7 @@ class TimeMachineApp(App[None]):
         Binding("u", "undo", "Undo preview"),
         Binding("r", "restore", "Restore"),
         Binding("s", "restore_file", "Restore file", show=False),
+        Binding("f", "file_search", "Filter paths", show=False),
         Binding("d", "diff", "Diff"),
         Binding("slash", "search", "Search"),
         Binding("question_mark", "help", "Help"),
@@ -69,6 +70,7 @@ class TimeMachineApp(App[None]):
         self.visible_events: dict[str, dict[str, Any]] = {}
         self.file_items: dict[str, dict[str, Any]] = {}
         self.pending: Callable[[], dict[str, Any]] | None = None
+        self.preview_epoch = 0
         self.preview_text = ""
         self.preview_lexer = "text"
         self.preview_path: str | None = None
@@ -78,6 +80,8 @@ class TimeMachineApp(App[None]):
         self.catalog: dict[str, Any] = {}
         self.primary_operation: str | None = None
         self.has_more = False
+        self.file_offset = 0
+        self.file_page_size = 200
         self.page_size = 50
         self.service_lock = asyncio.Lock()
         self.selection_worker: Worker[None] | None = None
@@ -104,6 +108,7 @@ class TimeMachineApp(App[None]):
             "files",
             "inspect",
             "restore_file",
+            "file_search",
         }:
             return False
         return True
@@ -161,6 +166,7 @@ class TimeMachineApp(App[None]):
                 yield Button("Load older entries", id="more")
             with Vertical(id="files-pane"):
                 yield Static("Select an archive entry", id="selection")
+                yield Input(placeholder="Filter file / directory paths [f]", id="path-filter")
                 yield DataTable(
                     id="files",
                     cursor_type="row",
@@ -168,6 +174,9 @@ class TimeMachineApp(App[None]):
                     show_row_labels=False,
                     cell_padding=1,
                 )
+                with Horizontal(id="file-page"):
+                    yield Button("Previous files", id="previous-files")
+                    yield Button("Next files", id="next-files")
             with Horizontal(id="preview-pane"):
                 with Vertical(id="diff-column"):
                     yield Static("Select a saved file", id="preview-title")
@@ -256,6 +265,7 @@ class TimeMachineApp(App[None]):
         widget.update(Text(safe(message)))
 
     def show_result(self, value: Any) -> None:
+        self.preview_epoch += 1
         self.preview_path = None
         self.preview_item = None
         self.preview_text = ""
@@ -486,6 +496,7 @@ class TimeMachineApp(App[None]):
             if self.selected_event is not item:
                 return
             self.selection = selected
+            self.file_offset = 0
             self.selected_id = selected["target"]
             self.file_items = {f["path"]: f for f in selected["files"]}
             self.recovery_controls()
@@ -505,6 +516,7 @@ class TimeMachineApp(App[None]):
             else None
         )
         if not repaint:
+            self.preview_epoch += 1
             files.clear()
         counts = {
             kind: sum(
@@ -522,7 +534,12 @@ class TimeMachineApp(App[None]):
         )
         self.query_one("#selection", Static).update(
             Text(
-                f"{len(selected['files'])} entries · {short(selected['target'])}\n"
+                (
+                    f"Recovery safeguard BEFORE {self.selected_event['kind']}"
+                    if self.selected_event and self.selected_event["category"] == "restore"
+                    else f"{len(selected['files'])} entries / {short(selected['target'])}"
+                )
+                + "\n"
                 + (
                     "Compared with " + short(selected["base"])
                     if selected["base"]
@@ -539,13 +556,32 @@ class TimeMachineApp(App[None]):
             "metadata": "= MODE",
             "saved": "S SAVE",
         }
-        for path, change in self.file_items.items():
+        path_query = self.query_one("#path-filter", Input).value.casefold()
+        matches = [p for p in self.file_items if not path_query or path_query in p.casefold()]
+        visible_paths = matches[self.file_offset : self.file_offset + self.file_page_size]
+        self.query_one("#file-page").display = len(matches) > self.file_page_size
+        self.query_one("#previous-files", Button).disabled = self.file_offset == 0
+        self.query_one("#next-files", Button).disabled = (
+            self.file_offset + self.file_page_size >= len(matches)
+        )
+        if len(matches) > self.file_page_size:
+            self.query_one("#selection", Static).update(
+                f"Showing {self.file_offset + 1}-{self.file_offset + len(visible_paths)}"
+                f" / {len(matches)} matches\n"
+                f"SAVE {short(selected['target'])} / filter paths to locate any file"
+            )
+        for path in visible_paths:
+            change = self.file_items[path]
             label = change["change"]
             name = PurePosixPath(path)
-            location = str(name.parent) if str(name.parent) != "." else "/ project root"
+            parent = str(name.parent)
             entry = change["after"] or change["before"]
             state = Text(labels[label], style=self.palette.get(label, ""))
-            file = Text(safe(name.name) + "\n" + safe(location), overflow="ellipsis", no_wrap=True)
+            file = Text(
+                safe(name.name) + ("\n" + safe(parent) if parent != "." else ""),
+                overflow="ellipsis",
+                no_wrap=True,
+            )
             byte_text = Text(
                 "dir" if entry.kind == "directory" else size(entry.size),
                 style=self.palette["muted"],
@@ -554,13 +590,18 @@ class TimeMachineApp(App[None]):
                 for column, value in (("state", state), ("path", file), ("bytes", byte_text)):
                     files.update_cell(path, column, value)
             else:
-                files.add_row(state, file, byte_text, key=path, height=2)
-        if not repaint and selected_path in self.file_items:
-            files.move_cursor(row=list(self.file_items).index(selected_path))
+                files.add_row(state, file, byte_text, key=path, height=2 if parent != "." else 1)
+        if not repaint and selected_path in visible_paths:
+            files.move_cursor(row=visible_paths.index(selected_path))
         self.call_after_refresh(self.fit_tables)
-        if not self.file_items:
-            self.query_one("#preview-title", Static).update("No filesystem differences")
-            self.show_result("No filesystem differences in this selection.")
+        if not visible_paths:
+            message = (
+                "No matching paths. Clear the path filter."
+                if self.file_items
+                else "No filesystem differences in this selection."
+            )
+            self.query_one("#preview-title", Static).update(message)
+            self.show_result(message)
 
     async def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         if event.data_table.id == "timeline":
@@ -604,6 +645,7 @@ class TimeMachineApp(App[None]):
                 self.failure(exc)
 
     async def preview_file(self, path: str) -> None:
+        epoch = self.preview_epoch
         change = self.file_items[path]
         self.update_ledger(path)
 
@@ -636,7 +678,11 @@ class TimeMachineApp(App[None]):
             )
 
         text = await self.service(read)
-        if path not in self.file_items or self.file_items[path] is not change:
+        if (
+            epoch != self.preview_epoch
+            or path not in self.file_items
+            or self.file_items[path] is not change
+        ):
             return
         lines = text.splitlines()
         display_lines = [safe(line) for line in lines[:2000]]
@@ -690,6 +736,9 @@ class TimeMachineApp(App[None]):
     async def on_input_changed(self, event: Input.Changed) -> None:
         if event.input.id == "filter":
             self.render_timeline()
+        elif event.input.id == "path-filter":
+            self.file_offset = 0
+            self.render_files()
         elif event.input.id == "find":
             self.match_index = -1
             self.action_find_next()
@@ -701,6 +750,8 @@ class TimeMachineApp(App[None]):
     def on_input_submitted(self, event: Input.Submitted) -> None:
         if event.input.id == "find":
             self.action_find_next()
+        elif event.input.id == "path-filter":
+            self.action_files()
         else:
             self.query_one("#timeline", DataTable).focus()
 
@@ -721,6 +772,10 @@ class TimeMachineApp(App[None]):
             )
         elif query:
             self.query_one("#activity", Static).update("No matches in this preview")
+
+    def action_file_search(self) -> None:
+        self.action_files()
+        self.query_one("#path-filter", Input).focus()
 
     def action_search(self) -> None:
         self.query_one("#filter", Input).focus()
@@ -813,6 +868,9 @@ class TimeMachineApp(App[None]):
             await self.action_refresh()
         elif event.button.id == "help-button":
             self.action_help()
+        elif event.button.id in ("previous-files", "next-files"):
+            self.file_offset += self.file_page_size * (1 if event.button.id == "next-files" else -1)
+            self.render_files()
         elif event.button.id == "more":
             await self.load_older()
 

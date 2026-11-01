@@ -73,3 +73,7 @@ Footer { background: $panel; }
 .narrow #activity { padding: 0 1; }
 .ascii #history-pane, .ascii #files-pane, .ascii #preview-pane { border: ascii $frame; }
 .ascii #history-pane:focus-within, .ascii #files-pane:focus-within, .ascii #preview-pane:focus-within { border: ascii $primary; }
+#path-filter { height: 1; min-height: 1; padding: 0 1; }
+.ascii #dialog, .ascii #help { border: ascii $warning; }
+#file-page { height: 1; display: none; }
+#file-page Button { width: 1fr; min-width: 0; height: 1; min-height: 1; border: none; padding: 0; color: $primary; }
