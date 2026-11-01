@@ -1,5 +1,6 @@
 """Run-based undo services; no Git mutations."""
 
+import sqlite3
 from typing import Any
 
 from .checkpoint import get_checkpoint
@@ -12,15 +13,23 @@ from .restore_engine import execute
 from .restore_plan import Plan, make_plan
 
 
+def stack_candidate(db: sqlite3.Connection, *, redo_action: bool = False) -> dict[str, Any] | None:
+    """Catalog eligibility only; a candidate still requires live plan validation."""
+    query = (
+        "SELECT * FROM runs WHERE state='undone' AND post IS NOT NULL ORDER BY sequence ASC LIMIT 1"
+        if redo_action
+        else "SELECT * FROM runs WHERE state='applied' AND post IS NOT NULL "
+        "ORDER BY sequence DESC LIMIT 1"
+    )
+    row = db.execute(query).fetchone()
+    return dict(row) if row is not None else None
+
+
 def undo_plan(project: Project) -> tuple[dict[str, Any], Plan]:
     with connect(project.store) as db:
-        row = db.execute(
-            "SELECT * FROM runs WHERE state='applied' AND post IS NOT NULL "
-            "ORDER BY sequence DESC LIMIT 1"
-        ).fetchone()
-    if row is None:
+        run = stack_candidate(db)
+    if run is None:
         raise TimeMachineError("No applied completed run to undo")
-    run = dict(row)
     pre, post = get_checkpoint(project, run["pre"]), get_checkpoint(project, run["post"])
     warnings: tuple[str, ...] = ()
     if post["git"] != git_context(project.root) or pre["git"] != post["git"]:
@@ -109,13 +118,9 @@ def recover(
 
 def redo_plan(project: Project) -> tuple[dict[str, Any], Plan]:
     with connect(project.store) as db:
-        row = db.execute(
-            "SELECT * FROM runs WHERE state='undone' AND post IS NOT NULL "
-            "ORDER BY sequence ASC LIMIT 1"
-        ).fetchone()
-    if row is None:
+        run = stack_candidate(db, redo_action=True)
+    if run is None:
         raise TimeMachineError("No run available to redo")
-    run = dict(row)
     pre, post = get_checkpoint(project, run["pre"]), get_checkpoint(project, run["post"])
     warnings: tuple[str, ...] = ()
     if post["git"] != git_context(project.root) or pre["git"] != post["git"]:
