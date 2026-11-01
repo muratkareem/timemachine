@@ -252,6 +252,13 @@ class TimeMachineApp(App[None]):
         log.write(human(value))
 
     def failure(self, exc: Exception) -> None:
+        self.catalog = {}
+        self.primary_operation = None
+        self.query_one("#undo-button", Button).disabled = True
+        self.query_one("#restore-button", Button).disabled = True
+        self.query_one("#action-context", Static).update(
+            "Review unavailable / resolve the error, then F5 refresh"
+        )
         self.notify_state(f"Cannot proceed: {safe(exc)}  {guidance(str(exc))}", "error")
         self.show_result(Text("No success is claimed.\n" + safe(exc) + "\n\n" + guidance(str(exc))))
 
@@ -711,6 +718,8 @@ class TimeMachineApp(App[None]):
         await self.action_refresh()
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
+        if isinstance(self.screen, ModalScreen):
+            return
         if event.button.id == "tab-archive":
             self.action_history()
         elif event.button.id == "tab-files":
@@ -753,6 +762,8 @@ class TimeMachineApp(App[None]):
         await self.review_restore()
 
     async def review_restore(self, selector: str | None = None) -> None:
+        if isinstance(self.screen, ModalScreen):
+            return
         if not self.selected_id:
             self.notify_state("Select a saved checkpoint or session first.")
             return
@@ -780,6 +791,9 @@ class TimeMachineApp(App[None]):
             self.failure(exc)
 
     async def stack_action(self, redo_action: bool) -> None:
+        if isinstance(self.screen, ModalScreen):
+            return
+
         def prepare() -> tuple[dict[str, Any], Plan]:
             with self.project.lock():
                 return redo_plan(self.project) if redo_action else undo_plan(self.project)

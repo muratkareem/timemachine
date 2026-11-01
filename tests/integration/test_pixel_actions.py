@@ -70,3 +70,44 @@ def test_empty_archive_disables_recovery_buttons(project):
             assert app.primary_operation is None
 
     asyncio.run(exercise())
+
+
+def test_corrupt_refresh_clears_previous_recovery_availability(project):
+    from timemachine.metadata import connect
+
+    result = session(project)
+
+    async def exercise():
+        app = TimeMachineApp(project)
+        async with app.run_test(size=(120, 40)) as pilot:
+            await pilot.pause()
+            assert app.primary_operation == "undo"
+            with connect(project.store) as db:
+                db.execute("UPDATE checkpoints SET digest=? WHERE id=?", ("0" * 64, result["post"]))
+            await pilot.press("f5")
+            await pilot.pause()
+            assert app.primary_operation is None
+            assert app.query_one("#undo-button", Button).disabled
+            assert app.query_one("#restore-button", Button).disabled
+            assert (project.root / "x").read_text() == "after"
+
+    asyncio.run(exercise())
+
+
+def test_direct_background_actions_cannot_replace_pending_modal(project):
+    session(project)
+
+    async def exercise():
+        app = TimeMachineApp(project)
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            await app.action_undo()
+            await pilot.pause()
+            screen, pending = app.screen, app.pending
+            await app.action_restore()
+            await app.action_redo()
+            assert app.screen is screen and app.pending is pending
+            await pilot.press("escape")
+            assert (project.root / "x").read_text() == "after"
+
+    asyncio.run(exercise())
