@@ -23,6 +23,8 @@ def test_six_layouts_keep_work_and_navigation_inside_viewport(project, width, he
             assert work.height >= 8
             assert work.bottom <= app.query_one("#activity").region.y
             assert work.right <= width
+            timeline = app.query_one("#timeline", DataTable)
+            assert abs(timeline.virtual_size.width - (timeline.size.width - 2)) <= 2
             for key, name in (("1", "timeline"), ("2", "files"), ("3", "preview")):
                 await pilot.press(key)
                 await pilot.pause()

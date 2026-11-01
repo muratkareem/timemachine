@@ -100,8 +100,8 @@ class ConfirmRestore(ModalScreen[bool]):
             )
             yield RichLog(id="plan", markup=False, wrap=True, min_width=20)
             yield Static(
-                "Recovery checkpoint + journal before writes; revalidate after consent.\n"
-                "Git history/index intact. Stop writers; multi-file recovery is not atomic.",
+                "Checkpoint + journal before writes; then recheck.\n"
+                "Stop writers. Git unchanged. No global atomicity.",
                 id="review-safety",
             )
             with Horizontal():
@@ -109,11 +109,14 @@ class ConfirmRestore(ModalScreen[bool]):
                 yield Button("Apply changes", id="apply", variant="warning")
 
     def on_mount(self) -> None:
+        self.query_one("#dialog").styles.height = min(
+            self.app.size.height - 2, max(16, 14 + len(self.plan.changes) * 2)
+        )
         colors = DARK if self.app.current_theme.dark else LIGHT
         table = Table(box=box.SIMPLE_HEAD, expand=True, padding=(0, 1))
         table.add_column("WRITE", width=8)
-        table.add_column("EXACT PATH", ratio=2)
-        table.add_column("BEFORE -> AFTER", ratio=1)
+        table.add_column("EXACT PATH", ratio=1)
+        table.add_column("BEFORE -> AFTER", ratio=2)
         for change in self.plan.changes[: self.MAX_REVIEW]:
             old, new = change.expected, change.target
             kind = "REMOVE" if new is None else "CREATE" if old is None else "REPLACE"

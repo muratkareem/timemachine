@@ -224,18 +224,20 @@ class TimeMachineApp(App[None]):
         self.call_after_refresh(self.fit_tables)
 
     def fit_tables(self) -> None:
-        timeline = self.query_one("#timeline", DataTable)
-        files = self.query_one("#files", DataTable)
-        if timeline.columns:
-            timeline.columns[
-                next(k for k in timeline.columns if k.value == "description")
-            ].width = max(8, timeline.size.width - 24)
-        if files.columns:
-            files.columns[next(k for k in files.columns if k.value == "path")].width = max(
-                8, files.size.width - 23
-            )
-        timeline.refresh(layout=True)
-        files.refresh(layout=True)
+        for name, column, reserved in (("timeline", "description", 24), ("files", "path", 23)):
+            table = self.query_one("#" + name, DataTable)
+            if not table.columns or not table.display:
+                continue
+            key = next(k for k in table.columns if k.value == column)
+            width = max(8, table.size.width - reserved)
+            if table.columns[key].width == width:
+                continue
+            table.columns[key].width = width
+            if table.row_count:
+                row = next(iter(table.rows))
+                # Public update API invalidates cached line widths and virtual size.
+                table.update_cell(row, key, table.get_cell(row, key), update_width=True)
+            table.refresh(layout=True)
 
     def layout_width(self, width: int) -> None:
         self.set_class(width < 120, "compact")
@@ -314,10 +316,7 @@ class TimeMachineApp(App[None]):
             self.primary_operation = kind
             button.label = "Review redo [^R]" if kind == "redo" else "Review undo [u]"
             button.disabled = False
-            context = (
-                f"NEXT / {kind.upper()} session {short(run['id'])} / "
-                "checks current files before consent"
-            )
+            context = f"NEXT / {kind.upper()} #{short(run['id'])} / live check required"
         else:
             self.primary_operation = None
             button.label = "No session action"
