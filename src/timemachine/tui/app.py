@@ -4,6 +4,7 @@ import asyncio
 import difflib
 import os
 from collections.abc import Callable
+from pathlib import PurePosixPath
 from typing import Any
 
 from rich.syntax import Syntax
@@ -270,13 +271,33 @@ class TimeMachineApp(App[None]):
         self.query_one("#history-pane").border_title = "1 / SESSION ARCHIVE"
         self.query_one("#files-pane").border_title = "2 / FILE INVENTORY"
         self.query_one("#preview-pane").border_title = "3 / CHANGE INSPECTOR"
-        self.query_one("#timeline", DataTable).add_column("UTC / STATE", width=18)
-        self.query_one("#timeline", DataTable).add_column("SESSION / SAVE POINT")
-        self.query_one("#files", DataTable).add_columns("Change", "Path")
+        self.query_one("#timeline", DataTable).add_column("UTC / STATE", width=18, key="event")
+        self.query_one("#timeline", DataTable).add_column(
+            "SESSION / SAVE POINT", key="description", width=30
+        )
+        files = self.query_one("#files", DataTable)
+        files.add_column("STATE", key="state", width=8)
+        files.add_column("FILE / RELATIVE PATH", key="path", width=24)
+        files.add_column("SIZE", key="bytes", width=7)
         self.set_class(self.ascii, "ascii")
         self.layout_width(self.size.width)
         await self.action_refresh()
         self.query_one("#timeline", DataTable).focus()
+        self.call_after_refresh(self.fit_tables)
+
+    def fit_tables(self) -> None:
+        timeline = self.query_one("#timeline", DataTable)
+        files = self.query_one("#files", DataTable)
+        if timeline.columns:
+            timeline.columns[
+                next(k for k in timeline.columns if k.value == "description")
+            ].width = max(8, timeline.size.width - 24)
+        if files.columns:
+            files.columns[next(k for k in files.columns if k.value == "path")].width = max(
+                8, files.size.width - 23
+            )
+        timeline.refresh(layout=True)
+        files.refresh(layout=True)
 
     def layout_width(self, width: int) -> None:
         self.set_class(width < 120, "compact")
@@ -286,6 +307,8 @@ class TimeMachineApp(App[None]):
 
     def on_resize(self, event: events.Resize) -> None:
         self.layout_width(event.size.width)
+        if self.query("#timeline"):
+            self.call_after_refresh(self.fit_tables)
 
     def notify_state(self, message: str, state: str = "") -> None:
         widget = self.query_one("#notice", Static)
@@ -509,13 +532,35 @@ class TimeMachineApp(App[None]):
                         )
                     )
                 )
+                self.update_ledger()
+                labels = {
+                    "added": "+ ADD",
+                    "modified": "~ EDIT",
+                    "deleted": "- DEL",
+                    "type": "! TYPE",
+                    "metadata": "= MODE",
+                    "saved": "S SAVE",
+                }
                 for path, change in self.file_items.items():
                     label = change["change"]
+                    name = PurePosixPath(path)
+                    location = str(name.parent) if str(name.parent) != "." else "/ project root"
+                    entry = change["after"] or change["before"]
                     files.add_row(
-                        Text(label.upper(), style=self.palette.get(label, "")),
-                        Text(safe(path)),
+                        Text(labels[label], style=self.palette.get(label, "")),
+                        Text(
+                            safe(name.name) + "\n" + safe(location),
+                            overflow="ellipsis",
+                            no_wrap=True,
+                        ),
+                        Text(
+                            "dir" if entry.kind == "directory" else size(entry.size),
+                            style=self.palette["muted"],
+                        ),
                         key=path,
+                        height=2,
                     )
+                self.call_after_refresh(self.fit_tables)
                 if not self.file_items:
                     self.query_one("#preview-title", Static).update("No filesystem differences")
                     self.show_result("No filesystem differences in this selection.")
@@ -530,8 +575,36 @@ class TimeMachineApp(App[None]):
         elif event.data_table.id == "files":
             self.query_one("#preview", RichLog).focus()
 
+    def update_ledger(self, path: str | None = None) -> None:
+        if not self.selection:
+            return
+        text = Text("ORIGIN  ", style=self.palette["muted"])
+        text.append(short(self.selection["base"]) if self.selection["base"] else "baseline")
+        text.append("\nSAVE    " + short(self.selection["target"]))
+        event = self.selected_event
+        if event:
+            text.append("\nSTATE   " + safe(event["status"]), style=self.palette["protected"])
+            if event["category"] == "run":
+                text.append(" / " + event["state"].upper())
+                text.append("\nPRE     " + short(event["pre"]))
+                text.append(
+                    "\nPOST    " + (short(event["post"]) if event["post"] else "not captured")
+                )
+        if path and path in self.file_items:
+            item = self.file_items[path]
+            text.append("\n\n" + safe(path), style="bold " + self.palette["text"])
+            for label, key in (("BEFORE", "before"), ("AFTER", "after")):
+                entry = item[key]
+                text.append("\n" + label + " / ", style=self.palette["muted"])
+                text.append(
+                    f"{entry.kind} {oct(entry.mode)}\n{size(entry.size)}" if entry else "absent"
+                )
+            text.append("\n\ns / restore selected path\nv / saved file or unified diff")
+        self.query_one("#ledger-content", Static).update(text)
+
     async def preview_file(self, path: str) -> None:
         change = self.file_items[path]
+        self.update_ledger(path)
 
         def read() -> str:
             objects = ObjectStore(self.project.store, self.project.config["quota_bytes"])
