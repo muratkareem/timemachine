@@ -17,7 +17,6 @@ from textual.widgets import Button, DataTable, Footer, Input, RichLog, Select, S
 
 from ..diff import text_content
 from ..git_context import git_context
-from ..metadata import connect
 from ..objects import ObjectStore
 from ..operations import redo, redo_plan, restore, restore_plan, undo, undo_plan
 from ..presentation import guidance, human, safe, short, size
@@ -155,6 +154,8 @@ class TimeMachineApp(App[None]):
         self.preview_text = ""
         self.file_mode = False
         self.match_index = -1
+        self.catalog: dict[str, Any] = {}
+        self.primary_operation: str | None = None
         self.page_size = 50
         self.service_lock = asyncio.Lock()
         self.register_theme(console_theme())
@@ -310,22 +311,51 @@ class TimeMachineApp(App[None]):
                 self.query_one("#activity", Static).update("Ready · F5 refreshes saved state")
 
     def dashboard(self) -> dict[str, Any]:
-        with connect(self.project.store) as db:
-            cp = db.execute(
-                "SELECT id,status,created FROM checkpoints ORDER BY created DESC LIMIT 1"
-            ).fetchone()
-            run = db.execute("SELECT * FROM runs ORDER BY sequence DESC LIMIT 1").fetchone()
-            pending = db.execute(
-                "SELECT count(*) FROM transactions WHERE status NOT IN ('COMPLETE','RECOVERED')"
-            ).fetchone()[0]
-        objects = list((self.project.store / "objects").iterdir())
-        return {
-            "checkpoint": dict(cp) if cp else None,
-            "run": dict(run) if run else None,
-            "pending": pending,
-            "bytes": sum(p.lstat().st_size for p in objects),
-            "git": git_context(self.project.root),
-        }
+        data = self.workspace.dashboard()
+        data["bytes"] = sum(p.lstat().st_size for p in (self.project.store / "objects").iterdir())
+        data["git"] = git_context(self.project.root)
+        run = data["run"]
+        data["git_warning"] = False
+        if run and run["post"]:
+            pre = self.workspace.checkpoint(run["pre"])
+            post = self.workspace.checkpoint(run["post"])
+            data["git_warning"] = pre["git"] != post["git"] or post["git"] != data["git"]
+        return data
+
+    def recovery_controls(self) -> None:
+        """Candidates come from the engine's catalog query; review still checks live files."""
+        choices: list[tuple[str, dict[str, Any]]] = []
+        for kind in ("undo", "redo"):
+            candidate = self.catalog.get(kind)
+            if isinstance(candidate, dict):
+                choices.append((kind, candidate))
+        selected = self.selected_event
+        if selected and selected["category"] == "run":
+            choices = [(kind, run) for kind, run in choices if run["id"] == selected["id"]]
+        # A later undone session takes priority over an older applied session.
+        choices.sort(key=lambda item: item[1]["sequence"], reverse=True)
+        button = self.query_one("#undo-button", Button)
+        restore_button = self.query_one("#restore-button", Button)
+        restore_button.disabled = not self.selected_id or bool(self.catalog.get("blocked"))
+        if choices:
+            kind, run = choices[0]
+            self.primary_operation = kind
+            button.label = "Review redo [^R]" if kind == "redo" else "Review undo [u]"
+            button.disabled = False
+            context = (
+                f"NEXT / {kind.upper()} session {short(run['id'])} / "
+                "checks current files before consent"
+            )
+        else:
+            self.primary_operation = None
+            button.label = "No session action"
+            button.disabled = True
+            context = self.catalog.get("blocked") or (
+                "Session order differs: select the next applied/undone session or refresh."
+                if selected and selected["category"] == "run"
+                else "No session to undo or redo. Save a checkpoint or run -- COMMAND."
+            )
+        self.query_one("#action-context", Static).update(Text(context))
 
     async def action_refresh(self) -> None:
         try:
@@ -333,10 +363,10 @@ class TimeMachineApp(App[None]):
             self.events = await self.service(lambda: self.workspace.timeline(self.page_size))
             self.render_timeline()
             data = await self.service(self.dashboard)
+            self.catalog = data
+            self.recovery_controls()
             cp, run = data["checkpoint"], data["run"]
-            needs_attention = data["pending"] or (
-                run and run["status"] in ("RUNNING", "FINALIZING")
-            )
+            needs_attention = bool(data["blocked"])
             if needs_attention:
                 state = "Recovery needs attention"
             elif cp and cp["status"] != "COMPLETE":
@@ -349,7 +379,7 @@ class TimeMachineApp(App[None]):
                 "Saved snapshots are not a live backup. Preview undo checks conflicts."
             )
             self.query_one("#brand", Static).update(
-                Text("TIME / MACHINE  /  " + safe(self.project.root.name))
+                Text("TIME / MACHINE\nSAVE-STATE CONSOLE / " + safe(self.project.root.name))
             )
             self.query_one("#card-protection", Static).update(
                 Text(
@@ -379,16 +409,10 @@ class TimeMachineApp(App[None]):
             self.query_one("#overview", Static).update(
                 Text(state + " · " + size(data["bytes"]) + " saved")
             )
-            if run and run["post"]:
-                pre, post = (
-                    self.workspace.checkpoint(run["pre"]),
-                    self.workspace.checkpoint(run["post"]),
+            if data["git_warning"]:
+                self.notify_state(
+                    "Git context differs. File recovery never reverses commits or index.", "error"
                 )
-                if pre["git"] != post["git"] or post["git"] != data["git"]:
-                    self.notify_state(
-                        "Git metadata differs. File recovery never reverses commits or the index.",
-                        "error",
-                    )
             if needs_attention:
                 self.notify_state(
                     "Session/recovery unfinished. Run timemachine doctor for next steps.",
@@ -452,6 +476,7 @@ class TimeMachineApp(App[None]):
         else:
             self.selected_id = None
             self.selected_event = None
+            self.recovery_controls()
             self.file_items.clear()
             self.selection = None
             self.query_one("#files", DataTable).clear()
@@ -464,6 +489,7 @@ class TimeMachineApp(App[None]):
             if event.data_table.id == "timeline" and key in self.visible_events:
                 item = self.visible_events[key]
                 self.selected_event = item
+                self.recovery_controls()
                 self.selected_id = None
                 self.selection = None
                 self.file_items.clear()
@@ -474,6 +500,7 @@ class TimeMachineApp(App[None]):
                     return
                 self.selection = selected
                 self.selected_id = selected["target"]
+                self.recovery_controls()
                 self.file_items = {f["path"]: f for f in selected["files"]}
                 files = self.query_one("#files", DataTable)
                 files.clear()
@@ -683,7 +710,10 @@ class TimeMachineApp(App[None]):
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "undo-button":
-            await self.action_undo()
+            if self.primary_operation == "redo":
+                await self.action_redo()
+            elif self.primary_operation == "undo":
+                await self.action_undo()
         elif event.button.id == "restore-button":
             await self.action_restore()
         elif event.button.id == "refresh-button":
