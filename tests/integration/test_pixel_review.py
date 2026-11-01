@@ -1,6 +1,6 @@
 import asyncio
 
-from textual.widgets import Button
+from textual.widgets import Button, RichLog
 
 from timemachine.models import Entry
 from timemachine.restore_plan import Change, Plan
@@ -51,5 +51,24 @@ def test_large_review_cannot_apply_unshown_entries_and_escape_cancels(project):
             await pilot.press("escape")
             assert not isinstance(app.screen, ConfirmRestore)
             assert not (project.root / "entry-0").exists()
+
+    asyncio.run(exercise())
+
+
+def test_narrow_review_folds_exact_paths_instead_of_ellipsis(project):
+    plan = Plan((Change("very-long-unbroken-path-" + "x" * 120, None, Entry("directory", 0o755)),))
+
+    async def exercise():
+        app = TimeMachineApp(project)
+        async with app.run_test(size=(60, 24)) as pilot:
+            await pilot.pause()
+            app.push_screen(ConfirmRestore(plan))
+            await pilot.pause()
+            log = app.screen.query_one("#plan", RichLog)
+            displayed = "".join(strip.text for strip in log.lines)
+            assert "…" not in displayed
+            assert displayed.count("x") >= 120
+            assert not app.screen.query_one("#apply", Button).disabled
+            await pilot.press("escape")
 
     asyncio.run(exercise())

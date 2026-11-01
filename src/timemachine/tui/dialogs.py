@@ -115,7 +115,7 @@ class ConfirmRestore(ModalScreen[bool]):
         colors = DARK if self.app.current_theme.dark else LIGHT
         table = Table(box=box.SIMPLE_HEAD, expand=True, padding=(0, 1))
         table.add_column("WRITE", width=8)
-        table.add_column("EXACT PATH", ratio=1)
+        table.add_column("EXACT PATH", ratio=1, overflow="fold")
         table.add_column("BEFORE -> AFTER", ratio=2)
         for change in self.plan.changes[: self.MAX_REVIEW]:
             old, new = change.expected, change.target
@@ -125,7 +125,9 @@ class ConfirmRestore(ModalScreen[bool]):
                 f"{e.kind} {oct(e.mode)} {size(e.size)}" if e else "absent" for e in (old, new)
             )
             table.add_row(
-                Text(kind, style=colors[role]), Text(safe(change.path)), Text(description)
+                Text(kind, style=colors[role]),
+                Text(safe(change.path), overflow="fold"),
+                Text(description),
             )
         log = self.query_one("#plan", RichLog)
         log.write(table)
