@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.0 — unpublished release candidate
+
+- Original pixel hourglass, save-state slots, double frames and dark/light syntax themes.
+- Broad archive/inventory workspace, bounded diff stage, saved-state ledger and six responsive layouts.
+- Backend-derived Undo/Redo action state, exact contextual Cancel-first reviews and file-level recovery.
+- Unicode path filtering, 200-row inventory pages, stable history cursors and cancellable read workers.
+- No-I/O theme repaint, ASCII/no-color/reduced-motion modes and a keyboard field guide.
+- Real nineteen-view gallery, published/candidate performance comparison and expanded UI/safety QA.
+- Manifest/catalog formats and CLI JSON preserved; no migration needed from v0.1.0.
+- v0.1.0 tag/assets remain unchanged. No v0.2.0 tag/release is published automatically.
+
 ## 0.1.0 — 2026-10-31
 
 - Conflict-safe local checkpoints, PRE/POST subprocess sessions, undo/redo and

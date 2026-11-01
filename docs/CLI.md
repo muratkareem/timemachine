@@ -79,3 +79,13 @@ failure; 2 usage error (confirmation cancellation returns 1); wrapped command st
   Suggested minimum: 60 columns x 24 rows. CLI remains the accessible alternative.
   File text is limited to 1 MiB before preview; displayed text is bounded to 2000
   lines and 500 characters per line, with explicit truncation. Stored data is intact.
+
+
+## v0.2.0 candidate workspace
+
+`timemachine tui` now uses the pixel save-state console. 1/2/3 switches panes;
+f filters paths; s reviews selected file/directory recovery. Undo/Redo follows the
+actual eligible backend session, not the latest display row. Reviews retain frozen
+intent and default to Cancel. More than 500 review entries requires the CLI; inventory
+pages are 200 rows and preview limits are unchanged. See PIXEL_UI_GUIDE.md. CLI JSON
+keys and machine behavior remain compatible; only --version advances to 0.2.0.
