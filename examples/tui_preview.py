@@ -7,8 +7,12 @@ import sys
 import tempfile
 from pathlib import Path
 
+from textual.widgets import DataTable
+
 from timemachine.checkpoint import checkpoint
+from timemachine.operations import undo
 from timemachine.project import Project
+from timemachine.retention import pin
 from timemachine.runner import run
 from timemachine.tui.app import TimeMachineApp
 
@@ -45,7 +49,10 @@ async def render(
         )
         (root / "legacy_config.py").write_text("DEBUG = True\n")
         with project.lock():
-            checkpoint(project, "Before the request helper update")
+            baseline = None
+            if view != "empty":
+                baseline = checkpoint(project, "Pinned / request helpers baseline")
+                pin(project, baseline)
             script = """from pathlib import Path
 p = Path('app.py')
 p.write_text(p.read_text().replace('return value.strip()',
@@ -58,7 +65,12 @@ Path('tests/test_names.py').write_text(
     'def test_spaces():\\n'
     '    assert normalize_name("  ada  ") == "Ada"\\n')
 """
-            run(project, [sys.executable, "-c", script], root)
+            if view != "empty":
+                run(project, [sys.executable, "-c", script], root)
+                if view == "redo":
+                    undo(project)
+            if view == "conflict":
+                (root / "app.py").write_text("# newer user work, preserved\n")
         app = TimeMachineApp(project)
         async with app.run_test(size=(width, height)) as pilot:
             await pilot.pause()
@@ -66,9 +78,18 @@ Path('tests/test_names.py').write_text(
             if light:
                 await app.action_theme()
             if view == "diff":
-                await pilot.press("enter")
+                await app.action_inspect()
+            elif view in ("undo", "conflict"):
+                await app.action_undo()
+            elif view == "redo":
+                await app.action_redo()
             elif view == "restore":
-                await pilot.press("u")
+                table = app.query_one("#timeline", DataTable)
+                row = next(i for i, item in enumerate(app.events) if item["id"] == baseline)
+                table.move_cursor(row=row)
+                await pilot.pause()
+                await app.workers.wait_for_complete()
+                await app.action_restore()
             await pilot.pause()
             await app.workers.wait_for_complete()
             output.parent.mkdir(parents=True, exist_ok=True)
@@ -80,7 +101,11 @@ if __name__ == "__main__":
     parser.add_argument("--output", type=Path, default=Path("/tmp/timemachine-tui.svg"))
     parser.add_argument("--width", type=int, default=140)
     parser.add_argument("--height", type=int, default=42)
-    parser.add_argument("--view", choices=["dashboard", "diff", "restore"], default="dashboard")
+    parser.add_argument(
+        "--view",
+        choices=["dashboard", "timeline", "diff", "undo", "redo", "restore", "conflict", "empty"],
+        default="dashboard",
+    )
     parser.add_argument("--light", action="store_true")
     args = parser.parse_args()
     asyncio.run(render(args.output.resolve(), args.width, args.height, args.view, args.light))
