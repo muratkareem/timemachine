@@ -139,6 +139,9 @@ class TimeMachineApp(App[None]):
         Binding("n", "find_next", "Next match", show=False),
         Binding("ctrl+r", "redo", "Redo", show=False),
         Binding("t", "theme", "Theme", show=False),
+        Binding("1", "history", "Archive", show=False),
+        Binding("2", "files", "Files", show=False),
+        Binding("3", "inspect", "Inspector", show=False),
     ]
 
     def __init__(self, project: Project):
@@ -179,6 +182,9 @@ class TimeMachineApp(App[None]):
             "search",
             "history",
             "help",
+            "files",
+            "inspect",
+            "restore_file",
         }:
             return False
         return True
@@ -573,7 +579,7 @@ class TimeMachineApp(App[None]):
         if event.data_table.id == "timeline":
             await self.action_diff()
         elif event.data_table.id == "files":
-            self.query_one("#preview", RichLog).focus()
+            await self.action_inspect()
 
     def update_ledger(self, path: str | None = None) -> None:
         if not self.selection:
@@ -729,7 +735,9 @@ class TimeMachineApp(App[None]):
             self.focused.action_cursor_up()
 
     async def action_diff(self) -> None:
+        self.remove_class("pane-files")
         self.add_class("detail-mode")
+        self.update_tabs("inspect")
         self.query_one("#files", DataTable).focus()
         table = self.query_one("#files", DataTable)
         if table.row_count:
@@ -747,8 +755,24 @@ class TimeMachineApp(App[None]):
             "Comparison origin: " + short(self.anchor or "none") + ". Select another history entry."
         )
 
-    def action_history(self) -> None:
+    def update_tabs(self, active: str) -> None:
+        for name in ("archive", "files", "inspect"):
+            self.query_one("#tab-" + name, Button).set_class(name == active, "active")
+
+    def action_files(self) -> None:
         self.remove_class("detail-mode")
+        self.add_class("pane-files")
+        self.update_tabs("files")
+        self.query_one("#files", DataTable).focus()
+        self.call_after_refresh(self.fit_tables)
+
+    async def action_inspect(self) -> None:
+        await self.action_diff()
+        self.query_one("#preview", RichLog).focus()
+
+    def action_history(self) -> None:
+        self.remove_class("detail-mode", "pane-files")
+        self.update_tabs("archive")
         self.query_one("#timeline", DataTable).focus()
 
     def action_help(self) -> None:
@@ -763,7 +787,13 @@ class TimeMachineApp(App[None]):
         await self.action_refresh()
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "undo-button":
+        if event.button.id == "tab-archive":
+            self.action_history()
+        elif event.button.id == "tab-files":
+            self.action_files()
+        elif event.button.id == "tab-inspect":
+            await self.action_inspect()
+        elif event.button.id == "undo-button":
             if self.primary_operation == "redo":
                 await self.action_redo()
             elif self.primary_operation == "undo":
