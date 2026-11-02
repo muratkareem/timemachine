@@ -7,7 +7,7 @@ release. Its compatible catalog remains v2 and manifest remains v1. Try the veri
 candidate code revision without cloning:
 
 ```sh
-uv tool install --python 3.12 'timemachine-cli[tui] @ https://github.com/muratkareem/timemachine/archive/6ca4525535877a53d3c8cf4e096b142091aeb606.tar.gz'
+uv tool install --python 3.12 'timemachine-cli[tui] @ https://github.com/muratkareem/timemachine/archive/bfd6cd04926961a517913c1d6845b825c2eb002c.tar.gz'
 ```
 
 Or install the prepared wheel using `uv tool install '/absolute/path/to/timemachine_cli-0.2.0-py3-none-any.whl[tui]'`.

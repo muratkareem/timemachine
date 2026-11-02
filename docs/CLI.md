@@ -83,7 +83,8 @@ failure; 2 usage error (confirmation cancellation returns 1); wrapped command st
 
 ## v0.2.0 candidate workspace
 
-`timemachine tui` now uses the pixel save-state console. 1/2/3 switches panes;
+`timemachine tui` defaults to Simple mode; a reveals Advanced mode.
+1/2/3 switches History/Files/Diff; ? opens the beginner Help;
 f filters paths; s reviews selected file/directory recovery. Undo/Redo follows the
 actual eligible backend session, not the latest display row. Reviews retain frozen
 intent and default to Cancel. More than 500 review entries requires the CLI; inventory

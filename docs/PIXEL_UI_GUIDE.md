@@ -1,3 +1,18 @@
+# Simple and Advanced modes
+
+Simple mode opens by default with status, Changed Files and What Changed. Use the
+main Undo/Redo button to check current files and review an exact plan. Apply requires
+explicit confirmation; Cancel is the default. History (1), Files (2), Diff (3),
+Help (?) and Advanced (a) are visible controls. Start protected commands from your
+terminal using `timemachine run -- COMMAND`; Help explains generic commands.
+
+Advanced (a) preserves all capabilities below, including identifiers, metadata,
+storage and selective restoration. Modes are session-local; toggling them writes
+no checkpoints, preferences or project metadata. Recovery uses the same backend.
+See [QUICKSTART.md](QUICKSTART.md) for an executable beginner walkthrough.
+
+## Advanced reference and common safety rules
+
 # Save-state console · v0.2.0 candidate
 
 The pixel workspace is an original terminal interface built from characters,
@@ -80,7 +95,7 @@ recovery steps. Refresh after resolving an error. No automatic override is provi
 
 ## Terminal/accessibility
 
-Verified fixture sizes: 60x24, 80x24, 100x30, 120x40, 160x45 and 200x55. Short
+Verified fixture sizes: 60x24, 80x24, 100x30, 120x40, 160x45 and 207x58. Short
 terminals replace the four slots with a compact summary. Narrow screens expose
 one pane at a time through 1/2/3; wide screens show both upper panes and the lower
 diff stage, with an optional factual ledger. Long diffs and reviews scroll.
