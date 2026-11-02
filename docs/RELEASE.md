@@ -5,7 +5,7 @@
 [PR #1](https://github.com/muratkareem/timemachine/pull/1) contains the verified pixel
 workspace. It is not merged, tagged or published. Candidate artifacts are prepared
 in release-artifacts/v0.2.0; BUILD.json identifies the exact source and checksums.
-See PIXEL_DELIVERY.md for gates, scores and limits. A future v0.2.0 publication
+See PRODUCT_DELIVERY.md for the final product gates, scores and limits. A future v0.2.0 publication
 requires new explicit approval. Never replace/move v0.1.0 or its four assets.
 The stable release and general build procedure below remain applicable.
 
@@ -15,7 +15,7 @@ Published GitHub version: [**v0.1.0**](https://github.com/muratkareem/timemachin
 and verified against approved hashes, and public-wheel installation passes acceptance.
 PyPI remains unpublished.
 
-Release version: **0.1.0**. Distribution name: **timemachine-cli**. No PyPI ownership
+Published stable version: **0.1.0**; prepared version: **0.2.0**. Distribution name: **timemachine-cli**. No PyPI ownership
 or publication is implied by repository ownership. The unrelated PyPI project
 `timemachine` must not be used. The public JSON endpoint for `timemachine-cli`
 returned 404 during the 2026-10-31 audit; this is not a name reservation. Recheck

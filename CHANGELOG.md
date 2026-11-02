@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.2.0 final product pass (unpublished)
+
+- Default Simple mode with Advanced disclosure and visible mode/help controls.
+- Plain status/recovery guidance, generic first-session example and quickstart.
+- Six-size mode, mouse, keyboard, cancellation and conflict regression tests.
+- No backend, metadata format or CLI JSON changes.
+
+
 ## 0.2.0 — unpublished release candidate
 
 - Original pixel hourglass, save-state slots, double frames and dark/light syntax themes.

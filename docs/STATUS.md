@@ -1,3 +1,14 @@
+# Final product pass — 2026-11-02
+
+Simple mode is now the default; Advanced preserves the existing workspace.
+Nine additional automated cases cover six sizes, mode switching without writes,
+keyboard/mouse/help, undo/redo/cancel/conflicts and changed files after confirmation.
+No backend/CLI/formats/dependencies changed. Source acceptance and fresh 10,000-file
+stress passed. Final local gate: 173 passed, 3 skips, 86% coverage; Ruff/format/mypy pass.
+Package/CI handoff evidence is recorded in PR #1 and PRODUCT_DELIVERY.md. No merge/publication is authorized.
+
+---
+
 # Current status — v0.2.0 pixel release candidate delivered
 
 Candidate **0.2.0** is prepared on **codex/pixel-tui-v0.2.0** with
