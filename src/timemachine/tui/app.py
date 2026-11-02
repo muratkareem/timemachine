@@ -322,9 +322,7 @@ class TimeMachineApp(App[None]):
             "Review unavailable / resolve the error, then F5 refresh"
         )
         self.notify_state(f"Cannot proceed: {safe(exc)}  {guidance(str(exc))}", "error")
-        self.query_one("#preview-title", Static).update(
-            "Recovery needs attention"
-        )
+        self.query_one("#preview-title", Static).update("Recovery needs attention")
         if not self.advanced:
             self.remove_class("pane-files", "pane-history")
             self.add_class("detail-mode")
