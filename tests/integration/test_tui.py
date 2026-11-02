@@ -14,25 +14,31 @@ def test_tui_real_history_diff_preview_and_confirmation(project):
         checkpoint(project, "second")
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(120, 40)) as pilot:
             await pilot.pause()
+            await app.workers.wait_for_complete()
             table = app.query_one("#timeline", DataTable)
             assert table.row_count == 2
             assert app.query_one("#files", DataTable).row_count == 1
             await pilot.press("b", "down", "d")
             await pilot.pause()
+            await app.workers.wait_for_complete()
             assert app.anchor is not None
             await pilot.press("r")
             await pilot.pause()
+            await app.workers.wait_for_complete()
             assert isinstance(app.screen, ConfirmRestore)
             await pilot.click("#cancel")
             await pilot.pause()
+            await app.workers.wait_for_complete()
             assert (project.root / "file").read_text() == "after"
             await pilot.press("r")
             await pilot.pause()
+            await app.workers.wait_for_complete()
             await pilot.click("#apply")
             await pilot.pause()
+            await app.workers.wait_for_complete()
             assert (project.root / "file").read_text() == "before"
 
     asyncio.run(exercise())
@@ -45,15 +51,18 @@ def test_tui_restore_keeps_frozen_expected_state(project):
     (project.root / "file").write_text("after")
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(120, 40)) as pilot:
             await pilot.pause()
+            await app.workers.wait_for_complete()
             await pilot.press("r")
             await pilot.pause()
+            await app.workers.wait_for_complete()
             assert isinstance(app.screen, ConfirmRestore)
             (project.root / "file").write_text("later user edit")
             await pilot.click("#apply")
             await pilot.pause()
+            await app.workers.wait_for_complete()
             assert (project.root / "file").read_text() == "later user edit"
 
     asyncio.run(exercise())
@@ -85,15 +94,18 @@ def test_tui_undo_refuses_changed_run_history(project):
     new_run("one")
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(120, 40)) as pilot:
             await pilot.pause()
+            await app.workers.wait_for_complete()
             await pilot.press("u")
             await pilot.pause()
+            await app.workers.wait_for_complete()
             assert isinstance(app.screen, ConfirmRestore)
             await asyncio.to_thread(new_run, "two")
             await pilot.click("#apply")
             await pilot.pause()
+            await app.workers.wait_for_complete()
             assert (project.root / "x").read_text() == "two"
 
     asyncio.run(exercise())
@@ -105,9 +117,10 @@ def test_narrow_empty_help_theme_and_keyboard(project):
     from timemachine.tui.app import HelpScreen
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(60, 24)) as pilot:
             await pilot.pause()
+            await app.workers.wait_for_complete()
             assert app.has_class("narrow")
             assert app.query_one("#timeline", DataTable).row_count == 0
             await pilot.press("question_mark")
@@ -132,20 +145,24 @@ def test_filter_unicode_search_and_narrow_details(project):
         checkpoint(project, "Second checkpoint")
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(70, 26)) as pilot:
             await pilot.pause()
+            await app.workers.wait_for_complete()
             await pilot.press("enter")
             await pilot.pause()
+            await app.workers.wait_for_complete()
             assert app.has_class("detail-mode")
             assert "+after" in app.preview_text
             app.query_one("#find", Input).value = "after"
             await pilot.pause()
+            await app.workers.wait_for_complete()
             assert app.match_index == 0
             await pilot.press("escape")
             assert not app.has_class("detail-mode")
             app.query_one("#filter", Input).value = "Unicode"
             await pilot.pause()
+            await app.workers.wait_for_complete()
             assert app.query_one("#timeline", DataTable).row_count == 1
             assert "файл[red].py" in app.file_items
 
@@ -162,9 +179,10 @@ def test_corrupt_manifest_refuses_selected_restore(project):
         db.execute("UPDATE checkpoints SET digest=? WHERE id=?", ("0" * 64, identifier))
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(120, 36)) as pilot:
             await pilot.pause()
+            await app.workers.wait_for_complete()
             assert app.selected_id is None
             await pilot.press("r")
             assert not isinstance(app.screen, ConfirmRestore)
@@ -190,11 +208,13 @@ def test_conflicting_undo_explains_safe_next_step(project):
     (project.root / "x").write_text("my newer work")
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(120, 36)) as pilot:
             await pilot.pause()
+            await app.workers.wait_for_complete()
             await pilot.press("u")
             await pilot.pause()
+            await app.workers.wait_for_complete()
             assert not isinstance(app.screen, ConfirmRestore)
             message = str(app.query_one("#notice", Static).render())
             assert "conflict" in message.lower() and "newer edits" in message
@@ -214,9 +234,10 @@ def test_binary_long_file_and_no_follow_preview(project):
         checkpoint(project)
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(100, 32)) as pilot:
             await pilot.pause()
+            await app.workers.wait_for_complete()
             await app.preview_file(name)
             assert "Binary" in app.preview_text
             await app.preview_file("large-lines.py")
@@ -226,6 +247,7 @@ def test_binary_long_file_and_no_follow_preview(project):
             assert "/never/read/this" in app.preview_text
             app.query_one("#find", Input).value = "not found"
             await pilot.pause()
+            await app.workers.wait_for_complete()
             assert app.match_index == -1
 
     asyncio.run(exercise())
@@ -240,21 +262,24 @@ def test_typing_does_not_trigger_actions_and_modal_is_exclusive(project):
     (project.root / "x").write_text("after")
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(120, 36)) as pilot:
             await pilot.pause()
+            await app.workers.wait_for_complete()
             await pilot.press("slash", "r", "u", "q", "t")
             assert app.query_one("#filter", Input).value == "ruqt"
             assert app.theme == "timemachine"
             app.query_one("#filter", Input).value = ""
             await pilot.press("escape", "r")
             await pilot.pause()
+            await app.workers.wait_for_complete()
             assert isinstance(app.screen, ConfirmRestore)
             screens = len(app.screen_stack)
             await pilot.press("u", "r")
             assert len(app.screen_stack) == screens
             await pilot.press("escape")
             await pilot.pause()
+            await app.workers.wait_for_complete()
             assert (project.root / "x").read_text() == "after"
 
     asyncio.run(exercise())
@@ -273,15 +298,18 @@ def test_empty_session_can_advance_history_without_touching_files(project):
         result = run(project, [sys.executable, "-c", "pass"], project.root)
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(120, 36)) as pilot:
             await pilot.pause()
+            await app.workers.wait_for_complete()
             await pilot.press("u")
             await pilot.pause()
+            await app.workers.wait_for_complete()
             assert isinstance(app.screen, ConfirmRestore)
             assert str(app.screen.query_one("#apply", Button).label) == "Confirm history step"
             await pilot.click("#apply")
             await pilot.pause()
+            await app.workers.wait_for_complete()
             assert (project.root / "x").read_text() == "unchanged"
 
     asyncio.run(exercise())

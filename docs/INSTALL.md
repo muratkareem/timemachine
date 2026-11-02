@@ -1,5 +1,21 @@
 # Installation
 
+## v0.2.0 review candidate
+
+The pixel workspace is prepared on codex/pixel-tui-v0.2.0, not published as a new
+release. Its compatible catalog remains v2 and manifest remains v1. Try the verified
+candidate code revision without cloning:
+
+```sh
+uv tool install --python 3.12 'timemachine-cli[tui] @ https://github.com/muratkareem/timemachine/archive/bfd6cd04926961a517913c1d6845b825c2eb002c.tar.gz'
+```
+
+Or install the prepared wheel using `uv tool install '/absolute/path/to/timemachine_cli-0.2.0-py3-none-any.whl[tui]'`.
+End users need no development dependencies. The Homebrew formula still installs
+published v0.1.0. The candidate does not change its source pin or existing assets.
+The following stable installation and storage instructions remain valid.
+
+
 Python 3.12+ and macOS/Linux local filesystems are required. Native Windows and
 shared/network filesystem recovery are not validated. See PLATFORMS.md.
 

@@ -1,3 +1,77 @@
+# Final product pass — 2026-11-02
+
+Simple mode is now the default; Advanced preserves the existing workspace.
+Nine additional automated cases cover six sizes, mode switching without writes,
+keyboard/mouse/help, undo/redo/cancel/conflicts and changed files after confirmation.
+No backend/CLI/formats/dependencies changed. Source acceptance and fresh 10,000-file
+stress passed. Final local gate: 173 passed, 3 skips, 86% coverage; Ruff/format/mypy pass.
+Package/CI handoff evidence is recorded in PR #1 and PRODUCT_DELIVERY.md. No merge/publication is authorized.
+
+---
+
+# Current status — v0.2.0 pixel release candidate delivered
+
+Candidate **0.2.0** is prepared on **codex/pixel-tui-v0.2.0** with
+[review PR #1](https://github.com/muratkareem/timemachine/pull/1), not merged/published.
+30 cohesive implementation/evidence commits from ca9646f include the final installed
+gallery and documentation closeout. main and the published v0.1.0 release remain unchanged.
+
+Final local gate: **164 passed, 3 documented skips, 86% coverage** (2728 statements,
+375 missed), 42.18 s. Ruff lint/format: 68 files; strict mypy: 29 source files; all
+pass. Both seven-job branch/PR CI runs at 4c3eada pass (41328985700 / 41329081554).
+Both branch/PR seven-job gates also pass at 5bc9dd8 (41329744412 / 41329748618).
+The final gallery/docs closeout changes no runtime/tests/dependencies/CI; head checks are on PR #1.
+
+Wheel/sdist clean double builds, Twine checks, isolated installs and installed
+acceptance/gallery pass. Linux CI and macOS artifact hashes match. No-clone pinned
+candidate source installation passes. Nineteen actual captures cover both palettes,
+six sizes, undo/redo/full restore/conflict/empty and narrow review. The 60x24 inspector
+has additional code space while retaining project identity and recovery controls.
+
+Native Windows/hunk restore/vendor hooks remain deferred. UI previews, file pages
+and reviews have explicit bounds; no unsafe fallback. Original restore/snapshot/
+storage/Git engines are unchanged; the shared eligible-run query is identical.
+Release ID/tag target and all four v0.1.0 asset IDs/sizes/digests are unchanged.
+PyPI remains unpublished. No new tag/release approval is requested or assumed.
+
+Verdict **RELEASE CANDIDATE · 89/100**. Full scores, test evidence, measured
+performance, screenshots, installation and limitations: PIXEL_DELIVERY.md.
+
+---
+
+## Historical implementation record
+
+# Current status — v0.2.0 pixel workspace in verification
+
+Development branch: codex/pixel-tui-v0.2.0; baseline 7b3a548. v0.1.0 tag/asset
+identities recorded; the published release is not modified. New candidate version
+0.2.0 is local/unpublished. No v0.2.0 tag or release will be created without approval.
+
+Implemented: original save-state palette/hourglass and pixel frames; broader archive
+and file inventory; bounded diff stage/ledger; backend-derived Undo/Redo candidates;
+file/path recovery; Cancel-first bounded reviews; six responsive layouts; Unicode
+path search and 200-row file pages; stable archive cursors; nonblocking read workers;
+no-I/O theme repaint; ASCII/no-color/reduced-motion support.
+
+Fresh baseline 140 passed/3 skips. First full visual gate: 161 passed/3 skips,
+86% coverage. Subsequent file-filter/layout focused gate: 19 passed. A no-I/O theme
+regression exposed a queued selection race; cell repaint and worker handling were
+corrected and the tests pass. Existing test assertions remain, with explicit waits
+for the new asynchronous read workers. Core restore/storage/Git formats unchanged;
+only the identical backend candidate query is shared with the read model.
+
+Published v0.1.0 wheel reinstalled and disposable acceptance passes. Nineteen actual
+Textual captures cover six sizes/two palettes plus recovery/conflict/empty states;
+visual inspection found and corrected cached widths and overlarge dialogs. Final
+captures and comprehensive gate are pending. No billable agent calls.
+
+Next: measured UI comparison against published v0.1.0, final gallery/branding/docs,
+full tests/build/clean install, branch push + review PR and remote seven-job CI.
+
+---
+
+## Previous release record
+
 # Current status — v0.1.0 published
 
 [GitHub Release v0.1.0](https://github.com/muratkareem/timemachine/releases/tag/v0.1.0) was published on 2026-10-31 at 10:55:45 UTC,

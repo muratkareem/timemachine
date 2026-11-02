@@ -1,6 +1,6 @@
-![TimeMachine — local recovery for coding agents](https://raw.githubusercontent.com/muratkareem/timemachine/main/docs/assets/wordmark.svg)
+![TimeMachine — local recovery for coding agents](https://raw.githubusercontent.com/muratkareem/timemachine/9f804707fc229321daf520e5ee91d029b9186320/docs/assets/pixel/wordmark.svg)
 
-**Undo AI coding agent changes without losing your own work.**
+**Safely undo AI coding agent changes while preserving unrelated work.**
 
 TimeMachine saves selected local files before and after a coding-agent session.
 Review the diff and undo that session while preserving unrelated work. It captures
@@ -9,17 +9,21 @@ No account, daemon or API key is required by TimeMachine.
 
 ## Try it in a minute
 
-Python **3.12+** · macOS / Linux · version [**0.1.0**](https://github.com/muratkareem/timemachine/releases/tag/v0.1.0).
-Install the verified release wheel with [uv](https://docs.astral.sh/uv/):
+Python **3.12+** · macOS / Linux · **v0.2.0 release candidate**, prepared for review.
+Try this verified source revision without cloning:
 
 ```sh
-uv tool install --python 3.12 'https://github.com/muratkareem/timemachine/releases/download/v0.1.0/timemachine_cli-0.1.0-py3-none-any.whl[tui]'
+uv tool install --python 3.12 'timemachine-cli[tui] @ https://github.com/muratkareem/timemachine/archive/bfd6cd04926961a517913c1d6845b825c2eb002c.tar.gz'
 
 cd /path/to/your/project
 timemachine init
-timemachine run -- codex          # or claude, gemini, aider, or any command
+timemachine run -- YOUR_COMMAND   # any installed executable and arguments
 timemachine tui                   # inspect the session and preview undo
 ```
+
+The published [stable v0.1.0](https://github.com/muratkareem/timemachine/releases/tag/v0.1.0)
+remains available with its previous interface; its tag and artifacts are unchanged.
+No v0.2.0 tag, GitHub Release or PyPI publication is claimed.
 
 Prefer the CLI? `timemachine diff`, then `timemachine undo --preview` and
 `timemachine undo`. Every restore still uses conflict checks and confirmation.
@@ -28,18 +32,22 @@ launching anything. The agents keep their own authentication and billing.
 
 **Initialization is setup, not a backup.** Wrap each session or create a checkpoint.
 The tool installation stays separate from your project dependencies.
-[Other installation methods](https://github.com/muratkareem/timemachine/blob/main/docs/INSTALL.md) include pipx and the macOS Homebrew tap.
+[Other installation methods](docs/INSTALL.md) include pipx and the macOS Homebrew tap.
 No PyPI publication is claimed; `timemachine` on PyPI is a different project.
 
 ## See the session, understand the recovery
 
-![Real TimeMachine dashboard and unified diff](https://raw.githubusercontent.com/muratkareem/timemachine/main/docs/assets/tui.svg)
+![Real TimeMachine dashboard and unified diff](docs/assets/simple/dark-160x45.svg)
 
-The dashboard distinguishes saved checkpoints from current files. The timeline
-connects agent sessions to PRE/POST snapshots. Choose a file to read its diff,
-search its contents, or inspect its saved bytes, type and permissions.
+**Simple mode is the default:** status, changed files, a readable diff, and one
+contextual Undo/Redo action. No internal snapshot IDs are needed. **Advanced (a)**
+reveals the full recovery workspace, storage, comparisons and file metadata.
+**Help (?)** explains the first session; **1/2/3** opens History, Files and Diff.
+Follow the [five-minute hands-on quickstart](docs/QUICKSTART.md) using only Python.
+Initialization alone does not save files. Recovery review checks current files
+and requires confirmation; a candidate button is not a live safety verdict.
 
-![Real undo review with explicit confirmation](https://raw.githubusercontent.com/muratkareem/timemachine/main/docs/assets/recovery.svg)
+![Real undo review with explicit confirmation](docs/assets/simple/undo.svg)
 
 Undo first checks affected current paths against the recorded result. A conflicting
 newer edit is refused. A recovery checkpoint and journal are retained before writes;
@@ -47,8 +55,8 @@ success appears only after the backend verifies the selected result.
 
 These are real screenshots from a disposable project and a wrapped synthetic
 Python command. Reproduce them with `python examples/tui_preview.py`. No billed
-agent or fake product data is used. [Narrow view](https://github.com/muratkareem/timemachine/blob/main/docs/assets/narrow.svg) · [Light theme](https://github.com/muratkareem/timemachine/blob/main/docs/assets/light.svg) ·
-[Before the redesign](https://github.com/muratkareem/timemachine/blob/main/docs/assets/tui-before.svg) · [UX decisions](https://github.com/muratkareem/timemachine/blob/main/docs/UX_OVERHAUL.md).
+agent or fake product data is used. [Narrow view](docs/assets/simple/dark-60x24.svg) · [Light theme](docs/assets/simple/light-120x40.svg) ·
+[Before the redesign](docs/assets/tui-before.svg) · [Pixel UI guide](docs/PIXEL_UI_GUIDE.md) · [Design and measurements](docs/PIXEL_OVERHAUL.md).
 
 ## A small before / after
 
@@ -60,7 +68,7 @@ timemachine undo --preview        # review first
 timemachine undo                  # confirm; hello.txt becomes before again
 ```
 
-A real [scripted terminal recording](https://github.com/muratkareem/timemachine/blob/main/docs/assets/demo.cast) can be played with
+A real [scripted terminal recording](docs/assets/demo.cast) can be played with
 `asciinema play docs/assets/demo.cast` from a checkout. Regenerate it with
 `python scripts/record_demo.py --output /tmp/timemachine-demo.cast`.
 For a fully disposable, self-checking demo, run `python examples/demo.py` from the
@@ -87,9 +95,11 @@ terminals get readable views; redirected output retains the existing JSON format
 Use `--json` explicitly for automation, `--human` to force readable output in pipes,
 or `--plain` for no-color output. `NO_COLOR` is respected.
 
-In the TUI: arrows or **j/k** navigate, **Enter/d** opens changes, **/** filters
-loaded history, **u** previews undo, **r** reviews restore, **?** opens help, and
-**Esc** goes back. Find searches the selected preview. **t** switches light/dark.
+In the TUI: **a** switches Simple/Advanced; **1/2/3** switches History/Files/Diff; arrows or **j/k** navigate.
+**Enter/d** opens changes, **/** filters loaded history, **f** filters paths, **u**
+reviews Undo, **Ctrl+R** reviews Redo, **r** reviews the full saved checkpoint and
+**s** reviews the selected path. **?** opens Help; **Esc** cancels or
+returns to the archive; **t** switches themes. Find searches the bounded preview.
 
 ## Recovery has a defined scope
 
@@ -103,7 +113,7 @@ loaded history, **u** previews undo, **r** reviews restore, **?** opens help, an
 - Corruption and interrupted recovery need explicit attention; nothing silently
   rolls back. Keep an independent backup of valuable work.
 
-Read the [safety contract](https://github.com/muratkareem/timemachine/blob/main/docs/SAFETY.md) and [recovery guide](https://github.com/muratkareem/timemachine/blob/main/docs/RECOVERY.md).
+Read the [safety contract](docs/SAFETY.md) and [recovery guide](docs/RECOVERY.md).
 Existing v1 catalogs require an explicit `timemachine migrate --preview` and
 `timemachine migrate --yes` before new writes. Manifests and objects stay compatible.
 Native Windows, hunk recovery, vendor hooks, watch, export and compression are deferred.
@@ -129,9 +139,9 @@ mypy
 python -m build --no-isolation
 ```
 
-[Contributing](https://github.com/muratkareem/timemachine/blob/main/CONTRIBUTING.md) · [CLI reference](https://github.com/muratkareem/timemachine/blob/main/docs/CLI.md) ·
-[Installation](https://github.com/muratkareem/timemachine/blob/main/docs/INSTALL.md) · [Architecture](https://github.com/muratkareem/timemachine/blob/main/docs/ARCHITECTURE.md) ·
-[Agent wrappers](https://github.com/muratkareem/timemachine/blob/main/docs/INTEGRATIONS.md) · [Security](https://github.com/muratkareem/timemachine/blob/main/SECURITY.md) ·
-[Measured benchmarks](https://github.com/muratkareem/timemachine/blob/main/docs/BENCHMARKS.md) · [Status](https://github.com/muratkareem/timemachine/blob/main/docs/STATUS.md) · [MIT license](https://github.com/muratkareem/timemachine/blob/main/LICENSE)
+[Contributing](CONTRIBUTING.md) · [CLI reference](docs/CLI.md) ·
+[Installation](docs/INSTALL.md) · [Architecture](docs/ARCHITECTURE.md) ·
+[Agent wrappers](docs/INTEGRATIONS.md) · [Security](SECURITY.md) ·
+[Measured benchmarks](docs/BENCHMARKS.md) · [Status](docs/STATUS.md) · [MIT license](LICENSE)
 
-Prepared release details, publication blockers and reproducible checks: [Release procedure](https://github.com/muratkareem/timemachine/blob/main/docs/RELEASE.md).
+Candidate notes: [v0.2.0](docs/releases/v0.2.0.md). Release details and reproducible checks: [Release procedure](docs/RELEASE.md).

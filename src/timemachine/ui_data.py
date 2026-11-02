@@ -10,6 +10,7 @@ from .checkpoint import get_checkpoint
 from .diff import changed, describe
 from .errors import TimeMachineError
 from .metadata import connect
+from .operations import stack_candidate
 from .project import Project
 
 
@@ -51,18 +52,62 @@ class Workspace:
         with self._lock:
             self.cache.clear()
 
-    def timeline(self, limit: int = 50, offset: int = 0) -> list[dict[str, Any]]:
+    def dashboard(self) -> dict[str, Any]:
+        """Read one catalog view. Eligibility is not a promise of live safety."""
+        with connect(self.project.store) as db:
+            cp = db.execute(
+                "SELECT id,status,created FROM checkpoints ORDER BY created DESC LIMIT 1"
+            ).fetchone()
+            run = db.execute("SELECT * FROM runs ORDER BY sequence DESC LIMIT 1").fetchone()
+            pending = db.execute(
+                "SELECT count(*) FROM transactions WHERE status NOT IN ('COMPLETE','RECOVERED')"
+            ).fetchone()[0]
+            unfinished = db.execute(
+                "SELECT count(*) FROM runs WHERE status IN ('RUNNING','FINALIZING')"
+            ).fetchone()[0]
+            schema = db.execute("PRAGMA user_version").fetchone()[0]
+            undo = stack_candidate(db)
+            redo = stack_candidate(db, redo_action=True)
+        from .metadata import CURRENT_SCHEMA
+
+        blocked = (
+            "Interrupted recovery: run doctor/recover"
+            if pending
+            else "Unfinished session: run doctor/finish-run"
+            if unfinished
+            else "Catalog upgrade: run migrate --preview"
+            if schema != CURRENT_SCHEMA
+            else ""
+        )
+        return {
+            "checkpoint": dict(cp) if cp else None,
+            "run": dict(run) if run else None,
+            "pending": pending,
+            "blocked": blocked,
+            "undo": undo if not blocked else None,
+            "redo": redo if not blocked else None,
+        }
+
+    def timeline(
+        self,
+        limit: int = 50,
+        offset: int = 0,
+        *,
+        before: tuple[str, str, str] | None = None,
+    ) -> list[dict[str, Any]]:
         with connect(self.project.store) as db:
             rows = db.execute(
                 """
+                SELECT * FROM (
                 SELECT 'checkpoint' AS category,id,created FROM checkpoints
                 WHERE id NOT IN (SELECT pre FROM runs UNION
                     SELECT post FROM runs WHERE post IS NOT NULL)
                 UNION ALL SELECT 'run',id,created FROM runs
                 UNION ALL SELECT 'restore',id,created FROM transactions
-                ORDER BY created DESC LIMIT ? OFFSET ?
+                ) WHERE (? IS NULL OR (created,category,id) < (?,?,?))
+                ORDER BY created DESC,category DESC,id DESC LIMIT ? OFFSET ?
             """,
-                (limit, offset),
+                (before[0] if before else None, *(before or ("", "", "")), limit, offset),
             ).fetchall()
             details: dict[str, dict[str, Any]] = {}
             columns = {
