@@ -36,6 +36,7 @@ class TimeMachineApp(App[None]):
     CSS_PATH = "theme.tcss"
     BINDINGS = [
         Binding("u", "undo", "Undo preview"),
+        Binding("a", "mode", "Simple / Advanced", show=False),
         Binding("r", "restore", "Restore"),
         Binding("s", "restore_file", "Restore file", show=False),
         Binding("f", "file_search", "Filter paths", show=False),
@@ -58,8 +59,9 @@ class TimeMachineApp(App[None]):
         Binding("3", "inspect", "Inspector", show=False),
     ]
 
-    def __init__(self, project: Project):
+    def __init__(self, project: Project, *, advanced: bool = False):
         super().__init__()
+        self.advanced = advanced
         self.project = project
         self.workspace = Workspace(project)
         self.selected_id: str | None = None
@@ -109,6 +111,7 @@ class TimeMachineApp(App[None]):
             "inspect",
             "restore_file",
             "file_search",
+            "mode",
         }:
             return False
         return True
@@ -132,7 +135,8 @@ class TimeMachineApp(App[None]):
             yield Button("Review undo [u]", id="undo-button", variant="primary")
             yield Button("Restore [r]", id="restore-button")
             yield Button("Refresh [F5]", id="refresh-button")
-            yield Button("Field guide [?]", id="help-button")
+            yield Button("Help [?]", id="help-button")
+            yield Button("Advanced [a]", id="mode-button")
         yield Static("Reading session order…", id="action-context")
         yield Static(
             "Saved snapshots are not a live backup. Review checks current files.", id="notice"
@@ -228,9 +232,40 @@ class TimeMachineApp(App[None]):
         files.add_column("SIZE", key="bytes", width=7)
         self.set_class(self.ascii, "ascii")
         self.layout_width(self.size.width)
+        self.present_mode()
         await self.action_refresh()
-        self.query_one("#timeline", DataTable).focus()
+        self.action_history() if self.advanced else self.action_files()
         self.call_after_refresh(self.fit_tables)
+
+    def present_mode(self) -> None:
+        self.set_class(not self.advanced, "simple")
+        self.query_one("#mode-button", Button).label = (
+            "Simple [a]" if self.advanced else "Advanced [a]"
+        )
+        for name, title in (
+            ("history", "History"),
+            ("files", "Changed Files"),
+            ("preview", "What Changed"),
+        ):
+            self.query_one("#" + name + "-pane").border_title = title
+        for name, title in (("archive", "1 History"), ("files", "2 Files"), ("inspect", "3 Diff")):
+            self.query_one("#tab-" + name, Button).label = title
+        self.query_one("#filter", Input).placeholder = "Search history /"
+
+    async def action_mode(self) -> None:
+        if isinstance(self.screen, ModalScreen):
+            return
+        self.advanced = not self.advanced
+        self.present_mode()
+        self.render_timeline(repaint=True)
+        if self.catalog:
+            self.render_dashboard(self.catalog)
+        if self.selection:
+            self.render_files(repaint=True)
+        if self.preview_path:
+            await self.preview_file(self.preview_path)
+        self.recovery_controls()
+        self.action_history() if self.advanced else self.action_files()
 
     def fit_tables(self) -> None:
         for name, column, reserved in (("timeline", "description", 24), ("files", "path", 23)):
@@ -329,6 +364,9 @@ class TimeMachineApp(App[None]):
             button.label = "Review redo [^R]" if kind == "redo" else "Review undo [u]"
             button.disabled = False
             context = f"NEXT / {kind.upper()} #{short(run['id'])} / live check required"
+            if not self.advanced:
+                button.label = "Redo Changes [^R]" if kind == "redo" else "Undo AI Changes [u]"
+                context = "Review checks current files. Nothing changes until you confirm."
         else:
             self.primary_operation = None
             button.label = "No session action"
@@ -364,7 +402,7 @@ class TimeMachineApp(App[None]):
                 (
                     "TIME / MACHINE / "
                     if self.has_class("narrow") and self.has_class("short")
-                    else "TIME / MACHINE\nSAVE-STATE CONSOLE / "
+                    else "TIME / MACHINE\nProject: "
                 )
                 + safe(self.project.root.name)
             )
@@ -413,6 +451,21 @@ class TimeMachineApp(App[None]):
         self.query_one("#overview", Static).update(
             Text(state + " · " + size(data["bytes"]) + " saved")
         )
+        if not self.advanced:
+            status = "Ready, but no files saved yet. Help [?] explains your first session."
+            if cp:
+                status = "Saved files available. Current files have not been checked."
+            if run:
+                status = (
+                    "Last session reverted. Review Redo to bring its changes back."
+                    if run["state"] == "undone"
+                    else "Last session captured. Review its changes below."
+                )
+                if run["status"] not in ("COMPLETE", "LATE_POST"):
+                    status = "Session incomplete. Run timemachine doctor before recovery."
+                elif run["exit_code"]:
+                    status = "Command failed; captured changes can still be reviewed."
+            self.query_one("#overview", Static).update(Text(status))
         if data["git_warning"]:
             self.notify_state(
                 "Git context differs. File recovery never reverses commits or index.", "error"
@@ -426,7 +479,9 @@ class TimeMachineApp(App[None]):
             self.query_one("#preview-title", Static).update("Start with one protected session")
             self.show_result(
                 "No snapshots yet.\n\nIn your terminal:\n"
-                "  timemachine run -- codex\n\nOr save a manual checkpoint:\n"
+                "  timemachine run -- YOUR_COMMAND\n"
+                "Any executable works; no particular AI agent is required.\n\n"
+                "Or save a manual checkpoint:\n"
                 "  timemachine checkpoint -m 'Before my changes'\n\n"
                 "Initialization alone does not back up your project."
             )
@@ -435,7 +490,7 @@ class TimeMachineApp(App[None]):
         table = self.query_one("#timeline", DataTable)
         if repaint:
             for key, item in self.visible_events.items():
-                stamp, body = archive_record(item, self.palette)
+                stamp, body = archive_record(item, self.palette, simple=not self.advanced)
                 table.update_cell(key, "event", stamp)
                 table.update_cell(key, "description", body)
             return
@@ -454,7 +509,7 @@ class TimeMachineApp(App[None]):
             self.visible_events[key] = item
             if item["id"] == previous:
                 selected_row = table.row_count
-            stamp, body = archive_record(item, self.palette)
+            stamp, body = archive_record(item, self.palette, simple=not self.advanced)
             table.add_row(stamp, body, key=key, height=2)
         more_button = self.query_one("#more", Button)
         more_button.disabled = not self.has_more
@@ -559,6 +614,11 @@ class TimeMachineApp(App[None]):
                 )
             )
         )
+        if not self.advanced:
+            self.query_one("#selection", Static).update(
+                f"{len(selected['files'])} paths / +{counts['added']} added / "
+                f"{counts['modified']} edited / {counts['deleted']} deleted"
+            )
         self.update_ledger()
         labels = {
             "added": "+ ADD",
@@ -580,7 +640,7 @@ class TimeMachineApp(App[None]):
             self.query_one("#selection", Static).update(
                 f"Showing {self.file_offset + 1}-{self.file_offset + len(visible_paths)}"
                 f" / {len(matches)} matches\n"
-                f"SAVE {short(selected['target'])} / filter paths to locate any file"
+                "Filter paths to locate any file"
             )
         for path in visible_paths:
             change = self.file_items[path]
@@ -672,8 +732,13 @@ class TimeMachineApp(App[None]):
                 return (
                     f"{change['change'].upper()} · {entry.kind} · {size(entry.size)}\n"
                     "Binary, non-UTF-8, link, directory or file over 1 MiB.\n"
-                    f"Mode: {oct(entry.mode)} · SHA-256: {entry.digest or 'not a regular file'}\n"
-                    f"Link target: {safe(entry.target) if entry.target else '—'}"
+                    + (
+                        f"Mode: {oct(entry.mode)} · SHA-256: "
+                        f"{entry.digest or 'not a regular file'}\n"
+                        if self.advanced
+                        else "Switch to Advanced for file details.\n"
+                    )
+                    + f"Link target: {safe(entry.target) if entry.target else '—'}"
                 )
             if self.file_mode or not self.selection or not self.selection["base"]:
                 return after if change["after"] else before
@@ -720,7 +785,7 @@ class TimeMachineApp(App[None]):
                 + " · "
                 + ("Saved file" if self.file_mode else "Unified diff / metadata")
                 + " · v toggle\n"
-                + metadata
+                + (metadata if self.advanced else "Review before applying recovery.")
             )
         )
         self.preview_path, self.preview_item = path, change
@@ -801,7 +866,7 @@ class TimeMachineApp(App[None]):
             self.focused.action_cursor_up()
 
     async def action_diff(self) -> None:
-        self.remove_class("pane-files")
+        self.remove_class("pane-files", "pane-history")
         self.add_class("detail-mode")
         self.update_tabs("inspect")
         self.query_one("#files", DataTable).focus()
@@ -826,7 +891,7 @@ class TimeMachineApp(App[None]):
             self.query_one("#tab-" + name, Button).set_class(name == active, "active")
 
     def action_files(self) -> None:
-        self.remove_class("detail-mode")
+        self.remove_class("detail-mode", "pane-history")
         self.add_class("pane-files")
         self.update_tabs("files")
         self.query_one("#files", DataTable).focus()
@@ -838,6 +903,7 @@ class TimeMachineApp(App[None]):
 
     def action_history(self) -> None:
         self.remove_class("detail-mode", "pane-files")
+        self.add_class("pane-history")
         self.update_tabs("archive")
         self.query_one("#timeline", DataTable).focus()
 
@@ -863,7 +929,9 @@ class TimeMachineApp(App[None]):
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         if isinstance(self.screen, ModalScreen):
             return
-        if event.button.id == "tab-archive":
+        if event.button.id == "mode-button":
+            await self.action_mode()
+        elif event.button.id == "tab-archive":
             self.action_history()
         elif event.button.id == "tab-files":
             self.action_files()
@@ -932,10 +1000,18 @@ class TimeMachineApp(App[None]):
                 ConfirmRestore(
                     plan,
                     "restore",
-                    "SAVE "
-                    + short(identifier)
-                    + " / "
-                    + (safe(selector) if selector else "FULL CHECKPOINT"),
+                    (
+                        "SAVE "
+                        + short(identifier)
+                        + " / "
+                        + (safe(selector) if selector else "FULL CHECKPOINT")
+                    )
+                    if self.advanced
+                    else (
+                        "Restore " + safe(selector)
+                        if selector
+                        else "Restore all files from this save."
+                    ),
                 ),
                 self.confirmed,
             )
@@ -979,12 +1055,20 @@ class TimeMachineApp(App[None]):
                 ConfirmRestore(
                     plan,
                     "redo" if redo_action else "undo",
-                    "SESSION "
-                    + short(run_record["id"])
-                    + " / PRE "
-                    + short(run_record["pre"])
-                    + " / POST "
-                    + short(run_record["post"]),
+                    (
+                        "SESSION "
+                        + short(run_record["id"])
+                        + " / PRE "
+                        + short(run_record["pre"])
+                        + " / POST "
+                        + short(run_record["post"])
+                    )
+                    if self.advanced
+                    else (
+                        "Bring back the reviewed session changes."
+                        if redo_action
+                        else "Revert the reviewed session changes. Unrelated edits are preserved."
+                    ),
                 ),
                 self.confirmed,
             )
@@ -1003,7 +1087,11 @@ class TimeMachineApp(App[None]):
             try:
                 result = await self.service(operation)
                 await self.action_refresh()
-                self.show_result(result)
+                self.show_result(
+                    result
+                    if self.advanced
+                    else "Changes verified. Use the main action to review the next step."
+                )
                 self.notify_state(
                     f"Verified {result['change_count']} changes. Recovery data retained.",
                     "success",

@@ -25,18 +25,23 @@ class HelpScreen(ModalScreen[None]):
 
     def compose(self) -> ComposeResult:
         with Vertical(id="help"):
-            yield Static("FIELD GUIDE / LOCAL RECOVERY", classes="heading")
+            yield Static("HELP / GET STARTED", classes="heading")
             yield RichLog(id="help-text", wrap=True, min_width=20)
             yield Button("Return [Esc]", id="close-help", variant="primary")
 
     def on_mount(self) -> None:
         self.query_one(RichLog).write(
             Text(
-                "01 / SAVE A STATE\n"
+                "01 / START HERE\n"
                 "timemachine init is setup, not a backup. Save a checkpoint or wrap a session.\n"
-                "timemachine run -- codex captures PRE and POST. Other agents work too.\n\n"
+                "In your project terminal: timemachine run -- YOUR_COMMAND\n"
+                "Replace YOUR_COMMAND with any executable and its arguments.\n"
+                "Example: timemachine run -- python -c 'print(123)'\n"
+                "Files are saved before and after the command; no AI agent is required.\n"
+                "To save manually: timemachine checkpoint -m 'Before my changes'\n\n"
                 "02 / INSPECT\n"
-                "1 Archive / 2 Files / 3 Inspector    Tab moves focus\n"
+                "1 History / 2 Files / 3 Diff    Tab moves focus\n"
+                "a switches Simple / Advanced; t switches dark / light.\n"
                 "Arrows or j/k navigate; Enter/d opens the selected file.\n"
                 "/ filters loaded archive entries; Load older fetches the next page.\n"
                 "f filters paths. Find searches this preview; Enter/n cycles matches.\n"
@@ -86,7 +91,7 @@ class ConfirmRestore(ModalScreen[bool]):
 
     def compose(self) -> ComposeResult:
         with Vertical(id="dialog"):
-            yield Static("RECOVERY TERMINAL / REVIEW " + self.operation.upper(), id="review-title")
+            yield Static("REVIEW " + self.operation.upper(), id="review-title")
             yield Static(
                 Text(safe(self.context) or "Frozen backend plan / no files changed yet"),
                 id="review-context",
@@ -100,8 +105,8 @@ class ConfirmRestore(ModalScreen[bool]):
             )
             yield RichLog(id="plan", markup=False, wrap=True, min_width=20)
             yield Static(
-                "Checkpoint + journal before writes; then recheck.\n"
-                "Stop writers. Git unchanged. No global atomicity.",
+                "A recovery copy is saved before writing; current files are checked again.\n"
+                "Pause editors/agents. Git history and index stay unchanged.",
                 id="review-safety",
             )
             with Horizontal():

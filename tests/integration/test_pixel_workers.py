@@ -23,7 +23,7 @@ def test_slow_selection_does_not_block_typing_or_repopulate_stale_files(project,
     monkeypatch.setattr(Workspace, "selection", slow)
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         try:
             async with app.run_test(size=(120, 40)) as pilot:
                 assert await asyncio.to_thread(entered.wait, 2)
@@ -51,7 +51,7 @@ def test_theme_switch_reuses_saved_data_and_preserves_selected_file(project, mon
         raise AssertionError("Theme switching must not read catalog, objects or live files")
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(160, 45)) as pilot:
             await pilot.pause()
             await app.workers.wait_for_complete()

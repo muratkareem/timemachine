@@ -14,7 +14,7 @@ def test_file_pages_are_bounded_and_unicode_path_filter_can_find_hidden_entry(pr
         checkpoint(project)
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(120, 40)) as pilot:
             await pilot.pause()
             await app.workers.wait_for_complete()
@@ -41,7 +41,7 @@ def test_ascii_no_color_chrome_and_reduced_motion(project, monkeypatch):
     monkeypatch.setenv("NO_COLOR", "1")
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(160, 45)) as pilot:
             await pilot.pause()
             assert app.ascii and app.no_color and app.animation_level == "none"

@@ -14,7 +14,7 @@ def test_tui_real_history_diff_preview_and_confirmation(project):
         checkpoint(project, "second")
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(120, 40)) as pilot:
             await pilot.pause()
             await app.workers.wait_for_complete()
@@ -51,7 +51,7 @@ def test_tui_restore_keeps_frozen_expected_state(project):
     (project.root / "file").write_text("after")
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(120, 40)) as pilot:
             await pilot.pause()
             await app.workers.wait_for_complete()
@@ -94,7 +94,7 @@ def test_tui_undo_refuses_changed_run_history(project):
     new_run("one")
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(120, 40)) as pilot:
             await pilot.pause()
             await app.workers.wait_for_complete()
@@ -117,7 +117,7 @@ def test_narrow_empty_help_theme_and_keyboard(project):
     from timemachine.tui.app import HelpScreen
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(60, 24)) as pilot:
             await pilot.pause()
             await app.workers.wait_for_complete()
@@ -145,7 +145,7 @@ def test_filter_unicode_search_and_narrow_details(project):
         checkpoint(project, "Second checkpoint")
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(70, 26)) as pilot:
             await pilot.pause()
             await app.workers.wait_for_complete()
@@ -179,7 +179,7 @@ def test_corrupt_manifest_refuses_selected_restore(project):
         db.execute("UPDATE checkpoints SET digest=? WHERE id=?", ("0" * 64, identifier))
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(120, 36)) as pilot:
             await pilot.pause()
             await app.workers.wait_for_complete()
@@ -208,7 +208,7 @@ def test_conflicting_undo_explains_safe_next_step(project):
     (project.root / "x").write_text("my newer work")
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(120, 36)) as pilot:
             await pilot.pause()
             await app.workers.wait_for_complete()
@@ -234,7 +234,7 @@ def test_binary_long_file_and_no_follow_preview(project):
         checkpoint(project)
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(100, 32)) as pilot:
             await pilot.pause()
             await app.workers.wait_for_complete()
@@ -262,7 +262,7 @@ def test_typing_does_not_trigger_actions_and_modal_is_exclusive(project):
     (project.root / "x").write_text("after")
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(120, 36)) as pilot:
             await pilot.pause()
             await app.workers.wait_for_complete()
@@ -298,7 +298,7 @@ def test_empty_session_can_advance_history_without_touching_files(project):
         result = run(project, [sys.executable, "-c", "pass"], project.root)
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(120, 36)) as pilot:
             await pilot.pause()
             await app.workers.wait_for_complete()

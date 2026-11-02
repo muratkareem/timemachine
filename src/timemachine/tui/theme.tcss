@@ -80,3 +80,21 @@ Footer { background: $panel; }
 
 .narrow.short #brandbar, .narrow.short #brand { height: 1; }
 .narrow.short.detail-mode #overview { display: none; }
+
+/* Simple mode keeps technical panels available through explicit disclosure. */
+.simple #dashboard, .simple #ledger, .simple #restore-button, .simple #tagline { display: none; }
+.simple #overview { display: block; height: auto; max-height: 2; margin: 0 1; }
+.simple #pane-tabs { display: block; }
+.simple #workarea { grid-size: 2; grid-columns: 1fr 2fr; grid-rows: 1fr; max-height: 32; }
+.simple #history-pane { display: none; }
+.simple #files-pane { display: block; }
+.simple #preview-pane { column-span: 1; }
+.simple.pane-history #history-pane { display: block; }
+.simple.pane-history #files-pane { display: none; }
+.simple.narrow #workarea { layout: vertical; }
+.simple.narrow #preview-pane, .simple.narrow #files-pane { display: none; }
+.simple.narrow.pane-files #files-pane { display: block; }
+.simple.narrow.detail-mode #preview-pane { display: block; }
+.simple #actions Button { padding: 0 1; margin-right: 0; }
+.simple.narrow #help-button { display: block; min-width: 8; }
+.simple.narrow #mode-button { min-width: 14; }

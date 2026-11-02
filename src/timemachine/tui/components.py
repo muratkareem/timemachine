@@ -16,7 +16,9 @@ class SaveSlot(Static):
         self.update(text)
 
 
-def archive_record(item: dict[str, Any], colors: dict[str, str]) -> tuple[Text, Text]:
+def archive_record(
+    item: dict[str, Any], colors: dict[str, str], *, simple: bool = False
+) -> tuple[Text, Text]:
     category, status = item["category"], item["status"]
     role = "error" if status not in ("COMPLETE", "RECOVERED") else "protected"
     marker, label = "S", "SAVE"
@@ -37,6 +39,15 @@ def archive_record(item: dict[str, Any], colors: dict[str, str]) -> tuple[Text, 
         marker, label, role = "*", "PINNED", "warning"
     elif item.get("kind") in ("pre", "post", "recovery"):
         label = item["kind"].upper()
+    if simple:
+        label = {
+            "APPLIED": "Applied",
+            "UNDONE": "Reverted",
+            "PRE": "Before",
+            "POST": "After",
+            "SAVE": "Saved",
+            "PINNED": "Pinned",
+        }.get(label, label.title())
     stamp = Text(item["created"][5:16].replace("T", " ") + "\n", style=colors["muted"])
     stamp.append(f"[{marker}] {label}", style=colors[role])
     title = item.get("message") or item.get("agent") or item.get("kind") or "Checkpoint"
@@ -45,5 +56,11 @@ def archive_record(item: dict[str, Any], colors: dict[str, str]) -> tuple[Text, 
     if category == "run":
         detail += " / PRE+POST" if item.get("post") else " / PRE only"
         detail += f" / exit {item['exit_code']}"
+    if simple:
+        detail = (
+            ("Before and after saved" if item.get("post") else "Session incomplete")
+            if category == "run"
+            else "Saved files"
+        )
     body.append(detail, style=colors["muted"])
     return stamp, body

@@ -16,7 +16,7 @@ def test_six_layouts_keep_work_and_navigation_inside_viewport(project, width, he
         checkpoint(project)
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(width, height)) as pilot:
             await pilot.pause()
             work = app.query_one("#workarea").region
@@ -43,7 +43,7 @@ def test_resize_keeps_file_selection_and_returns_to_archive(project):
         checkpoint(project)
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(160, 45)) as pilot:
             await pilot.pause()
             selected = app.selected_id

@@ -22,7 +22,7 @@ def test_primary_action_changes_to_redo_after_undo_and_cancel_is_default(project
     session(project)
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(120, 40)) as pilot:
             await pilot.pause()
             assert app.primary_operation == "undo"
@@ -51,7 +51,7 @@ def test_latest_undone_session_prioritizes_redo_over_older_applied_session(proje
         undo(project)
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test() as pilot:
             await pilot.pause()
             assert app.catalog["undo"] and app.catalog["redo"]
@@ -62,7 +62,7 @@ def test_latest_undone_session_prioritizes_redo_over_older_applied_session(proje
 
 def test_empty_archive_disables_recovery_buttons(project):
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test() as pilot:
             await pilot.pause()
             assert app.query_one("#undo-button", Button).disabled
@@ -78,7 +78,7 @@ def test_corrupt_refresh_clears_previous_recovery_availability(project):
     result = session(project)
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(120, 40)) as pilot:
             await pilot.pause()
             assert app.primary_operation == "undo"
@@ -98,7 +98,7 @@ def test_direct_background_actions_cannot_replace_pending_modal(project):
     session(project)
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test() as pilot:
             await pilot.pause()
             await app.action_undo()

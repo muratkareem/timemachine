@@ -18,7 +18,7 @@ def test_file_restore_cancel_and_apply_preserve_unrelated_edits(project):
     (project.root / "y").write_text("newer user y")
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(100, 30)) as pilot:
             await pilot.pause()
             await pilot.press("2", "s")
@@ -41,7 +41,7 @@ def test_large_review_cannot_apply_unshown_entries_and_escape_cancels(project):
     plan = Plan(tuple(Change(f"entry-{i}", None, Entry("directory", 0o755)) for i in range(501)))
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(60, 24)) as pilot:
             await pilot.pause()
             app.push_screen(ConfirmRestore(plan))
@@ -59,7 +59,7 @@ def test_narrow_review_folds_exact_paths_instead_of_ellipsis(project):
     plan = Plan((Change("very-long-unbroken-path-" + "x" * 120, None, Entry("directory", 0o755)),))
 
     async def exercise():
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=True)
         async with app.run_test(size=(60, 24)) as pilot:
             await pilot.pause()
             app.push_screen(ConfirmRestore(plan))
