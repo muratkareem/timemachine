@@ -85,7 +85,7 @@ Footer { background: $panel; }
 .simple #dashboard, .simple #ledger, .simple #restore-button, .simple #tagline { display: none; }
 .simple #overview { display: block; height: auto; max-height: 2; margin: 0 1; }
 .simple #pane-tabs { display: block; }
-.simple #workarea { grid-size: 2; grid-columns: 1fr 2fr; grid-rows: 1fr; max-height: 32; }
+.simple #workarea { grid-size: 2; grid-columns: 1fr 1.5fr; grid-rows: 1fr; max-height: 32; }
 .simple #history-pane { display: none; }
 .simple #files-pane { display: block; }
 .simple #preview-pane { column-span: 1; }
@@ -98,3 +98,6 @@ Footer { background: $panel; }
 .simple #actions Button { padding: 0 1; margin-right: 0; }
 .simple.narrow #help-button { display: block; min-width: 8; }
 .simple.narrow #mode-button { min-width: 14; }
+
+.simple.empty-project #files-pane, .simple.empty-project #history-pane { display: none; }
+.simple.empty-project #preview-pane { display: block; column-span: 2; }

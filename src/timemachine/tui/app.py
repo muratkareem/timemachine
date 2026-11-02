@@ -135,7 +135,7 @@ class TimeMachineApp(App[None]):
             yield Button("Review undo [u]", id="undo-button", variant="primary")
             yield Button("Restore [r]", id="restore-button")
             yield Button("Refresh [F5]", id="refresh-button")
-            yield Button("Help [?]", id="help-button")
+            yield Button("Help (?)", id="help-button")
             yield Button("Advanced [a]", id="mode-button")
         yield Static("Reading session order…", id="action-context")
         yield Static(
@@ -235,12 +235,14 @@ class TimeMachineApp(App[None]):
         self.present_mode()
         await self.action_refresh()
         self.action_history() if self.advanced else self.action_files()
+        if not self.events and not self.advanced:
+            await self.action_inspect()
         self.call_after_refresh(self.fit_tables)
 
     def present_mode(self) -> None:
         self.set_class(not self.advanced, "simple")
         self.query_one("#mode-button", Button).label = (
-            "Simple [a]" if self.advanced else "Advanced [a]"
+            "Simple (a)" if self.advanced else "Advanced (a)"
         )
         for name, title in (
             ("history", "History"),
@@ -308,6 +310,7 @@ class TimeMachineApp(App[None]):
         self.preview_text = ""
         log = self.query_one("#preview", RichLog)
         log.clear()
+        log.wrap = True
         log.write(human(value))
 
     def failure(self, exc: Exception) -> None:
@@ -319,6 +322,13 @@ class TimeMachineApp(App[None]):
             "Review unavailable / resolve the error, then F5 refresh"
         )
         self.notify_state(f"Cannot proceed: {safe(exc)}  {guidance(str(exc))}", "error")
+        self.query_one("#preview-title", Static).update(
+            "Recovery needs attention"
+        )
+        if not self.advanced:
+            self.remove_class("pane-files", "pane-history")
+            self.add_class("detail-mode")
+            self.update_tabs("inspect")
         self.show_result(Text("No success is claimed.\n" + safe(exc) + "\n\n" + guidance(str(exc))))
 
     async def service(self, operation: Callable[[], Any]) -> Any:
@@ -365,8 +375,8 @@ class TimeMachineApp(App[None]):
             button.disabled = False
             context = f"NEXT / {kind.upper()} #{short(run['id'])} / live check required"
             if not self.advanced:
-                button.label = "Redo Changes [^R]" if kind == "redo" else "Undo AI Changes [u]"
-                context = "Review checks current files. Nothing changes until you confirm."
+                button.label = "Redo Changes (^R)" if kind == "redo" else "Undo AI Changes (u)"
+                context = "Review first. Apply only after you confirm."
         else:
             self.primary_operation = None
             button.label = "No session action"
@@ -419,7 +429,11 @@ class TimeMachineApp(App[None]):
             state = "Checkpoint available"
         else:
             state = "Ready to checkpoint"
-        self.notify_state("Saved snapshots only / live files checked at review.")
+        self.notify_state(
+            "Current files are checked when you review recovery."
+            if not self.advanced
+            else "Saved snapshots only / live files checked at review."
+        )
         self.render_brand()
         self.query_one("#card-protection", SaveSlot).show(
             "SYSTEM STATUS",
@@ -455,6 +469,8 @@ class TimeMachineApp(App[None]):
             status = "Ready, but no files saved yet. Help [?] explains your first session."
             if cp:
                 status = "Saved files available. Current files have not been checked."
+            if cp and cp["status"] != "COMPLETE":
+                status = "Latest save incomplete. Run timemachine doctor for guidance."
             if run:
                 status = (
                     "Last session reverted. Review Redo to bring its changes back."
@@ -487,6 +503,7 @@ class TimeMachineApp(App[None]):
             )
 
     def render_timeline(self, *, repaint: bool = False) -> None:
+        self.set_class(not self.events, "empty-project")
         table = self.query_one("#timeline", DataTable)
         if repaint:
             for key, item in self.visible_events.items():
@@ -528,7 +545,17 @@ class TimeMachineApp(App[None]):
             self.selection = None
             self.query_one("#files", DataTable).clear()
             self.query_one("#preview-title", Static).update("No matching selection")
-            self.show_result("No matching history. Clear the filter or load older entries.")
+            self.show_result(
+                "No matching history. Clear the filter or load older entries."
+                if self.events
+                else "No files saved yet. Initialization is setup, not a backup.\n\n"
+                "In your project terminal:\n  timemachine run -- YOUR_COMMAND\n\n"
+                "Replace YOUR_COMMAND with any executable and arguments.\n"
+                "Or save manually:\n  timemachine checkpoint -m 'Before my changes'\n\n"
+                "Help (?) has a runnable Python example."
+            )
+            if not self.events:
+                self.query_one("#preview-title", Static).update("Your first saved session")
 
     async def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         key = str(event.row_key.value)
@@ -783,7 +810,13 @@ class TimeMachineApp(App[None]):
                 + "\n"
                 + change["change"].upper()
                 + " · "
-                + ("Saved file" if self.file_mode else "Unified diff / metadata")
+                + (
+                    "Saved file"
+                    if self.file_mode
+                    else "Unified diff / metadata"
+                    if self.advanced
+                    else "Changes"
+                )
                 + " · v toggle\n"
                 + (metadata if self.advanced else "Review before applying recovery.")
             )
@@ -799,6 +832,7 @@ class TimeMachineApp(App[None]):
 
     def draw_preview(self) -> None:
         log = self.query_one("#preview", RichLog)
+        log.wrap = False
         log.clear()
         log.write(
             Syntax(
@@ -855,6 +889,7 @@ class TimeMachineApp(App[None]):
         self.query_one("#path-filter", Input).focus()
 
     def action_search(self) -> None:
+        self.action_history()
         self.query_one("#filter", Input).focus()
 
     def action_next_row(self) -> None:

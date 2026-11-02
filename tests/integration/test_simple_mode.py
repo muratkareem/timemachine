@@ -4,7 +4,7 @@ import asyncio
 import sys
 
 import pytest
-from textual.widgets import Button, DataTable, Static
+from textual.widgets import Button, DataTable, RichLog, Static
 
 from timemachine.runner import run
 from timemachine.tui.app import ConfirmRestore, TimeMachineApp
@@ -62,7 +62,10 @@ def test_default_simple_layout_and_read_only_mode_switch(project, width, height)
             assert app.focused is not None
             await pilot.press("1")
             assert app.focused is app.query_one("#timeline", DataTable)
-            await pilot.press("2")
+            await pilot.press("slash")
+            assert app.has_class("pane-history")
+            assert app.focused.id == "filter"
+            await pilot.press("escape", "2")
             assert app.focused is app.query_one("#files", DataTable)
 
     asyncio.run(exercise())
@@ -122,9 +125,36 @@ def test_simple_initialization_does_not_claim_backup(project):
         async with app.run_test(size=(80, 24)) as pilot:
             await settle(app, pilot)
             assert "no files saved" in str(app.query_one("#overview", Static).render())
+            assert "YOUR_COMMAND" in "\n".join(
+                line.text for line in app.query_one("#preview", RichLog).lines
+            )
             assert app.query_one("#undo-button", Button).disabled
             await pilot.click("#help-button")
             assert app.focused.id == "close-help"
             await pilot.press("escape")
+
+    asyncio.run(exercise())
+
+
+def test_simple_confirmation_rechecks_current_files(project):
+    (project.root / "x").write_text("before")
+    with project.lock():
+        run(
+            project,
+            [sys.executable, "-c", "from pathlib import Path; Path('x').write_text('after')"],
+            project.root,
+        )
+
+    async def exercise():
+        app = TimeMachineApp(project)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await settle(app, pilot)
+            await pilot.click("#undo-button")
+            assert isinstance(app.screen, ConfirmRestore)
+            (project.root / "x").write_text("changed after review")
+            await pilot.click("#apply")
+            await settle(app, pilot)
+            assert (project.root / "x").read_text() == "changed after review"
+            assert app.query_one("#undo-button", Button).disabled
 
     asyncio.run(exercise())
