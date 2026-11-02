@@ -71,13 +71,17 @@ Path('tests/test_names.py').write_text(
                     undo(project)
             if view == "conflict":
                 (root / "app.py").write_text("# newer user work, preserved\n")
-        app = TimeMachineApp(project)
+        app = TimeMachineApp(project, advanced=view == "advanced")
         async with app.run_test(size=(width, height)) as pilot:
             await pilot.pause()
             await app.workers.wait_for_complete()
             if light:
                 await app.action_theme()
-            if view == "diff":
+            if view == "help":
+                app.action_help()
+            elif view == "timeline":
+                app.action_history()
+            elif view == "diff":
                 await app.action_inspect()
             elif view in ("undo", "conflict"):
                 await app.action_undo()
@@ -103,7 +107,18 @@ if __name__ == "__main__":
     parser.add_argument("--height", type=int, default=42)
     parser.add_argument(
         "--view",
-        choices=["dashboard", "timeline", "diff", "undo", "redo", "restore", "conflict", "empty"],
+        choices=[
+            "dashboard",
+            "advanced",
+            "help",
+            "timeline",
+            "diff",
+            "undo",
+            "redo",
+            "restore",
+            "conflict",
+            "empty",
+        ],
         default="dashboard",
     )
     parser.add_argument("--light", action="store_true")

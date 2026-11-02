@@ -8,7 +8,7 @@ from tui_preview import render
 
 
 async def main(output):
-    for width, height in ((60, 24), (80, 24), (100, 30), (120, 40), (160, 45), (200, 55)):
+    for width, height in ((60, 24), (80, 24), (100, 30), (120, 40), (160, 45), (207, 58)):
         for light in (False, True):
             theme = "light" if light else "dark"
             await render(
@@ -18,7 +18,7 @@ async def main(output):
                 "diff" if width < 90 else "dashboard",
                 light,
             )
-    for view in ("undo", "redo", "restore", "conflict", "empty", "timeline"):
+    for view in ("advanced", "help", "undo", "redo", "restore", "conflict", "empty", "timeline"):
         await render(output / f"{view}.svg", 140, 42, view)
     await render(output / "narrow-review.svg", 60, 24, "undo")
 
