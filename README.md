@@ -1,4 +1,4 @@
-![TimeMachine — local recovery for coding agents](https://raw.githubusercontent.com/muratkareem/timemachine/9f804707fc229321daf520e5ee91d029b9186320/docs/assets/pixel/wordmark.svg)
+![TimeMachine — local recovery for coding agents](https://raw.githubusercontent.com/muratkareem/timemachine/v0.2.0/docs/assets/pixel/wordmark.svg)
 
 **Safely undo AI coding agent changes while preserving unrelated work.**
 
@@ -9,11 +9,11 @@ No account, daemon or API key is required by TimeMachine.
 
 ## Try it in a minute
 
-Python **3.12+** · macOS / Linux · **v0.2.0 release candidate**, prepared for review.
-Try this verified source revision without cloning:
+Python **3.12+** · macOS / Linux · **v0.2.0**, published on GitHub.
+Install the verified release without cloning:
 
 ```sh
-uv tool install --python 3.12 'timemachine-cli[tui] @ https://github.com/muratkareem/timemachine/archive/bfd6cd04926961a517913c1d6845b825c2eb002c.tar.gz'
+uv tool install --python 3.12 'https://github.com/muratkareem/timemachine/releases/download/v0.2.0/timemachine_cli-0.2.0-py3-none-any.whl[tui]'
 
 cd /path/to/your/project
 timemachine init
@@ -21,9 +21,9 @@ timemachine run -- YOUR_COMMAND   # any installed executable and arguments
 timemachine tui                   # inspect the session and preview undo
 ```
 
-The published [stable v0.1.0](https://github.com/muratkareem/timemachine/releases/tag/v0.1.0)
+The historical [v0.1.0](https://github.com/muratkareem/timemachine/releases/tag/v0.1.0)
 remains available with its previous interface; its tag and artifacts are unchanged.
-No v0.2.0 tag, GitHub Release or PyPI publication is claimed.
+[GitHub Release v0.2.0](https://github.com/muratkareem/timemachine/releases/tag/v0.2.0) includes verified packages and checksums. PyPI remains unpublished.
 
 Prefer the CLI? `timemachine diff`, then `timemachine undo --preview` and
 `timemachine undo`. Every restore still uses conflict checks and confirmation.
@@ -144,4 +144,4 @@ python -m build --no-isolation
 [Agent wrappers](docs/INTEGRATIONS.md) · [Security](SECURITY.md) ·
 [Measured benchmarks](docs/BENCHMARKS.md) · [Status](docs/STATUS.md) · [MIT license](LICENSE)
 
-Candidate notes: [v0.2.0](docs/releases/v0.2.0.md). Release details and reproducible checks: [Release procedure](docs/RELEASE.md).
+Release notes: [v0.2.0](docs/releases/v0.2.0.md). Release details and reproducible checks: [Release procedure](docs/RELEASE.md).

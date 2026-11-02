@@ -81,7 +81,7 @@ failure; 2 usage error (confirmation cancellation returns 1); wrapped command st
   lines and 500 characters per line, with explicit truncation. Stored data is intact.
 
 
-## v0.2.0 candidate workspace
+## v0.2.0 workspace
 
 `timemachine tui` defaults to Simple mode; a reveals Advanced mode.
 1/2/3 switches History/Files/Diff; ? opens the beginner Help;

@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.2.0 final product pass (unpublished)
+## v0.2.0 — Published 2026-11-02
 
 - Default Simple mode with Advanced disclosure and visible mode/help controls.
 - Plain status/recovery guidance, generic first-session example and quickstart.

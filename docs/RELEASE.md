@@ -1,3 +1,15 @@
+# v0.2.0 published — 2026-11-02
+
+[GitHub Release v0.2.0](https://github.com/muratkareem/timemachine/releases/tag/v0.2.0)
+is public. PR #1 merged with history preserved. Annotated tag v0.2.0 resolves to
+5373901539c6d1748256263d76102f7b36f94fd3. All seven release-commit CI jobs pass
+(run 41420598910). Fresh local suite: 173 passed, 3 documented skips, 86% coverage.
+Clean double builds, Twine and isolated wheel/sdist recovery acceptance pass;
+all four uploaded assets match verified originals. Public install: INSTALL.md.
+The original v0.1.0 release is unchanged. No PyPI upload was performed.
+
+## Historical preparation record
+
 # Release procedure
 
 ## Current review candidate: v0.2.0

@@ -1,25 +1,23 @@
 # Installation
 
-## v0.2.0 review candidate
+## Published v0.2.0
 
-The pixel workspace is prepared on codex/pixel-tui-v0.2.0, not published as a new
-release. Its compatible catalog remains v2 and manifest remains v1. Try the verified
-candidate code revision without cloning:
+Install the official GitHub Release with Python 3.12+:
 
 ```sh
-uv tool install --python 3.12 'timemachine-cli[tui] @ https://github.com/muratkareem/timemachine/archive/bfd6cd04926961a517913c1d6845b825c2eb002c.tar.gz'
+uv tool install --python 3.12 'https://github.com/muratkareem/timemachine/releases/download/v0.2.0/timemachine_cli-0.2.0-py3-none-any.whl[tui]'
 ```
 
-Or install the prepared wheel using `uv tool install '/absolute/path/to/timemachine_cli-0.2.0-py3-none-any.whl[tui]'`.
-End users need no development dependencies. The Homebrew formula still installs
-published v0.1.0. The candidate does not change its source pin or existing assets.
-The following stable installation and storage instructions remain valid.
-
+The release includes wheel, source archive, SHA256SUMS and BUILD.json.
+Tag v0.2.0 points to 5373901539c6d1748256263d76102f7b36f94fd3.
+Simple mode is the default; a opens Advanced. Follow QUICKSTART.md.
+PyPI remains unpublished. The Homebrew formula currently installs historical v0.1.0;
+use the release wheel above for v0.2.0.
 
 Python 3.12+ and macOS/Linux local filesystems are required. Native Windows and
 shared/network filesystem recovery are not validated. See PLATFORMS.md.
 
-## No clone required
+## Historical v0.1.0 alternatives
 
 [GitHub v0.1.0](https://github.com/muratkareem/timemachine/releases/tag/v0.1.0) is published with wheel, source archive, checksums and
 build manifest. Its tag points to `e10c054ec38eb129dc985d0b521b1214c4e65b19`.

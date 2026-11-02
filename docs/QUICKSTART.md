@@ -1,6 +1,6 @@
 # Your first protected session
 
-Install the candidate using [INSTALL.md](INSTALL.md), then open a disposable project
+Install published v0.2.0 using [INSTALL.md](INSTALL.md), then open a disposable project
 for this walkthrough. Python 3.12+ and macOS/Linux are supported.
 
 ```sh
