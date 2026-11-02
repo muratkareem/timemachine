@@ -8,6 +8,14 @@ Clean double builds, Twine and isolated wheel/sdist recovery acceptance pass;
 all four uploaded assets match verified originals. Public install: INSTALL.md.
 The original v0.1.0 release is unchanged. No PyPI upload was performed.
 
+Release resume verification confirmed both the tagged release and the subsequent
+main documentation commit (8dbddd7); all seven jobs passed for each. A fresh tool
+install from the public v0.2.0 wheel URL reports version 0.2.0 and passes disposable
+init/session/diff/undo/redo, conflict, Git and recovery acceptance. Downloaded assets
+match GitHub digests, SHA256SUMS and BUILD.json. Current user-facing changelog and
+UI/release guides now consistently describe v0.2.0 as published. These documentation
+corrections do not change the tagged commit or its assets.
+
 ## Historical preparation record
 
 # Final product pass — 2026-11-02

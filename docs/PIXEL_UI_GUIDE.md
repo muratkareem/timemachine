@@ -13,7 +13,7 @@ See [QUICKSTART.md](QUICKSTART.md) for an executable beginner walkthrough.
 
 ## Advanced reference and common safety rules
 
-# Save-state console · v0.2.0 candidate
+# Save-state console · v0.2.0
 
 The pixel workspace is an original terminal interface built from characters,
 square frames and coordinated semantic colors. It uses your normal terminal font,
@@ -119,5 +119,6 @@ explicit backend locks and confirmation.
 - Interrupted/corrupt store: preserve it and use `timemachine doctor`; see RECOVERY.md.
 - Low-capability/small terminal: use ASCII/no-color or the `--plain` CLI.
 
-v0.1.0 remains the published stable release. v0.2.0 is a review candidate, with no
-new tag/release publication implied by screenshots or successful CI.
+v0.2.0 is [published on GitHub](https://github.com/muratkareem/timemachine/releases/tag/v0.2.0).
+Use the official release installation command in [INSTALL.md](INSTALL.md).
+The historical v0.1.0 release remains available with its original interface and assets.
