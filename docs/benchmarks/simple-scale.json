@@ -1,0 +1,29 @@
+{
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "python": "3.12.16",
+  "files": 10000,
+  "binary_mib": 8,
+  "directory_depth": 20,
+  "edited_files": 100,
+  "roundtrips": 2,
+  "fresh_checkpoint_s": 2.828328,
+  "unchanged_checkpoint_s": 1.112084,
+  "wrapped_session_s": 2.178353,
+  "diff_s": 0.070056,
+  "undo_s": 2.182953,
+  "redo_s": 2.121831,
+  "additional_roundtrips": [
+    {
+      "undo_s": 2.179576,
+      "redo_s": 1.971771
+    }
+  ],
+  "verify_s": 0.456399,
+  "gc_dry_run_s": 0.980615,
+  "history_headers_s": 0.002097,
+  "initial_object_bytes": 8568608,
+  "unchanged_object_bytes": 8568608,
+  "final_object_bytes": 8568621,
+  "peak_rss_bytes": 73957376,
+  "note": "Disposable run; edited_files bounds undo/redo; warm cache possible"
+}
