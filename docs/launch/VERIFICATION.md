@@ -43,9 +43,9 @@ reruns or workflow changes were made for that external issue. New launch-commit
 CI is reported separately in the delivery report; this file does not predict it.
 
 The [social preview PNG](../assets/launch/social-preview.png) is a real installed
-UI capture. Upload it under GitHub repository Settings → General → Social preview;
-the repository API/CLI used here does not provide that upload control. It has not
-been configured remotely.
+UI capture. It was uploaded under GitHub repository Settings → General → Social
+preview and verified visibly in the authenticated settings page. The browser
+upload completed the control unavailable through the repository API/CLI.
 
 Promotional posts remain drafts pending maintainer approval. No testimonials,
 download counts or universal safety claims were invented. Native Windows, hunk

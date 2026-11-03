@@ -7,7 +7,7 @@ agent during a coordinated wrapper command. Full pytest: 173 passed, 3 documente
 skips; Ruff/format/mypy and installed-wheel recovery acceptance passed. No new
 build was run (the user requested preserving the already published product).
 Release tag and asset digests are preserved. Discoverability metadata configured;
-social preview PNG prepared for manual upload. Posts remain unpublished.
+social preview uploaded and verified in GitHub settings. Posts remain unpublished.
 Details and commands: [launch verification](launch/VERIFICATION.md).
 
 ---
