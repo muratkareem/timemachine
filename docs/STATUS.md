@@ -1,3 +1,17 @@
+# Launch preparation — 2026-11-03
+
+README quickstart, installed-wheel dashboard/conflict captures, a 54-second
+actual CLI video, reproducible demo tooling, storyboard and English publication
+drafts are prepared. The committed demo includes a live edit by the current Codex
+agent during a coordinated wrapper command. Full pytest: 173 passed, 3 documented
+skips; Ruff/format/mypy and installed-wheel recovery acceptance passed. No new
+build was run (the user requested preserving the already published product).
+Release tag and asset digests are preserved. Discoverability metadata configured;
+social preview PNG prepared for manual upload. Posts remain unpublished.
+Details and commands: [launch verification](launch/VERIFICATION.md).
+
+---
+
 # v0.2.0 published — 2026-11-02
 
 [GitHub Release v0.2.0](https://github.com/muratkareem/timemachine/releases/tag/v0.2.0)

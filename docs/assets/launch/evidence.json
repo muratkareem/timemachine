@@ -1,0 +1,51 @@
+{
+  "mode": "Live Codex tool edit; coordinated wait command",
+  "checks": "checkpoint, diff, undo bytes, redo bytes, conflict preservation, integrity passed",
+  "stages": [
+    {
+      "title": "1 / Save a checkpoint (init alone is not a backup)",
+      "text": "$ python -m timemachine --plain --human init --storage <fixture>/store\n\u256d\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 TimeMachine is ready \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 Ready to checkpoint \u00b7                                                        \u2502\n\u2502 /private/var/folders/v5/65lp57953gl7fdvcjct3ymz00000gn/T/timemachine-launch- \u2502\n\u2502 pjphfqtn/project                                                             \u2502\n\u2502                                                                              \u2502\n\u2502 Initialization does not create a backup or watch for changes.                \u2502\n\u2502 Protects selected file bytes, modes, directories and link targets.           \u2502\n\u2502 Snapshots:                                                                   \u2502\n\u2502 /private/var/folders/v5/65lp57953gl7fdvcjct3ymz00000gn/T/timemachine-launch- \u2502\n\u2502 pjphfqtn/store                                                               \u2502\n\u2502 Scope: 1 entries ready to capture (no backup yet)                            \u2502\n\u2502 Exclusions (not recovered): .git, .timemachine.json, .venv, venv,            \u2502\n\u2502 node_modules, __pycache__, .pytest_cache, .mypy_cache, .ruff_cache           \u2502\n\u2502                                                                              \u2502\n\u2502 Next: timemachine run -- codex                                               \u2502\n\u2502 Then: timemachine diff \u00b7 timemachine undo --preview                          \u2502\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\n",
+      "exit_code": 0
+    },
+    {
+      "title": "1 / Save a checkpoint",
+      "text": "$ python -m timemachine --plain --human checkpoint -m 'Before greeting change'\n\u256d\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Checkpoint complete \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 Checkpoint 98371536def4446ba83294f4282b1528 saved.                           \u2502\n\u2502 Inspect with timemachine show 98371536                                       \u2502\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\n",
+      "exit_code": 0
+    },
+    {
+      "title": "2 / Live Codex tool edit; coordinated wait command",
+      "text": "$ python -m timemachine --plain --human run -- python -c 'from pathlib import Path; import time; Path('\"'\"'/private/tmp/tm-launch-live-capture/READY'\"'\"').write_text(str(Path.cwd())); done = Path('\"'\"'/private/tmp/tm-launch-live-capture/DONE'\"'\"'); exec('\"'\"'while not done.exists(): time.sleep(0.1)'\"'\"'); print('\"'\"'Coordinated editor finished; capturing POST state.'\"'\"')'\nCoordinated editor finished; capturing POST state.\nPRE 9131d22d2e86446ea11b01f65541b8b0 verified. Session protected within the \nconfigured scope.\n\u256d\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Session recorded \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 COMPLETE \u00b7 exit 0                                                            \u2502\n\u2502 PRE 9131d22d \u2192 POST 709fadc2                                                 \u2502\n\u2502 Next: timemachine diff \u00b7 timemachine undo --preview                          \u2502\n\u2502 Detached processes may continue after POST.                                  \u2502\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\n",
+      "exit_code": 0
+    },
+    {
+      "title": "3 / Review the recorded diff",
+      "text": "$ python -m timemachine --plain --human diff\n                                1 entry changes                                 \n Change                         Path                           Size             \n MODIFIED                       hello.py                       53 B             \n--- \"hello.py\" (before)\n+++ \"hello.py\" (after)\n@@ -1,2 +1,2 @@\n def greet(name):\n-    return \"Hello \" + name\n+    return f\"Hello {name.strip()}!\"\n\n",
+      "exit_code": 0
+    },
+    {
+      "title": "4 / Preview undo before writing",
+      "text": "$ python -m timemachine --plain --human undo --preview\n                                1 entry changes                                 \n Change                         Path                           Size             \n MODIFIED                       hello.py                       44 B             \n",
+      "exit_code": 0
+    },
+    {
+      "title": "4 / Undo restores original bytes",
+      "text": "$ python -m timemachine --plain --human undo --yes\n                                1 entry changes                                 \n Change                         Path                           Size             \n MODIFIED                       hello.py                       44 B             \nVerified. Recovery checkpoint and journal retained.\n",
+      "exit_code": 0
+    },
+    {
+      "title": "5 / Redo reapplies recorded bytes",
+      "text": "$ python -m timemachine --plain --human redo --yes\n                                1 entry changes                                 \n Change                         Path                           Size             \n MODIFIED                       hello.py                       53 B             \nVerified. Recovery checkpoint and journal retained.\n",
+      "exit_code": 0
+    },
+    {
+      "title": "6 / Conflict refuses undo; newer work survives",
+      "text": "$ python -m timemachine --plain --human undo --yes\n\u256d\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Cannot proceed \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 Restore conflicts; no files changed: ['hello.py']                            \u2502\n\u2502                                                                              \u2502\n\u2502 Keep your newer edits. Copy them somewhere safe, stop writers, then preview  \u2502\n\u2502 again.                                                                       \u2502\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\n",
+      "exit_code": 1
+    },
+    {
+      "title": "7 / Verify stored integrity",
+      "text": "$ python -m timemachine --plain --human verify\n\u256d\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Verification complete \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 Integrity: verified                                                          \u2502\n\u2502 5 complete checkpoints \u00b7 2 objects \u00b7 2 journals                              \u2502\n\u2502 0 incomplete (not restore targets)                                           \u2502\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\n",
+      "exit_code": 0
+    }
+  ]
+}

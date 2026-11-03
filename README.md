@@ -9,35 +9,36 @@ No account, daemon or API key is required by TimeMachine.
 
 ## Try it in a minute
 
-Python **3.12+** · macOS / Linux · **v0.2.0**, published on GitHub.
-Install the verified release without cloning:
+Python **3.12–3.14** · **macOS / Linux local filesystems** · [MIT](LICENSE).
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) first, then the
+[published v0.2.0 wheel](https://github.com/muratkareem/timemachine/releases/tag/v0.2.0):
 
 ```sh
 uv tool install --python 3.12 'https://github.com/muratkareem/timemachine/releases/download/v0.2.0/timemachine_cli-0.2.0-py3-none-any.whl[tui]'
 
-cd /path/to/your/project
+mkdir timemachine-demo && cd timemachine-demo
+printf 'before\n' > hello.txt
 timemachine init
-timemachine run -- YOUR_COMMAND   # any installed executable and arguments
-timemachine tui                   # inspect the session and preview undo
+timemachine run -- python3 -c "from pathlib import Path; Path('hello.txt').write_text('after\\n')"
+timemachine diff
+timemachine undo --preview
+timemachine undo                 # confirm; hello.txt returns to before
+timemachine redo --preview
+timemachine redo                 # confirm; recorded changes return
 ```
 
-The historical [v0.1.0](https://github.com/muratkareem/timemachine/releases/tag/v0.1.0)
-remains available with its previous interface; its tag and artifacts are unchanged.
-[GitHub Release v0.2.0](https://github.com/muratkareem/timemachine/releases/tag/v0.2.0) includes verified packages and checksums. PyPI remains unpublished.
-
-Prefer the CLI? `timemachine diff`, then `timemachine undo --preview` and
-`timemachine undo`. Every restore still uses conflict checks and confirmation.
-`timemachine quickstart` explains the workflow and lists installed agents without
-launching anything. The agents keep their own authentication and billing.
+For your own project, wrap an installed agent: `timemachine run -- codex` (or
+another executable). Agents keep their own credentials, permissions and billing.
+`timemachine tui` opens the visual review; `timemachine quickstart` explains setup.
 
 **Initialization is setup, not a backup.** Wrap each session or create a checkpoint.
-The tool installation stays separate from your project dependencies.
-[Other installation methods](docs/INSTALL.md) include pipx and the macOS Homebrew tap.
-No PyPI publication is claimed; `timemachine` on PyPI is a different project.
+TimeMachine is local-first: no account, daemon or API key of its own.
+[Other installation methods](docs/INSTALL.md) · [Five-minute guide](docs/QUICKSTART.md).
+This release is distributed on GitHub; the similarly named PyPI project is unrelated.
 
 ## See the session, understand the recovery
 
-![Real TimeMachine dashboard and unified diff](docs/assets/simple/dark-160x45.svg)
+![Real TimeMachine dashboard and unified diff](docs/assets/launch/dashboard.svg)
 
 **Simple mode is the default:** status, changed files, a readable diff, and one
 contextual Undo/Redo action. No internal snapshot IDs are needed. **Advanced (a)**
@@ -47,7 +48,7 @@ Follow the [five-minute hands-on quickstart](docs/QUICKSTART.md) using only Pyth
 Initialization alone does not save files. Recovery review checks current files
 and requires confirmation; a candidate button is not a live safety verdict.
 
-![Real undo review with explicit confirmation](docs/assets/simple/undo.svg)
+![Real conflict review preserving a newer edit](docs/assets/launch/conflict.svg)
 
 Undo first checks affected current paths against the recorded result. A conflicting
 newer edit is refused. A recovery checkpoint and journal are retained before writes;
@@ -56,23 +57,19 @@ success appears only after the backend verifies the selected result.
 These are real screenshots from a disposable project and a wrapped synthetic
 Python command. Reproduce them with `python examples/tui_preview.py`. No billed
 agent or fake product data is used. [Narrow view](docs/assets/simple/dark-60x24.svg) · [Light theme](docs/assets/simple/light-120x40.svg) ·
-[Before the redesign](docs/assets/tui-before.svg) · [Pixel UI guide](docs/PIXEL_UI_GUIDE.md) · [Design and measurements](docs/PIXEL_OVERHAUL.md).
+[UI guide](docs/PIXEL_UI_GUIDE.md).
 
-## A small before / after
+## Watch the recovery workflow
 
-```sh
-printf 'before\n' > hello.txt
-timemachine run -- python3 -c "from pathlib import Path; Path('hello.txt').write_text('after\n')"
-timemachine diff                  # shows before → after
-timemachine undo --preview        # review first
-timemachine undo                  # confirm; hello.txt becomes before again
-```
+[Watch the 54-second CLI demo](docs/assets/launch/demo.mp4) ·
+[Play the terminal recording](docs/assets/launch/demo.cast) ·
+[Reproduce the demo](docs/launch/DEMO.md).
 
-A real [scripted terminal recording](docs/assets/demo.cast) can be played with
-`asciinema play docs/assets/demo.cast` from a checkout. Regenerate it with
-`python scripts/record_demo.py --output /tmp/timemachine-demo.cast`.
-For a fully disposable, self-checking demo, run `python examples/demo.py` from the
-installed checkout. It asserts the bytes after undo and redo, then removes its fixture.
+The demo uses the published wheel and real CLI output: checkpoint, wrapped change,
+diff, undo, redo, then a refused undo protecting a newer edit. The published capture shows **this Codex agent editing the disposable project**
+while a coordinated wait command runs inside the wrapper. It is edited CLI output,
+not a screen recording of the Codex interface. The default reproduction uses a
+labelled Python replay; the guide also supports an installed agent command.
 
 ## The tools you need, in one place
 
@@ -128,6 +125,8 @@ Native Windows, hunk recovery, vendor hooks, watch, export and compression are d
 | Interrupted run or restore | Run `timemachine doctor`; follow the explicit recovery IDs |
 | Small terminal | Enter opens details; Esc returns to history; CLI remains available |
 | Corrupt snapshot or store | Stop restore/GC and preserve the store; see the recovery guide |
+
+[Launch materials and publication drafts](docs/launch/README.md).
 
 ## Develop and contribute
 
