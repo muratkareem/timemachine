@@ -16,6 +16,15 @@ async def settle(app, pilot):
     await pilot.pause()
 
 
+async def wait_for(pilot, predicate):
+    # Preview/execute handlers await filesystem I/O outside Textual's worker manager.
+    for _ in range(100):
+        if predicate():
+            return
+        await pilot.pause(0.05)
+    assert predicate(), "UI operation did not finish within the bounded wait"
+
+
 @pytest.mark.parametrize(
     "width,height", [(60, 24), (80, 24), (100, 30), (120, 40), (160, 45), (207, 58)]
 )
@@ -93,6 +102,7 @@ def test_simple_undo_redo_cancel_and_conflict_preserve_user_work(project):
         async with app.run_test(size=(100, 30)) as pilot:
             await settle(app, pilot)
             await pilot.click("#undo-button")
+            await wait_for(pilot, lambda: isinstance(app.screen, ConfirmRestore))
             assert isinstance(app.screen, ConfirmRestore)
             assert app.focused.id == "cancel"
             await pilot.press("a")
@@ -100,12 +110,16 @@ def test_simple_undo_redo_cancel_and_conflict_preserve_user_work(project):
             await pilot.press("escape")
             assert (project.root / "x").read_text() == "after"
             await pilot.click("#undo-button")
+            await wait_for(pilot, lambda: isinstance(app.screen, ConfirmRestore))
             await pilot.click("#apply")
+            await wait_for(pilot, lambda: not isinstance(app.screen, ConfirmRestore))
             await settle(app, pilot)
             assert (project.root / "x").read_text() == "before"
             assert app.primary_operation == "redo"
             await pilot.click("#undo-button")
+            await wait_for(pilot, lambda: isinstance(app.screen, ConfirmRestore))
             await pilot.click("#apply")
+            await wait_for(pilot, lambda: not isinstance(app.screen, ConfirmRestore))
             await settle(app, pilot)
             assert (project.root / "x").read_text() == "after"
             (project.root / "x").write_text("my newer edit")
@@ -150,9 +164,11 @@ def test_simple_confirmation_rechecks_current_files(project):
         async with app.run_test(size=(80, 24)) as pilot:
             await settle(app, pilot)
             await pilot.click("#undo-button")
+            await wait_for(pilot, lambda: isinstance(app.screen, ConfirmRestore))
             assert isinstance(app.screen, ConfirmRestore)
             (project.root / "x").write_text("changed after review")
             await pilot.click("#apply")
+            await wait_for(pilot, lambda: not isinstance(app.screen, ConfirmRestore))
             await settle(app, pilot)
             assert (project.root / "x").read_text() == "changed after review"
             assert app.query_one("#undo-button", Button).disabled

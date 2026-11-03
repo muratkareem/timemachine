@@ -8,6 +8,8 @@ skips; Ruff/format/mypy and installed-wheel recovery acceptance passed. No new
 build was run (the user requested preserving the already published product).
 Release tag and asset digests are preserved. Discoverability metadata configured;
 social preview uploaded and verified in GitHub settings. Posts remain unpublished.
+A macOS CI timing race in existing UI tests was corrected with bounded waits
+for asynchronous confirmation transitions; application code remains unchanged.
 Details and commands: [launch verification](launch/VERIFICATION.md).
 
 ---

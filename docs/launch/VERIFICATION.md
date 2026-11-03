@@ -1,7 +1,7 @@
 # Launch verification — 2026-11-03
 
 Verified against main baseline `bc09c6a777a6895a595d3f1059d4370081b53d53`.
-Documentation and capture tooling only; recovery engine, version and dependencies
+Documentation, capture tooling and bounded UI-test synchronization; recovery engine, version and dependencies
 are unchanged. No new distribution was built or release created.
 
 ## Published installation
@@ -52,3 +52,14 @@ download counts or universal safety claims were invented. Native Windows, hunk
 recovery and vendor hooks remain deferred. Local snapshots may contain secrets;
 external writers must stop before restore, which is not globally atomic. Read
 [the safety contract](../SAFETY.md) before protecting valuable work.
+
+## CI follow-up
+
+Launch runs 41620161484 and 41620527141 each passed six jobs but exposed a
+pre-existing asynchronous UI-test timing race on different macOS/Python jobs.
+The test clicked Undo and immediately asserted the confirmation screen before
+filesystem preview preparation completed; assertion teardown interrupted the
+handler and caused secondary missing-widget errors. Simple-mode tests now wait
+up to five seconds for confirmation transitions, without weakening the existing
+file-preservation assertions. Application code and the published wheel are unchanged.
+The focused nine-case suite and full local suite pass after this test-only change.
